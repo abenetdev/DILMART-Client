@@ -7,9 +7,6 @@ import store from "./store/store.js";
 import { Toaster } from "./components/ui/toaster.jsx";
 import axios from "axios";
 
-// ── Global 401 interceptor ─────────────────────────────────────────────────
-// When the server returns 401 (suspended account, force-logout, or expired
-// tokenVersion) clear the auth state so the user is redirected to login.
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
