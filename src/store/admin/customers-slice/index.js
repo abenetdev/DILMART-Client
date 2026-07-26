@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
-const BASE = "http://localhost:5000/api/admin/customers";
+const BASE = "/api/admin/customers";
 const cfg  = { withCredentials: true };
 
 // ── Thunks ─────────────────────────────────────────────────────────────────

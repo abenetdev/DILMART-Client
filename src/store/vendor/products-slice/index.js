@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 const initialState = {
   isListLoading: false,
@@ -16,7 +16,7 @@ export const addNewProduct = createAsyncThunk(
       console.log("Redux: Sending product data to API:", formData);
       
       const result = await axios.post(
-        "http://localhost:5000/api/vendor/products/add",
+        "/api/vendor/products/add",
         formData,
         {
           headers: {
@@ -39,7 +39,7 @@ export const fetchAllProducts = createAsyncThunk(
   "/vendor/products/fetchAllProducts",
   async (params = {}) => {
     const { status, category, search } = params;
-    let url = `http://localhost:5000/api/vendor/products/get?`;
+    let url = `/api/vendor/products/get?`;
     
     const queryParams = [];
     if (status && status !== "all") queryParams.push(`status=${status}`);
@@ -57,7 +57,7 @@ export const getProductById = createAsyncThunk(
   "/vendor/products/getProductById",
   async (id) => {
     const result = await axios.get(
-      `http://localhost:5000/api/vendor/products/get/${id}`,
+      `/api/vendor/products/get/${id}`,
       { withCredentials: true }
     );
     return result?.data;
@@ -68,7 +68,7 @@ export const editProduct = createAsyncThunk(
   "/vendor/products/editProduct",
   async ({ id, formData }) => {
     const result = await axios.put(
-      `http://localhost:5000/api/vendor/products/edit/${id}`,
+      `/api/vendor/products/edit/${id}`,
       formData,
       {
         headers: {
@@ -86,7 +86,7 @@ export const deleteProduct = createAsyncThunk(
   "/vendor/products/deleteProduct",
   async (id) => {
     const result = await axios.delete(
-      `http://localhost:5000/api/vendor/products/delete/${id}`,
+      `/api/vendor/products/delete/${id}`,
       { withCredentials: true }
     );
 
@@ -98,7 +98,7 @@ export const bulkUpdateStatus = createAsyncThunk(
   "/vendor/products/bulkUpdateStatus",
   async ({ productIds, status, storeId }) => {
     const result = await axios.put(
-      "http://localhost:5000/api/vendor/products/bulk-status",
+      "/api/vendor/products/bulk-status",
       { productIds, status, storeId },
       {
         headers: { "Content-Type": "application/json" },
@@ -114,7 +114,7 @@ export const setSuperDeal = createAsyncThunk(
   async ({ id, dealPrice, dealTitle, expiresAt }, { rejectWithValue }) => {
     try {
       const result = await axios.put(
-        `http://localhost:5000/api/vendor/products/super-deal/${id}`,
+        `/api/vendor/products/super-deal/${id}`,
         { dealPrice, dealTitle, expiresAt },
         { headers: { "Content-Type": "application/json" }, withCredentials: true }
       );
@@ -130,7 +130,7 @@ export const cancelSuperDeal = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const result = await axios.delete(
-        `http://localhost:5000/api/vendor/products/super-deal/${id}`,
+        `/api/vendor/products/super-deal/${id}`,
         { withCredentials: true }
       );
       return result?.data;

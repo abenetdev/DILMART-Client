@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
-const BASE = "http://localhost:5000/api/admin/seller-applications";
+const BASE = "/api/admin/seller-applications";
 
 const initialState = {
   isLoading:    false,

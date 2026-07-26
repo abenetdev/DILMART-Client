@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios from "@/lib/axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const BASE        = "http://localhost:5000/api/shop/cart";
-const PRODUCTS    = "http://localhost:5000/api/shop/products/get";
+const BASE        = "/api/shop/cart";
+const PRODUCTS    = "/api/shop/products/get";
 const GUEST_KEY   = "guestCart";
 
 // ── localStorage helpers ──────────────────────────────────────────────────

@@ -13,10 +13,11 @@ import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { prependNotification } from "@/store/vendor/notification-slice";
 import notificationSoundSrc from "@/assets/notification.mp3";
+import { API_URL } from "@/lib/axios";
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = API_URL;
 
 export function SocketProvider({ children }) {
   const dispatch  = useDispatch();

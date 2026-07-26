@@ -9,10 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import {
   ShieldCheck, User, Mail, KeyRound, Loader2, CheckCircle2, Eye, EyeOff,
 } from "lucide-react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { patchUserInState } from "@/store/auth-slice";
 
-const BASE = "http://localhost:5000/api/admin/auth";
+const BASE = "/api/admin/auth";
 const cfg  = { withCredentials: true };
 
 // ── Password input with show/hide toggle ──────────────────────────────────

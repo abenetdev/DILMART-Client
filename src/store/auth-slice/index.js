@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 const initialState = {
   isAuthenticated: false,
@@ -12,7 +12,7 @@ export const registerUser = createAsyncThunk(
 
   async (formData) => {
     const response = await axios.post(
-      "http://localhost:5000/api/auth/register",
+      "/api/auth/register",
       formData,
       {
         withCredentials: true,
@@ -28,7 +28,7 @@ export const loginUser = createAsyncThunk(
 
   async (formData) => {
     const response = await axios.post(
-      "http://localhost:5000/api/auth/login",
+      "/api/auth/login",
       formData,
       {
         withCredentials: true,
@@ -44,7 +44,7 @@ export const logoutUser = createAsyncThunk(
 
   async () => {
     const response = await axios.post(
-      "http://localhost:5000/api/auth/logout",
+      "/api/auth/logout",
       {},
       {
         withCredentials: true,
@@ -60,7 +60,7 @@ export const checkAuth = createAsyncThunk(
 
   async () => {
     const response = await axios.get(
-      "http://localhost:5000/api/auth/check-auth",
+      "/api/auth/check-auth",
       {
         withCredentials: true,
         headers: {
@@ -79,7 +79,7 @@ export const updateProfile = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/auth/profile",
+        "/api/auth/profile",
         formData,
         { withCredentials: true }
       );
@@ -95,7 +95,7 @@ export const changePassword = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        "http://localhost:5000/api/auth/change-password",
+        "/api/auth/change-password",
         formData,
         { withCredentials: true }
       );
@@ -111,7 +111,7 @@ export const adminLoginUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/admin/auth/login",
+        "/api/admin/auth/login",
         formData,
         { withCredentials: true }
       );
@@ -127,7 +127,7 @@ export const verifyOtp = createAsyncThunk(
   async ({ email, otp }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/verify-otp",
+        "/api/auth/verify-otp",
         { email, otp },
         { withCredentials: true }
       );
@@ -143,7 +143,7 @@ export const resendOtp = createAsyncThunk(
   async ({ email }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/resend-otp",
+        "/api/auth/resend-otp",
         { email },
         { withCredentials: true }
       );

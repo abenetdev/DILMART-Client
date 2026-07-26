@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { Skeleton } from "../ui/skeleton";
 
 function ProductImageUpload({
@@ -50,7 +50,7 @@ function ProductImageUpload({
     const data = new FormData();
     data.append("my_file", imageFile);
     const response = await axios.post(
-      "http://localhost:5000/api/admin/products/upload-image",
+      "/api/admin/products/upload-image",
       data
     );
     console.log(response, "response");

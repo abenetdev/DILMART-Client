@@ -9,7 +9,7 @@
  */
 
 import { useRef, useState } from "react";
-import axios from "axios";
+import axios from "@/lib/axios";
 import { ImagePlus, Video, X, Loader2, Play, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -32,7 +32,7 @@ function MediaUpload({ images = [], video = "", onImagesChange, onVideoChange })
       files.forEach((f) => formData.append("files", f));
 
       const res = await axios.post(
-        "http://localhost:5000/api/vendor/products/upload-media",
+        "/api/vendor/products/upload-media",
         formData,
         { withCredentials: true }
       );

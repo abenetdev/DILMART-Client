@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 const initialState = {
   isLoading: false,
@@ -13,7 +13,7 @@ export const getHomeData = createAsyncThunk(
   "shopHome/getHomeData",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get("http://localhost:5000/api/shop/home");
+      const res = await axios.get("/api/shop/home");
       return res.data;
     } catch (e) {
       return rejectWithValue(e.response?.data || { message: e.message });

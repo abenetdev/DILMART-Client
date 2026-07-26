@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 const initialState = {
   checkoutUrl: null,
@@ -17,7 +17,7 @@ export const createNewOrder = createAsyncThunk(
   "/order/createNewOrder",
   async (orderData) => {
     const response = await axios.post(
-      "http://localhost:5000/api/shop/order/create",
+      "/api/shop/order/create",
       orderData
     );
     return response.data;
@@ -29,7 +29,7 @@ export const verifyPayment = createAsyncThunk(
   "/order/verifyPayment",
   async ({ txRef, orderId, orderGroupId }) => {
     const response = await axios.post(
-      "http://localhost:5000/api/shop/order/verify",
+      "/api/shop/order/verify",
       { txRef, orderId, orderGroupId }
     );
     return response.data;
@@ -41,7 +41,7 @@ export const getAllOrdersByUserId = createAsyncThunk(
   "/order/getAllOrdersByUserId",
   async (userId) => {
     const response = await axios.get(
-      `http://localhost:5000/api/shop/order/list/${userId}`
+      `/api/shop/order/list/${userId}`
     );
     return response.data;
   }
@@ -52,7 +52,7 @@ export const getOrderDetails = createAsyncThunk(
   "/order/getOrderDetails",
   async (id) => {
     const response = await axios.get(
-      `http://localhost:5000/api/shop/order/details/${id}`
+      `/api/shop/order/details/${id}`
     );
     return response.data;
   }
@@ -63,7 +63,7 @@ export const confirmDeliveryByCustomer = createAsyncThunk(
   async (orderId, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/shop/order/confirm-delivery/${orderId}`,
+        `/api/shop/order/confirm-delivery/${orderId}`,
         {},
         { withCredentials: true }
       );
