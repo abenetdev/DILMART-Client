@@ -1,7 +1,7 @@
 import {
   HousePlug, LogOut, Menu, ShoppingCart,
   UserCog, LogIn, UserPlus, Package,
-  Store, Search, X,
+  Store, Search, X, Heart,
 } from "lucide-react";
 import {
   Link,
@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { logoutUser } from "@/store/auth-slice";
 import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
+import { fetchWishlist } from "@/store/shop/wishlist-slice";
 import { Label } from "../ui/label";
 import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice";
 
@@ -168,6 +169,33 @@ function MenuItems({ onNavigate }) {
   );
 }
 
+// ── Wishlist button — only visible when authenticated ─────────────────────
+
+function WishlistButton({ onClick }) {
+  const { count }           = useSelector((s) => s.shopWishlist);
+  const { isAuthenticated } = useSelector((s) => s.auth);
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <Button
+      onClick={onClick}
+      variant="outline"
+      size="icon"
+      className="relative shrink-0"
+      aria-label="Wishlist"
+    >
+      <Heart className="w-5 h-5" />
+      {count > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1">
+          {count}
+        </span>
+      )}
+      <span className="sr-only">Wishlist</span>
+    </Button>
+  );
+}
+
 // ── Cart button (shared, used in both top-bar and desktop right section) ──
 
 function CartButton({ onClick }) {
@@ -271,10 +299,13 @@ function ShoppingHeader() {
   const dispatch   = useDispatch();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Fetch cart on mount / auth change
+  // Fetch cart and wishlist on mount / auth change
   useEffect(() => {
     const cartUserId = getCartUserId(user, isAuthenticated);
     dispatch(fetchCartItems(cartUserId));
+    if (isAuthenticated && user?.id) {
+      dispatch(fetchWishlist(user.id));
+    }
   }, [dispatch, isAuthenticated, user?.id]);
 
   function closeMobile() {
@@ -298,9 +329,9 @@ function ShoppingHeader() {
           <HeaderSearchBar />
         </div>
 
-        {/* ── Mobile-only: cart + hamburger ── */}
+        {/* ── Mobile-only: wishlist + cart + hamburger ── */}
         <div className="flex items-center gap-2 lg:hidden">
-          {/* Cart lives in the top bar on mobile */}
+          <WishlistButton onClick={() => navigate("/shop/account/wishlist")} />
           <CartButton onClick={() => navigate("/shop/cart")} />
 
           {/* Hamburger — account & nav only */}
@@ -323,8 +354,9 @@ function ShoppingHeader() {
           </Sheet>
         </div>
 
-        {/* ── Desktop-only: cart + account ── */}
+        {/* ── Desktop-only: wishlist + cart + account ── */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
+          <WishlistButton onClick={() => navigate("/shop/account/wishlist")} />
           <CartButton onClick={() => navigate("/shop/cart")} />
           <AccountControls />
         </div>
