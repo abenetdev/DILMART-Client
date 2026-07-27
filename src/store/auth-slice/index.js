@@ -26,8 +26,17 @@ export const loginUser = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   "/auth/logout",
   async () => {
-    const response = await axios.post("/api/auth/logout", {});
-    return response.data;
+    // Clear localStorage immediately — don't wait for the server response.
+    // This ensures logout works even if the network request fails.
+    localStorage.removeItem("token");
+    try {
+      const response = await axios.post("/api/auth/logout", {});
+      return response.data;
+    } catch {
+      // Server call failed (e.g. Render sleeping), but we already cleared
+      // the token so the user is logged out client-side regardless.
+      return { success: true };
+    }
   }
 );
 
@@ -182,11 +191,23 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
 
-      // logout
+      // logout — state is cleared on pending so UI responds instantly
+      .addCase(logoutUser.pending, (state) => {
+        localStorage.removeItem("token");
+        state.isLoading       = false;
+        state.user            = null;
+        state.isAuthenticated = false;
+      })
       .addCase(logoutUser.fulfilled, (state) => {
         localStorage.removeItem("token");
-        state.isLoading = false;
-        state.user = null;
+        state.isLoading       = false;
+        state.user            = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(logoutUser.rejected, (state) => {
+        localStorage.removeItem("token");
+        state.isLoading       = false;
+        state.user            = null;
         state.isAuthenticated = false;
       })
 
