@@ -9,5 +9,16 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+// ── Request interceptor: attach token from localStorage as Bearer header ──
+// This is required for cross-origin deployments (Vercel → Render) because
+// Chrome incognito blocks SameSite=None third-party cookies.
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export default axiosInstance;
 export { API_URL };
