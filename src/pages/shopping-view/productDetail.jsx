@@ -385,7 +385,7 @@ function ProductDetailPage() {
                   {productDetails.description}
                 </p>
                 {/* Only show the toggle if description is long enough */}
-                {productDetails.description.length > 300 && (
+                {productDetails.description.length > 250 && (
                   <button
                     type="button"
                     onClick={() => setShowFullDesc((p) => !p)}
