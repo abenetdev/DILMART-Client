@@ -108,14 +108,13 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                 <p className="font-medium text-sm">Your order has been shipped!</p>
                 <p className="text-sm text-muted-foreground">
                   Did you receive your order? Confirm only after everything has arrived as expected.
-                  The vendor will be paid after platform review.
                 </p>
               </div>
             </div>
             <Button
               onClick={handleConfirmDelivery}
               disabled={isSubmitting}
-              className="w-full"
+              className="w-full bg-green-600"
             >
               {isSubmitting ? "Confirming…" : "Yes, I received my order ✓"}
             </Button>
