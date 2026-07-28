@@ -9,9 +9,14 @@ const initialState = {
 
 export const registerUser = createAsyncThunk(
   "/auth/register",
-  async (formData) => {
-    const response = await axios.post("/api/auth/register", formData);
-    return response.data;
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/register", formData);
+      return response.data;
+    } catch (e) {
+      // Axios throws on 4xx/5xx — extract the server's message so the UI can show it
+      return rejectWithValue(e.response?.data || { success: false, message: e.message });
+    }
   }
 );
 
@@ -148,6 +153,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
       .addCase(registerUser.rejected, (state) => {
+        // rejectWithValue payload is available as action.payload in the component
+        // We just reset loading here — the component handles the error display
         state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;

@@ -46,27 +46,27 @@ function AuthRegister() {
     const data = await dispatch(registerUser(form));
     setLoading(false);
 
-    if (data?.payload?.success) {
+    // Unwrap — payload comes from fulfilled, error.payload from rejectWithValue
+    const result = data?.payload;
+
+    if (result?.success) {
       toast({ title: "Code sent!", description: `Check ${form.email} for your verification code.` });
       navigate(`/auth/verify-otp?email=${encodeURIComponent(form.email)}`);
+    } else if (result?.retryAfter || data?.error?.message?.includes("429")) {
+      const retryAfter = result?.retryAfter || 900;
+      setRateLimited(true);
+      setTimeRemaining(retryAfter);
+      toast({
+        title:       "Too many attempts",
+        description: `Please wait ${Math.ceil(retryAfter / 60)} minutes before trying again`,
+        variant:     "destructive",
+      });
     } else {
-      // Check if it's a rate limit error (429 status)
-      if (data?.error?.message?.includes("429") || data?.payload?.retryAfter) {
-        const retryAfter = data?.payload?.retryAfter || 900; // Default 15 minutes
-        setRateLimited(true);
-        setTimeRemaining(retryAfter);
-        toast({
-          title:       "Too many attempts",
-          description: `Please wait ${Math.ceil(retryAfter / 60)} minutes before trying again`,
-          variant:     "destructive",
-        });
-      } else {
-        toast({
-          title:       "Registration failed",
-          description: data?.payload?.message || "Please try again",
-          variant:     "destructive",
-        });
-      }
+      toast({
+        title:       "Registration failed",
+        description: result?.message || "Something went wrong. Please try again.",
+        variant:     "destructive",
+      });
     }
   }
 
