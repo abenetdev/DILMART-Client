@@ -117,6 +117,18 @@ export const resendOtp = createAsyncThunk(
   }
 );
 
+export const googleLogin = createAsyncThunk(
+  "/auth/googleLogin",
+  async ({ idToken }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/google", { idToken });
+      return response.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data || { message: e.message });
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -254,6 +266,25 @@ const authSlice = createSlice({
           }
           state.user = action.payload.user;
         }
+      })
+
+      // Google login (same shape as email/password login)
+      .addCase(googleLogin.pending, (state) => { state.isLoading = true; })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload.success) {
+          if (action.payload.token) localStorage.setItem("token", action.payload.token);
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+        } else {
+          state.user = null;
+          state.isAuthenticated = false;
+        }
+      })
+      .addCase(googleLogin.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
       });
   },
 });

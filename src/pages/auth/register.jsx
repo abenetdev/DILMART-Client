@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { registerUser } from "@/store/auth-slice";
+import { registerUser, googleLogin } from "@/store/auth-slice";
+import { mergeGuestCart } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff, UserPlus, Clock } from "lucide-react";
+import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 
 function AuthRegister() {
   const [form, setForm]               = useState({ userName: "", email: "", password: "" });
@@ -18,8 +20,28 @@ function AuthRegister() {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
   const { toast } = useToast();
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const set = (field, val) => setForm((p) => ({ ...p, [field]: val }));
+
+  async function handleGoogleSuccess(idToken) {
+    setGoogleLoading(true);
+    const data = await dispatch(googleLogin({ idToken }));
+    setGoogleLoading(false);
+
+    if (data?.payload?.success) {
+      const userId = data.payload.user?.id;
+      if (userId) dispatch(mergeGuestCart(userId));
+      toast({ title: "Account created with Google!" });
+      navigate("/shop/home", { replace: true });
+    } else {
+      toast({
+        title:       "Google sign-up failed",
+        description: data?.payload?.message || "Please try again",
+        variant:     "destructive",
+      });
+    }
+  }
 
   // Countdown timer for rate limit
   useEffect(() => {
@@ -182,6 +204,13 @@ function AuthRegister() {
           <span className="bg-gray-50 px-2 text-gray-400">or</span>
         </div>
       </div>
+
+      {/* Google Sign-Up */}
+      <GoogleSignInButton
+        onSuccess={handleGoogleSuccess}
+        onError={(msg) => toast({ title: msg, variant: "destructive" })}
+        loading={googleLoading}
+      />
 
       {/* Login link */}
       <p className="text-center text-sm text-gray-500">

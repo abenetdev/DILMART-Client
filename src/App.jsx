@@ -43,7 +43,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth, clearAuth } from "./store/auth-slice";
 import { loadGuestCartToStore } from "./store/shop/cart-slice";
-import { Skeleton } from "@/components/ui/skeleton";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import CartPage from "./pages/shopping-view/cart";
 import AllStoresPage from "./pages/shopping-view/all-stores";
@@ -57,7 +56,7 @@ import BecomeASeller from "./pages/become-seller/becomeSeller";
 import { SocketProvider } from "./context/SocketContext";
 
 function App() {
-  const { user, isAuthenticated, isLoading } = useSelector(
+  const { user, isAuthenticated } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
@@ -88,9 +87,6 @@ const location = useLocation();
     dispatch(loadGuestCartToStore());
   }, [dispatch]);
 
-  if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
-
-  console.log(isLoading, user);
 
   return (
    <div className="flex flex-col overflow-hidden bg-white">

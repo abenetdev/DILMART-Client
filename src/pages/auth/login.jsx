@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { loginUser } from "@/store/auth-slice";
+import { loginUser, googleLogin } from "@/store/auth-slice";
 import { mergeGuestCart } from "@/store/shop/cart-slice";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff, LogIn, Clock } from "lucide-react";
+import GoogleSignInButton from "@/components/auth/google-sign-in-button";
 
 function AuthLogin() {
   const [form, setForm]               = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading]         = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
@@ -25,6 +27,29 @@ function AuthLogin() {
   const redirectTo = searchParams.get("redirect") || "/shop/home";
 
   const set = (field, val) => setForm((p) => ({ ...p, [field]: val }));
+
+  async function handleGoogleSuccess(idToken) {
+    setGoogleLoading(true);
+    const data = await dispatch(googleLogin({ idToken }));
+    setGoogleLoading(false);
+
+    if (data?.payload?.success) {
+      const userId = data.payload.user?.id;
+      if (userId) dispatch(mergeGuestCart(userId));
+      toast({ title: "Logged In Successfully" });
+      const role = data.payload.user?.role;
+      const destination = role === "vendor" ? "/vendor/dashboard"
+        : role === "admin" ? "/admin/dashboard"
+        : redirectTo;
+      navigate(destination, { replace: true });
+    } else {
+      toast({
+        title:       "Google sign-in failed",
+        description: data?.payload?.message || "Please try again",
+        variant:     "destructive",
+      });
+    }
+  }
 
   // Countdown timer for rate limit
   useEffect(() => {
@@ -186,6 +211,13 @@ function AuthLogin() {
           <span className="bg-gray-50 px-2 text-gray-400">or</span>
         </div>
       </div>
+
+      {/* Google Sign-In */}
+      <GoogleSignInButton
+        onSuccess={handleGoogleSuccess}
+        onError={(msg) => toast({ title: msg, variant: "destructive" })}
+        loading={googleLoading}
+      />
 
       {/* Register link */}
       <p className="text-center text-sm text-gray-500">
