@@ -56,6 +56,7 @@ import {
   setSuperDeal,
   cancelSuperDeal,
 } from "@/store/vendor/products-slice";
+import { currencyFormatter } from "@/utils";
 
 const initialFormData = {
   name: "",
@@ -383,13 +384,13 @@ function VendorProducts() {
                     <TableCell className="capitalize">{product.category}</TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">ETB {product.price}</div>
+                        <div className="font-medium">ETB {currencyFormatter(product.price)}</div>
                         {product.salePrice > 0 && (
-                          <div className="text-sm text-green-600">Sale: ETB {product.salePrice}</div>
+                          <div className="text-sm text-green-600">Sale: ETB  {currencyFormatter(product.salePrice)}</div>
                         )}
                         {dealLive && (
                           <div className="text-sm font-bold text-orange-600">
-                            âš¡ ETB {deal.dealPrice}
+                            âš¡ ETB  {currencyFormatter(deal.dealPrice)}
                           </div>
                         )}
                       </div>

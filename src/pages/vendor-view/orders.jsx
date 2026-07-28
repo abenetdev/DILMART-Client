@@ -30,6 +30,7 @@ import {
   Truck,
 } from "lucide-react";
 import { getAllOrdersForVendor } from "@/store/vendor/order-slice";
+import { currencyFormatter } from "@/utils";
 
 // ── Status config ──────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -180,7 +181,7 @@ function VendorOrders() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{order.cartItems?.length || 0} item(s)</TableCell>
-                  <TableCell className="font-medium">ETB {order.totalAmount?.toFixed(2)}</TableCell>
+                  <TableCell className="font-medium">ETB {currencyFormatter(order.totalAmount)}</TableCell>
                   <TableCell><StatusBadge status={order.orderStatus} /></TableCell>
                   <TableCell>
                     <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />

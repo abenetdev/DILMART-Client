@@ -28,6 +28,7 @@ import {
   processOrder,
   shipOrder,
 } from "@/store/vendor/order-slice";
+import { currencyFormatter } from "@/utils";
 
 // ── Status config ──────────────────────────────────────────────────────────
 
@@ -221,8 +222,8 @@ function VendorOrderDetails() {
                     <p className="font-medium">{item.title}</p>
                     <p className="text-sm text-muted-foreground mt-0.5">Qty: {item.quantity}</p>
                     <p className="text-sm font-medium mt-0.5">
-                      ETB {item.price} × {item.quantity} = ETB{" "}
-                      {(parseFloat(item.price) * item.quantity).toFixed(2)}
+                      ETB {(item.price)} × {item.quantity} = ETB{" "}
+                      {currencyFormatter(parseFloat(item.price) * item.quantity)}
                     </p>
                   </div>
                 </div>
@@ -231,7 +232,7 @@ function VendorOrderDetails() {
             <Separator className="my-4" />
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span>ETB {orderDetails.totalAmount?.toFixed(2)}</span>
+              <span>ETB {currencyFormatter(orderDetails.totalAmount)}</span>
             </div>
           </CardContent>
         </Card>

@@ -520,7 +520,7 @@ export default function ShoppingHome() {
                 ))}
               </div>
             ) : superDeals?.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {superDeals.map((p) => (
                   <SuperDealCard key={p._id} product={p} onAddToCart={handleAddtoCart} />
                 ))}
@@ -680,45 +680,6 @@ export default function ShoppingHome() {
           </div>
         </section>
       )}
-
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          7. NEWSLETTER
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="container mx-auto px-4 text-center max-w-2xl">
-          <Mail className="h-12 w-12 mx-auto mb-4 opacity-80" />
-          <h2 className="text-3xl font-bold">Stay in the Loop</h2>
-          <p className="mt-3 text-blue-100">
-            Subscribe to get exclusive deals, new arrivals, and store updates
-            straight to your inbox.
-          </p>
-          {subscribed ? (
-            <div className="mt-8 inline-flex items-center gap-2 bg-white/20 rounded-xl px-6 py-3">
-              <Zap className="h-5 w-5" />
-              <span className="font-semibold">
-                You're subscribed! Thanks 🎉
-              </span>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSubscribe}
-              className="mt-8 flex gap-2 max-w-md mx-auto"
-            >
-              <Input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 bg-white/20 border-white/30 placeholder-blue-200 text-white focus-visible:ring-white"
-              />
-              <Button type="submit" variant="secondary" className="shrink-0">
-                Subscribe
-              </Button>
-            </form>
-          )}
-        </div>
-      </section>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           8. FOOTER (now rendered globally in App.jsx)
