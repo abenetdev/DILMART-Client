@@ -521,7 +521,7 @@ export default function ShoppingHome() {
               </div>
             ) : superDeals?.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {superDeals.map((p) => (
+                {superDeals.slice(0, 4).map((p) => (
                   <SuperDealCard key={p._id} product={p} onAddToCart={handleAddtoCart} />
                 ))}
               </div>
