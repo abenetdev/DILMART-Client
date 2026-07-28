@@ -263,9 +263,10 @@ function ShoppingListing() {
         {/* ── Skeleton ── */}
         {isLoading && <ProductSkeleton />}
 
+{/* grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 p-2 sm:p-4 */}
         {/* ── Grid ── */}
         {!isLoading && productList.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 p-2 sm:p-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {productList.map((product) => (
               <ShoppingProductTile
                 key={product._id}
