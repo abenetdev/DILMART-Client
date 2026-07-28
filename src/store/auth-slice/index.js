@@ -124,6 +124,13 @@ const authSlice = createSlice({
       state.user            = null;
       state.isAuthenticated = false;
     },
+    // Used when we know for certain the user is not authenticated
+    // (e.g. no token in localStorage on production app start)
+    clearAuth: (state) => {
+      state.isLoading       = false;
+      state.user            = null;
+      state.isAuthenticated = false;
+    },
     // Called directly after a successful admin profile PATCH
     patchUserInState: (state, action) => {
       if (state.user) {
@@ -244,5 +251,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, forceLogout, patchUserInState } = authSlice.actions;
+export const { setUser, forceLogout, clearAuth, patchUserInState } = authSlice.actions;
 export default authSlice.reducer;

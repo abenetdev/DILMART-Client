@@ -41,7 +41,7 @@ import ScrollToTop from "./components/common/scroll-to-top";
 import UnauthPage from "./pages/unauth-page";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { checkAuth } from "./store/auth-slice";
+import { checkAuth, clearAuth } from "./store/auth-slice";
 import { loadGuestCartToStore } from "./store/shop/cart-slice";
 import { Skeleton } from "@/components/ui/skeleton";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
@@ -73,8 +73,18 @@ const location = useLocation();
     location.pathname.startsWith(path)
   );
   useEffect(() => {
-    dispatch(checkAuth());
-    // Seed guest cart from localStorage into Redux on every app start
+    const storedToken = localStorage.getItem("token");
+    const isProduction = import.meta.env.PROD;
+
+    if (!isProduction || storedToken) {
+      // Local dev: rely on cookies (no localStorage token needed)
+      // Production: only call checkAuth if we have a token in localStorage
+      dispatch(checkAuth());
+    } else {
+      // Production with no token → user is definitely logged out, skip the network call
+      dispatch(clearAuth());
+    }
+
     dispatch(loadGuestCartToStore());
   }, [dispatch]);
 
