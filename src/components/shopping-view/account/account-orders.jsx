@@ -12,11 +12,9 @@ import {
 } from "@/store/shop/order-slice";
 import ShoppingOrderDetailsView from "../order-details";
 import Pagination from "@/components/common/pagination";
+import { currencyFormatter } from "@/utils";
 
 const PAGE_SIZE = 5;
-
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const statusColor = (status) => {
   const map = {
@@ -139,7 +137,7 @@ function AccountOrders() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4 sm:flex-col sm:items-end">
-                      <span className="text-lg font-bold">{fmt(order.totalAmount)}</span>
+                      <span className="text-lg font-bold">{currencyFormatter(order.totalAmount)}</span>
                       <Button size="sm" variant="outline" onClick={() => handleView(order._id)}>
                         View Details
                       </Button>

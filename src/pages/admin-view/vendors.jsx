@@ -29,10 +29,7 @@ import {
   updateVendorAccountStatus, deleteVendor, resetVendorPassword,
   clearVendorDetails, registerVendor,
 } from "@/store/admin/vendors-slice";
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import { currencyFormatter } from "@/utils";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -273,7 +270,7 @@ export default function AdminVendors() {
                   <TableCell><AccountStatusBadge status={vendor.accountStatus} /></TableCell>
                   <TableCell>{vendor.stats?.totalProducts ?? 0}</TableCell>
                   <TableCell>{vendor.stats?.totalOrders ?? 0}</TableCell>
-                  <TableCell>{fmt(vendor.stats?.totalRevenue)}</TableCell>
+                  <TableCell>{currencyFormatter(vendor.stats?.totalRevenue)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{formatDate(vendor.joinedAt)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -388,7 +385,7 @@ export default function AdminVendors() {
                     <ShoppingBag className="h-4 w-4" />Orders
                   </div>
                   <p className="text-xl font-bold">{vendorDetails.stats?.totalOrders ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">{fmt(vendorDetails.stats?.totalRevenue)} revenue</p>
+                  <p className="text-xs text-muted-foreground">{currencyFormatter(vendorDetails.stats?.totalRevenue)} revenue</p>
                 </div>
                 <div className="rounded-lg border p-3 col-span-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -397,11 +394,11 @@ export default function AdminVendors() {
                   <div className="flex gap-6">
                     <div>
                       <p className="text-xs text-muted-foreground">Available</p>
-                      <p className="font-semibold text-green-600">{fmt(vendorDetails.stats?.availableBalance)}</p>
+                      <p className="font-semibold text-green-600">{currencyFormatter(vendorDetails.stats?.availableBalance)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Pending</p>
-                      <p className="font-semibold text-orange-600">{fmt(vendorDetails.stats?.pendingBalance)}</p>
+                      <p className="font-semibold text-orange-600">{currencyFormatter(vendorDetails.stats?.pendingBalance)}</p>
                     </div>
                   </div>
                 </div>
@@ -414,7 +411,7 @@ export default function AdminVendors() {
                     {vendorDetails.recentOrders.map((order) => (
                       <div key={order._id} className="flex items-center justify-between text-sm rounded border px-3 py-2">
                         <span className="font-mono text-xs">{order.orderId}</span>
-                        <span>{fmt(order.totalAmount)}</span>
+                        <span>{currencyFormatter(order.totalAmount)}</span>
                         <Badge variant="secondary">{order.orderStatus}</Badge>
                       </div>
                     ))}

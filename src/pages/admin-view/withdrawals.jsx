@@ -52,12 +52,7 @@ import {
   rejectWithdrawal,
   clearWithdrawalDetails,
 } from "@/store/admin/withdrawals-slice";
-
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+import { currencyFormatter } from "@/utils";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -224,7 +219,7 @@ export default function AdminWithdrawals() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">{fmt(stats.pendingAmount)} awaiting</p>
+            <p className="text-xs text-muted-foreground">{currencyFormatter(stats.pendingAmount)} awaiting</p>
           </CardContent>
         </Card>
         <Card>
@@ -309,7 +304,7 @@ export default function AdminWithdrawals() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{w.storeName}</TableCell>
-                  <TableCell className="font-semibold">{fmt(w.amount)}</TableCell>
+                  <TableCell className="font-semibold">{currencyFormatter(w.amount)}</TableCell>
                   <TableCell className="text-sm capitalize">
                     {PAYOUT_LABELS[w.payoutMethod] || w.payoutMethod}
                   </TableCell>
@@ -373,7 +368,7 @@ export default function AdminWithdrawals() {
           ) : withdrawalDetails ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">{fmt(withdrawalDetails.amount)}</span>
+                <span className="text-2xl font-bold">{currencyFormatter(withdrawalDetails.amount)}</span>
                 <StatusBadge status={withdrawalDetails.status} />
               </div>
 
@@ -390,8 +385,8 @@ export default function AdminWithdrawals() {
               {withdrawalDetails.wallet && (
                 <div className="rounded-lg border p-3 text-sm">
                   <p className="font-medium mb-1">Vendor Wallet</p>
-                  <p>Available: <span className="text-green-600 font-semibold">{fmt(withdrawalDetails.wallet.availableBalance)}</span></p>
-                  <p className="text-muted-foreground">Pending: {fmt(withdrawalDetails.wallet.pendingBalance)}</p>
+                  <p>Available: <span className="text-green-600 font-semibold">{currencyFormatter(withdrawalDetails.wallet.availableBalance)}</span></p>
+                  <p className="text-muted-foreground">Pending: {currencyFormatter(withdrawalDetails.wallet.pendingBalance)}</p>
                 </div>
               )}
 

@@ -35,12 +35,7 @@ import {
   removeFromWishlist,
   fetchWishlist,
 } from "@/store/shop/wishlist-slice";
-
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+import { currencyFormatter } from "@/utils";
 
 function ProductDetailPage() {
   const { productId } = useParams();
@@ -359,10 +354,10 @@ function ProductDetailPage() {
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-primary">{fmt(displayPrice)}</span>
+            <span className="text-3xl font-bold text-primary">{currencyFormatter(displayPrice)}</span>
             {hasSale && (
               <span className="text-lg text-muted-foreground line-through">
-                {fmt(price)}
+                {currencyFormatter(price)}
               </span>
             )}
           </div>

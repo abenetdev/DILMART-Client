@@ -34,11 +34,11 @@ import {
   softDeleteAdminProduct, restoreAdminProduct, bulkAdminProductAction,
   fetchAdminProductOrders, clearProductDetails,
 } from "@/store/admin/products-slice";
+import { currencyFormatter } from "@/utils";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
-const fmt     = (n) => `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
-const fmtDT   = (d) => d ? new Date(d).toLocaleString("en-US",  { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+const currencyFormatterDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+const currencyFormatterDT   = (d) => d ? new Date(d).toLocaleString("en-US",  { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 // SKU uses # prefix to distinguish from Order IDs (which use ORD- prefix)
 const toSKU    = (id) => id ? `#${String(id).slice(-8).toUpperCase()}` : "—";
 const shortId  = toSKU; // alias used in detail view
@@ -357,9 +357,9 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="rounded-xl border p-3">
                   <p className="text-xs text-muted-foreground">Price</p>
-                  <p className="text-lg font-bold mt-0.5">{fmt(p.price)}</p>
+                  <p className="text-lg font-bold mt-0.5">{currencyFormatter(p.price)}</p>
                   {p.salePrice > 0 && p.salePrice < p.price && (
-                    <p className="text-xs text-green-600 font-medium">Sale: {fmt(p.salePrice)}</p>
+                    <p className="text-xs text-green-600 font-medium">Sale: {currencyFormatter(p.salePrice)}</p>
                   )}
                 </div>
                 <div className="rounded-xl border p-3">
@@ -395,18 +395,18 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
               )}
 
               <div className="space-y-2 text-sm">
-                <p><span className="text-muted-foreground">Created:</span> {fmtDate(p.createdAt)}</p>
-                <p><span className="text-muted-foreground">Last Updated:</span> {fmtDate(p.updatedAt)}</p>
+                <p><span className="text-muted-foreground">Created:</span> {currencyFormatterDate(p.createdAt)}</p>
+                <p><span className="text-muted-foreground">Last Updated:</span> {currencyFormatterDate(p.updatedAt)}</p>
                 {p.unpublishedAt && (
                   <div className="p-3 rounded-lg bg-orange-50 border border-orange-200 space-y-1">
                     <p className="text-xs font-semibold text-orange-800">Unpublished</p>
-                    <p className="text-xs text-orange-700">{fmtDT(p.unpublishedAt)}</p>
+                    <p className="text-xs text-orange-700">{currencyFormatterDT(p.unpublishedAt)}</p>
                     {p.unpublishedReason && <p className="text-xs text-orange-600">Reason: {p.unpublishedReason}</p>}
                   </div>
                 )}
                 {p.isDeleted && p.deletedAt && (
                   <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                    <p className="text-xs font-semibold text-red-800">Deleted on {fmtDT(p.deletedAt)}</p>
+                    <p className="text-xs font-semibold text-red-800">Deleted on {currencyFormatterDT(p.deletedAt)}</p>
                   </div>
                 )}
               </div>
@@ -447,7 +447,7 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: "Total Orders",  value: p.performance?.totalOrders || 0,   icon: ShoppingBag },
-                  { label: "Total Revenue", value: fmt(p.performance?.totalRevenue), icon: BarChart3   },
+                  { label: "Total Revenue", value: currencyFormatter(p.performance?.totalRevenue), icon: BarChart3   },
                   { label: "Rating",        value: <Stars rating={p.performance?.rating || 0} />, icon: Star },
                   { label: "Views",         value: p.performance?.viewCount || 0,     icon: Eye },
                 ].map(({ label, value, icon: Icon }) => (
@@ -512,9 +512,9 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
                         <TableRow key={o._id}>
                           <TableCell className="font-mono text-xs">#{o.orderId}</TableCell>
                           <TableCell className="text-sm">{o.customerName}</TableCell>
-                          <TableCell className="text-sm">{fmtDate(o.orderDate)}</TableCell>
+                          <TableCell className="text-sm">{currencyFormatterDate(o.orderDate)}</TableCell>
                           <TableCell className="text-sm">{o.item?.quantity || 0}</TableCell>
-                          <TableCell className="font-semibold text-sm">{fmt(o.item?.price * o.item?.quantity)}</TableCell>
+                          <TableCell className="font-semibold text-sm">{currencyFormatter(o.item?.price * o.item?.quantity)}</TableCell>
                           <TableCell><Badge variant="secondary" className="capitalize">{o.orderStatus}</Badge></TableCell>
                         </TableRow>
                       ))}
@@ -535,7 +535,7 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
                 <div key={r._id} className="rounded-xl border p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <Stars rating={r.reviewValue || 0} />
-                    <span className="text-xs text-muted-foreground">{fmtDate(r.createdAt)}</span>
+                    <span className="text-xs text-muted-foreground">{currencyFormatterDate(r.createdAt)}</span>
                   </div>
                   <p className="text-sm">{r.reviewMessage || "No comment"}</p>
                   <p className="text-xs text-muted-foreground">by {r.userName || "Anonymous"}</p>
@@ -557,7 +557,7 @@ function ProductDetailsDialog({ open, onClose, productId, onAction }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium capitalize">{log.action.replace(/_/g, " ").toLowerCase()}</p>
-                    <p className="text-xs text-muted-foreground">{log.adminName} · {fmtDT(log.createdAt)}</p>
+                    <p className="text-xs text-muted-foreground">{log.adminName} · {currencyFormatterDT(log.createdAt)}</p>
                     {log.reason && <p className="text-xs text-muted-foreground mt-1">Reason: {log.reason}</p>}
                   </div>
                 </div>
@@ -905,8 +905,8 @@ export default function AdminProducts() {
                 </TableCell>
                 <TableCell className="text-sm font-semibold">
                   {product.salePrice > 0 && product.salePrice < product.price
-                    ? <span className="text-green-600">{fmt(product.salePrice)}</span>
-                    : fmt(product.price)}
+                    ? <span className="text-green-600">{currencyFormatter(product.salePrice)}</span>
+                    : currencyFormatter(product.price)}
                 </TableCell>
                 <TableCell>
                   <span className={`text-sm font-medium ${product.stock === 0 ? "text-red-600" : product.stock <= 5 ? "text-yellow-600" : "text-gray-900"}`}>
@@ -919,7 +919,7 @@ export default function AdminProducts() {
                 </TableCell>
                 <TableCell><StatusBadge product={product} /></TableCell>
                 <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
-                  {fmtDate(product.createdAt)}
+                  {currencyFormatterDate(product.createdAt)}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

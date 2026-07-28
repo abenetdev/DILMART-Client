@@ -54,9 +54,7 @@ import {
   getEarningsBreakdown,
   getPayoutSettings,
 } from "@/store/vendor/wallet-slice";
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-const fmt = (amount) => `ETB ${(amount || 0).toFixed(2)}`;
+import { currencyFormatter } from "@/utils";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -188,7 +186,7 @@ export default function VendorWallet() {
       return;
     }
     if (amount > (wallet?.availableBalance || 0)) {
-      toast({ title: "Insufficient balance", description: `Max available: ${fmt(wallet?.availableBalance)}`, variant: "destructive" });
+      toast({ title: "Insufficient balance", description: `Max available: ${currencyFormatter(wallet?.availableBalance)}`, variant: "destructive" });
       return;
     }
 
@@ -279,7 +277,7 @@ export default function VendorWallet() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fmt(wallet?.totalRevenue)}</div>
+            <div className="text-2xl font-bold">{currencyFormatter(wallet?.totalRevenue)}</div>
             <p className="text-xs text-muted-foreground mt-1">All completed orders</p>
           </CardContent>
         </Card>
@@ -290,7 +288,7 @@ export default function VendorWallet() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{fmt(wallet?.availableBalance)}</div>
+            <div className="text-2xl font-bold text-green-600">{currencyFormatter(wallet?.availableBalance)}</div>
             <p className="text-xs text-muted-foreground mt-1">Ready for withdrawal</p>
           </CardContent>
         </Card>
@@ -301,7 +299,7 @@ export default function VendorWallet() {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{fmt(wallet?.pendingBalance)}</div>
+            <div className="text-2xl font-bold text-orange-600">{currencyFormatter(wallet?.pendingBalance)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Released after delivery is confirmed
             </p>
@@ -314,7 +312,7 @@ export default function VendorWallet() {
             <WalletIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fmt(wallet?.withdrawnAmount)}</div>
+            <div className="text-2xl font-bold">{currencyFormatter(wallet?.withdrawnAmount)}</div>
             <p className="text-xs text-muted-foreground mt-1">{wallet?.totalOrders || 0} orders</p>
           </CardContent>
         </Card>
@@ -351,7 +349,7 @@ export default function VendorWallet() {
                         <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
                         <TableCell><TypeBadge type={txn.type} /></TableCell>
                         <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {txn.amount >= 0 ? "+" : ""}{fmt(txn.amount)}
+                          {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
                         </TableCell>
                         <TableCell><StatusBadge status={txn.status} /></TableCell>
                       </TableRow>
@@ -405,7 +403,7 @@ export default function VendorWallet() {
                         <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
                         <TableCell><TypeBadge type={txn.type} /></TableCell>
                         <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {txn.amount >= 0 ? "+" : ""}{fmt(txn.amount)}
+                          {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
                         </TableCell>
                         <TableCell><StatusBadge status={txn.status} /></TableCell>
                         <TableCell className="text-xs text-muted-foreground max-w-[220px]">
@@ -450,7 +448,7 @@ export default function VendorWallet() {
                           WD-{w._id?.slice(-6).toUpperCase()}
                         </TableCell>
                         <TableCell className="text-sm">{formatDate(w.requestedAt)}</TableCell>
-                        <TableCell className="font-medium">{fmt(w.amount)}</TableCell>
+                        <TableCell className="font-medium">{currencyFormatter(w.amount)}</TableCell>
                         <TableCell className="text-sm capitalize">
                           {w.payoutMethod === "telebirr" ? "Telebirr" :
                            w.payoutMethod === "bank"     ? "Bank Transfer" :
@@ -581,7 +579,7 @@ export default function VendorWallet() {
               <div className="bg-muted/50 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Available Balance</p>
-                  <p className="text-2xl font-bold text-green-600">{fmt(wallet?.availableBalance)}</p>
+                  <p className="text-2xl font-bold text-green-600">{currencyFormatter(wallet?.availableBalance)}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-300" />
               </div>

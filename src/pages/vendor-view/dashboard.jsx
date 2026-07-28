@@ -34,11 +34,11 @@ import {
   BarChart3,
   RefreshCw,
 } from "lucide-react";
+import { currencyFormatter } from "@/utils";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const fmt  = (n) => `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const fmtN = (n) => (n || 0).toLocaleString();
+const currencyFormatterN = (n) => (n || 0).toLocaleString();
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -157,42 +157,42 @@ export default function VendorDashboard() {
   const overviewCards = [
     {
       label: "Total Revenue",
-      value: fmt(overview.totalRevenue),
+      value: currencyFormatter(overview.totalRevenue),
       icon:  TrendingUp,
       color: "text-green-600",
       bg:    "bg-green-50",
     },
     {
       label: "Total Orders",
-      value: `${fmtN(overview.totalOrders)} Orders`,
+      value: `${currencyFormatterN(overview.totalOrders)} Orders`,
       icon:  ShoppingBag,
       color: "text-blue-600",
       bg:    "bg-blue-50",
     },
     {
       label: "Products",
-      value: `${fmtN(overview.activeProducts)} Products`,
+      value: `${currencyFormatterN(overview.activeProducts)} Products`,
       icon:  Package,
       color: "text-purple-600",
       bg:    "bg-purple-50",
     },
     {
       label: "Available Balance",
-      value: fmt(overview.availableBalance),
+      value: currencyFormatter(overview.availableBalance),
       icon:  Wallet,
       color: "text-orange-600",
       bg:    "bg-orange-50",
     },
     {
       label: "Pending Orders",
-      value: `${fmtN(overview.pendingOrders)} Orders`,
+      value: `${currencyFormatterN(overview.pendingOrders)} Orders`,
       icon:  Clock,
       color: "text-yellow-600",
       bg:    "bg-yellow-50",
     },
     {
       label: "Customers",
-      value: `${fmtN(overview.uniqueCustomers)} Customers`,
+      value: `${currencyFormatterN(overview.uniqueCustomers)} Customers`,
       icon:  Users,
       color: "text-pink-600",
       bg:    "bg-pink-50",
@@ -308,7 +308,7 @@ export default function VendorDashboard() {
                 className={`bg-gradient-to-r ${color} rounded-xl p-4 text-white`}
               >
                 <p className="text-white/70 text-sm">{label}</p>
-                <p className="text-2xl font-bold mt-1">{fmt(value)}</p>
+                <p className="text-2xl font-bold mt-1">{currencyFormatter(value)}</p>
               </div>
             ))}
           </div>
@@ -358,7 +358,7 @@ export default function VendorDashboard() {
                       </TableCell>
                       <TableCell className="text-sm">{order.customerName}</TableCell>
                       <TableCell className="text-sm font-medium">
-                        {fmt(order.totalAmount)}
+                        {currencyFormatter(order.totalAmount)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={order.orderStatus} />
@@ -394,7 +394,7 @@ export default function VendorDashboard() {
                 className={`flex items-center justify-between p-3 rounded-lg border-l-4 bg-muted/30 ${color}`}
               >
                 <span className="text-sm font-medium">{label}</span>
-                <span className="text-lg font-bold">{fmtN(count)}</span>
+                <span className="text-lg font-bold">{currencyFormatterN(count)}</span>
               </div>
             ))}
           </CardContent>
@@ -437,11 +437,11 @@ export default function VendorDashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{p.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      Sold: {fmtN(p.unitsSold)} units
+                      Sold: {currencyFormatterN(p.unitsSold)} units
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-green-600">{fmt(p.revenue)}</p>
+                    <p className="text-sm font-bold text-green-600">{currencyFormatter(p.revenue)}</p>
                   </div>
                 </div>
               ))
@@ -537,7 +537,7 @@ export default function VendorDashboard() {
             ].map(({ label, value, color }) => (
               <div key={label} className="flex items-center justify-between py-2 border-b last:border-0">
                 <span className="text-sm text-muted-foreground">{label}</span>
-                <span className={`text-sm font-bold ${color}`}>{fmt(value)}</span>
+                <span className={`text-sm font-bold ${color}`}>{currencyFormatter(value)}</span>
               </div>
             ))}
           </CardContent>
@@ -553,8 +553,8 @@ export default function VendorDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { label: "Store Views",    value: fmtN(storePerformance.storeViews),   icon: Eye,      color: "bg-blue-50 text-blue-600"   },
-              { label: "Product Views",  value: fmtN(storePerformance.productViews), icon: Package,  color: "bg-purple-50 text-purple-600" },
+              { label: "Store Views",    value: currencyFormatterN(storePerformance.storeViews),   icon: Eye,      color: "bg-blue-50 text-blue-600"   },
+              { label: "Product Views",  value: currencyFormatterN(storePerformance.productViews), icon: Package,  color: "bg-purple-50 text-purple-600" },
               { label: "Conversion Rate", value: `${storePerformance.conversionRate}%`, icon: TrendingUp, color: "bg-green-50 text-green-600" },
             ].map(({ label, value, icon: Icon, color }) => (
               <div key={label} className="flex items-center gap-3">

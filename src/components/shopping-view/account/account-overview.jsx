@@ -12,9 +12,8 @@ import { getAllOrdersByUserId } from "@/store/shop/order-slice";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlist } from "@/store/shop/wishlist-slice";
 import { getSellerStatus } from "@/store/shop/seller-slice";
+import { currencyFormatter } from "@/utils";
 
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const statusColor = (status) => {
   const map = {
@@ -78,7 +77,7 @@ function AccountOverview() {
     },
     {
       label: "Total Spent",
-      value: fmt(totalSpent),
+      value: currencyFormatter(totalSpent),
       icon: TrendingUp,
       color: "from-emerald-500 to-teal-600",
       link: "/shop/account/orders",
@@ -164,7 +163,7 @@ function AccountOverview() {
                     <Badge className={statusColor(order.orderStatus)}>
                       {order.orderStatus}
                     </Badge>
-                    <span className="font-semibold">{fmt(order.totalAmount)}</span>
+                    <span className="font-semibold">{currencyFormatter(order.totalAmount)}</span>
                   </div>
                 </div>
               ))}

@@ -56,12 +56,7 @@ import {
   rejectEscrowRelease,
   resetOrderDetails,
 } from "@/store/admin/order-slice";
-
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+import { currencyFormatter } from "@/utils";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("en-US", {
@@ -401,7 +396,7 @@ export default function AdminOrders() {
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{order.vendorName}</TableCell>
-                  <TableCell className="font-medium">{fmt(order.totalAmount)}</TableCell>
+                  <TableCell className="font-medium">{currencyFormatter(order.totalAmount)}</TableCell>
                   <TableCell>
                     <PaymentStatusBadge status={order.paymentStatus} />
                   </TableCell>
@@ -488,7 +483,7 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Total</p>
-                  <p className="font-bold text-lg">{fmt(orderDetails.totalAmount)}</p>
+                  <p className="font-bold text-lg">{currencyFormatter(orderDetails.totalAmount)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Date</p>
@@ -530,7 +525,7 @@ export default function AdminOrders() {
                         <p className="font-medium truncate">{item.title}</p>
                         <p className="text-muted-foreground">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-medium">{fmt(parseFloat(item.price) * item.quantity)}</p>
+                      <p className="font-medium">{currencyFormatter(parseFloat(item.price) * item.quantity)}</p>
                     </div>
                   ))}
                 </div>

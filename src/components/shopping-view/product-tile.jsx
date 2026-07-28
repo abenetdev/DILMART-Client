@@ -113,7 +113,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         onClick={() => navigate(`/shop/product/${product?._id}`)}
       >
         {/* Title */}
-        <h2 className="text-[11px] sm:text-sm font-semibold line-clamp-2 leading-snug text-gray-900">
+        <h2 className="text-[14px] sm:text-lg font-semibold line-clamp-2 leading-snug text-gray-900">
           {title}
         </h2>
 
@@ -129,7 +129,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 mt-auto pt-1">
           {salePrice > 0 ? (
             <>
-              <span className="text-xs sm:text-sm font-bold text-primary leading-tight">
+              <span className="text-md sm:text-lg font-bold text-primary leading-tight">
                 ETB {currencyFormatter(salePrice)}
               </span>
               <span className="text-[9px] sm:text-xs line-through text-muted-foreground leading-tight">
@@ -137,7 +137,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
               </span>
             </>
           ) : (
-            <span className="text-xs sm:text-sm font-bold text-primary leading-tight">
+            <span className="text-md sm:text-lg font-bold text-primary leading-tight">
               ETB {currencyFormatter(price)}
             </span>
           )}

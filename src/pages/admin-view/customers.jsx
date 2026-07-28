@@ -31,9 +31,9 @@ import {
   resetCustomerPassword, forceLogoutCustomer, deleteCustomer,
   deleteCustomerReview, clearCustomerDetails,
 } from "@/store/admin/customers-slice";
+import { currencyFormatter } from "@/utils";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-const fmt = (n) => `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
@@ -180,8 +180,8 @@ function CustomerDetailsDialog({ open, onClose, customerId, onAction }) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: "Total Orders",  value: d.stats.totalOrders,              color: "blue"   },
-                  { label: "Total Spent",   value: fmt(d.stats.totalSpent),          color: "green"  },
-                  { label: "Avg Order",     value: fmt(d.stats.avgOrder),            color: "purple" },
+                  { label: "Total Spent",   value: currencyFormatter(d.stats.totalSpent),          color: "green"  },
+                  { label: "Avg Order",     value: currencyFormatter(d.stats.avgOrder),            color: "purple" },
                   { label: "Cancelled",     value: d.stats.cancelled,                color: "orange" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="rounded-xl border p-3 text-center">
@@ -233,7 +233,7 @@ function CustomerDetailsDialog({ open, onClose, customerId, onAction }) {
                           <TableCell className="font-mono text-xs">#{o.orderId}</TableCell>
                           <TableCell className="text-sm">{fmtDate(o.orderDate)}</TableCell>
                           <TableCell className="text-sm">{o.itemCount}</TableCell>
-                          <TableCell className="font-semibold text-sm">{fmt(o.totalAmount)}</TableCell>
+                          <TableCell className="font-semibold text-sm">{currencyFormatter(o.totalAmount)}</TableCell>
                           <TableCell><PaymentBadge status={o.paymentStatus} /></TableCell>
                           <TableCell><OrderStatusBadge status={o.orderStatus} /></TableCell>
                         </TableRow>
@@ -316,7 +316,7 @@ function CustomerDetailsDialog({ open, onClose, customerId, onAction }) {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{item.name || "Product"}</p>
-                        <p className="text-xs text-muted-foreground">{fmt(item.price)}</p>
+                        <p className="text-xs text-muted-foreground">{currencyFormatter(item.price)}</p>
                         <p className="text-xs text-muted-foreground">{fmtDate(item.addedAt)}</p>
                       </div>
                     </div>
@@ -638,7 +638,7 @@ export default function AdminCustomers() {
                 <TableCell className="text-sm">{c.phone || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{fmtDate(c.createdAt)}</TableCell>
                 <TableCell className="text-sm font-semibold">{c.totalOrders}</TableCell>
-                <TableCell className="text-sm font-semibold">{fmt(c.totalSpent)}</TableCell>
+                <TableCell className="text-sm font-semibold">{currencyFormatter(c.totalSpent)}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{fmtDate(c.lastOrderDate)}</TableCell>
                 <TableCell><AccountBadge status={c.accountStatus} /></TableCell>
                 <TableCell><VerifiedBadge verified={c.isEmailVerified} /></TableCell>

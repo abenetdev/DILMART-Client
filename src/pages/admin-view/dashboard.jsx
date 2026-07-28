@@ -15,13 +15,12 @@ import {
   Clock, CheckCircle2, XCircle, Truck, ClipboardList,
   ChevronRight, Activity,
 } from "lucide-react";
+import { currencyFormatter } from "@/utils";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const fmt = (n) =>
-  `ETB ${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-const fmtCompact = (n) => {
+const currencyFormatterCompact = (n) => {
   if (n >= 1_000_000) return `ETB ${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000)     return `ETB ${(n / 1_000).toFixed(1)}K`;
   return `ETB ${(n || 0).toFixed(2)}`;
@@ -232,8 +231,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Total Revenue"
-          value={fmtCompact(overview.totalRevenue)}
-          sub={fmt(overview.totalRevenue)}
+          value={currencyFormatterCompact(overview.totalRevenue)}
+          sub={currencyFormatter(overview.totalRevenue)}
           icon={TrendingUp}
           color="green"
         />
@@ -273,8 +272,8 @@ export default function AdminDashboard() {
         />
         <StatCard
           label="Platform Commission"
-          value={fmtCompact(overview.platformCommission)}
-          sub={fmt(overview.platformCommission)}
+          value={currencyFormatterCompact(overview.platformCommission)}
+          sub={currencyFormatter(overview.platformCommission)}
           icon={Wallet}
           color="rose"
         />
@@ -293,9 +292,9 @@ export default function AdminDashboard() {
           Sales Performance
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <SalesCard label="Today"      value={fmt(salesPerformance.today)}     icon={Activity}   iconColor="text-blue-500" />
-          <SalesCard label="This Week"  value={fmt(salesPerformance.thisWeek)}  icon={BarChart3}  iconColor="text-purple-500" />
-          <SalesCard label="This Month" value={fmt(salesPerformance.thisMonth)} icon={TrendingUp} iconColor="text-green-500" />
+          <SalesCard label="Today"      value={currencyFormatter(salesPerformance.today)}     icon={Activity}   iconColor="text-blue-500" />
+          <SalesCard label="This Week"  value={currencyFormatter(salesPerformance.thisWeek)}  icon={BarChart3}  iconColor="text-purple-500" />
+          <SalesCard label="This Month" value={currencyFormatter(salesPerformance.thisMonth)} icon={TrendingUp} iconColor="text-green-500" />
         </div>
       </div>
 
@@ -359,7 +358,7 @@ export default function AdminDashboard() {
                         <p className="text-sm font-medium leading-tight">{order.customerName}</p>
                         <p className="text-xs text-muted-foreground">{order.vendorName}</p>
                       </TableCell>
-                      <TableCell className="text-sm font-semibold">{fmt(order.totalAmount)}</TableCell>
+                      <TableCell className="text-sm font-semibold">{currencyFormatter(order.totalAmount)}</TableCell>
                       <TableCell><StatusBadge status={order.orderStatus} /></TableCell>
                       <TableCell className="text-xs text-muted-foreground">{formatDate(order.orderDate)}</TableCell>
                     </TableRow>
@@ -409,7 +408,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-gray-900">{fmtCompact(vendor.revenue)}</p>
+                    <p className="text-sm font-bold text-gray-900">{currencyFormatterCompact(vendor.revenue)}</p>
                   </div>
                 </div>
               ))}
