@@ -367,7 +367,7 @@ export default function ShoppingHome() {
             Discover Amazing <span className="text-blue-400">Products</span>{" "}
             from Top Stores
           </h1>
-          <p className="mt-4 text-lg text-white/80 max-w-xl text-green-500">
+          <p className="mt-4 text-lg max-w-xl text-green-500">
             Shop from thousands of verified vendors. Best prices, fast delivery.
           </p>
 
