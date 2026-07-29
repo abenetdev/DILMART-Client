@@ -33,7 +33,7 @@ function AuthRegister() {
       const userId = data.payload.user?.id;
       if (userId) dispatch(mergeGuestCart(userId));
       toast({ title: "Account created with Google!" });
-      navigate("/shop/home", { replace: true });
+      navigate("/", { replace: true });
     } else {
       toast({
         title:       "Google sign-up failed",

@@ -63,7 +63,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
       {/* ── Image area ── */}
       <div
         className="relative overflow-hidden"
-        onClick={() => navigate(`/shop/product/${product?._id}`)}
+        onClick={() => navigate(`/product/${product?._id}`)}
       >
         {/*
           aspect-square on mobile → perfectly square image that always fits
@@ -110,7 +110,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
       {/* ── Text content ── */}
       <CardContent
         className="p-2 sm:p-3 flex-1 flex flex-col gap-1"
-        onClick={() => navigate(`/shop/product/${product?._id}`)}
+        onClick={() => navigate(`/product/${product?._id}`)}
       >
         {/* Title */}
         <h2 className="text-[14px] sm:text-lg font-semibold line-clamp-2 leading-snug text-gray-900">

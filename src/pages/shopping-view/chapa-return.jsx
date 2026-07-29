@@ -41,7 +41,7 @@ function ChapaReturnPage() {
         sessionStorage.removeItem("currentTxRef");
         setStatus("success");
         // Redirect to success page after 2 s
-        setTimeout(() => navigate("/shop/payment-success"), 2000);
+        setTimeout(() => navigate("/payment-success"), 2000);
       } else {
         setStatus("failed");
         setMessage(result?.payload?.message || "Payment could not be verified.");
@@ -88,10 +88,10 @@ function ChapaReturnPage() {
             <>
               <p className="text-muted-foreground text-sm">{message}</p>
               <div className="flex gap-3 justify-center">
-                <Button onClick={() => navigate("/shop/checkout")} variant="outline">
+                <Button onClick={() => navigate("/checkout")} variant="outline">
                   Try Again
                 </Button>
-                <Button onClick={() => navigate("/shop/home")}>
+                <Button onClick={() => navigate("/")}>
                   Back to Shop
                 </Button>
               </div>

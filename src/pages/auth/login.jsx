@@ -24,7 +24,7 @@ function AuthLogin() {
   const { toast }      = useToast();
 
   // Where to send the user after successful login
-  const redirectTo = searchParams.get("redirect") || "/shop/home";
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const set = (field, val) => setForm((p) => ({ ...p, [field]: val }));
 

@@ -243,7 +243,7 @@ export default function StoreFront() {
             exist or is unavailable.
           </p>
           <Button
-            onClick={() => navigate("/shop/home")}
+            onClick={() => navigate("/")}
             className="mt-5 gap-2 w-full"
           >
             <ArrowLeft className="h-4 w-4" />

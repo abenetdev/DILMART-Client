@@ -11,6 +11,7 @@ import {
   getAllOrdersByUserId,
   getOrderDetails,
 } from "@/store/shop/order-slice";
+import { currencyFormatter } from "@/utils";
 
 function ShoppingOrderDetailsView({ orderDetails }) {
   const dispatch = useDispatch();
@@ -68,7 +69,7 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Order Price</p>
-            <Label>ETB {orderDetails?.totalAmount?.toFixed(2)}</Label>
+            <Label>ETB { currencyFormatter(orderDetails?.totalAmount)}</Label>
           </div>
           <div className="flex mt-2 items-center justify-between">
             <p className="font-medium">Payment method</p>
@@ -136,27 +137,12 @@ function ShoppingOrderDetailsView({ orderDetails }) {
                 <li key={i} className="flex items-center justify-between text-sm">
                   <span>{item.title}</span>
                   <span>Qty: {item.quantity}</span>
-                  <span>ETB {item.price}</span>
+                  <span>ETB { currencyFormatter(item.price)}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-        {/* <div className="grid gap-4">
-          <div className="grid gap-2">
-            <div className="font-medium">Shipping Info</div>
-            <div className="grid gap-0.5 text-muted-foreground text-sm">
-              <span>{user?.userName}</span>
-              <span>{orderDetails?.addressInfo?.address}</span>
-              <span>{orderDetails?.addressInfo?.city}</span>
-              <span>{orderDetails?.addressInfo?.pincode}</span>
-              <span>{orderDetails?.addressInfo?.phone}</span>
-              {orderDetails?.addressInfo?.notes && (
-                <span>{orderDetails?.addressInfo?.notes}</span>
-              )}
-            </div>
-          </div>
-        </div> */}
       </div>
     </DialogContent>
   );

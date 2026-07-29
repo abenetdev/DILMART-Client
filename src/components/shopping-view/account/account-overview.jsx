@@ -59,28 +59,28 @@ function AccountOverview() {
       value: orderList?.length || 0,
       icon: Package,
       color: "from-blue-500 to-blue-600",
-      link: "/shop/account/orders",
+      link: "/account/orders",
     },
     {
       label: "Wishlist Items",
       value: wishlistCount,
       icon: Heart,
       color: "from-rose-500 to-pink-600",
-      link: "/shop/account/wishlist",
+      link: "/account/wishlist",
     },
     {
       label: "Cart Items",
       value: cartCount,
       icon: ShoppingCart,
       color: "from-violet-500 to-purple-600",
-      link: "/shop/account/cart",
+      link: "/account/cart",
     },
     {
       label: "Total Spent",
       value: currencyFormatter(totalSpent),
       icon: TrendingUp,
       color: "from-emerald-500 to-teal-600",
-      link: "/shop/account/orders",
+      link: "/account/orders",
       isText: true,
     },
   ];
@@ -131,7 +131,7 @@ function AccountOverview() {
             </p>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/shop/account/orders">View all</Link>
+            <Link to="/account/orders">View all</Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -173,7 +173,7 @@ function AccountOverview() {
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
               <p className="text-muted-foreground">No orders yet</p>
               <Button className="mt-4" asChild>
-                <Link to="/shop/listing">Start Shopping</Link>
+                <Link to="/listing">Start Shopping</Link>
               </Button>
             </div>
           )}
@@ -194,7 +194,7 @@ function AccountOverview() {
             </div>
           </div>
           <Button
-            onClick={() => navigate("/shop/become-seller")}
+            onClick={() => navigate("/become-seller")}
             className="shrink-0 bg-white text-slate-900 hover:bg-slate-100 gap-2"
           >
             Become a Seller
@@ -218,7 +218,7 @@ function AccountOverview() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => navigate("/shop/become-seller")}
+            onClick={() => navigate("/become-seller")}
             className="shrink-0 border-red-300 text-red-700 hover:bg-red-100"
           >
             Reapply

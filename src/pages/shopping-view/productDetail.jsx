@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -56,6 +56,8 @@ function ProductDetailPage() {
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const descRef = useRef(null);
 
   const userId = user?.id || user?._id;
 
@@ -80,7 +82,16 @@ function ProductDetailPage() {
     setSelectedImage(0);
     setQuantity(1);
     setShowFullDesc(false);
+    setDescOverflows(false);
   }, [productId]);
+
+  // Detect whether the clamped paragraph is actually overflowing
+  useEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // Measure with clamp active (scrollHeight > clientHeight means it overflows)
+    setDescOverflows(el.scrollHeight > el.clientHeight + 2);
+  }, [productDetails?.description, showFullDesc]);
 
   if (isLoading && !productDetails) {
     return (
@@ -98,7 +109,7 @@ function ProductDetailPage() {
         <p className="text-muted-foreground mb-6">
           This product may have been removed or is no longer available.
         </p>
-        <Button onClick={() => navigate("/shop/listing")}>Browse Products</Button>
+        <Button onClick={() => navigate("/listing")}>Browse Products</Button>
       </div>
     );
   }
@@ -204,18 +215,18 @@ function ProductDetailPage() {
     <div className="container mx-auto px-4 py-6 md:py-10">
       {/* Breadcrumb */}
       <nav className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground mb-6">
-        <Link to="/shop/home" className="hover:text-foreground">
+        <Link to="/" className="hover:text-foreground">
           Home
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <Link to="/shop/listing" className="hover:text-foreground">
+        <Link to="/listing" className="hover:text-foreground">
           Products
         </Link>
         {categoryLabel && (
           <>
             <ChevronRight className="h-3.5 w-3.5" />
             <Link
-              to={`/shop/listing?category=${productDetails.category}`}
+              to={`/listing?category=${productDetails.category}`}
               className="hover:text-foreground"
             >
               {categoryLabel}
@@ -376,16 +387,17 @@ function ProductDetailPage() {
           {productDetails.description && (
             <div>
               <h2 className="font-semibold mb-2">Description</h2>
-              <div className="relative">
+              <div>
                 <p
-                  className={`text-muted-foreground text-sm leading-relaxed whitespace-pre-line transition-all ${
+                  ref={descRef}
+                  className={`text-muted-foreground text-sm leading-relaxed whitespace-pre-line break-words transition-all ${
                     showFullDesc ? "" : "line-clamp-4"
                   }`}
                 >
                   {productDetails.description}
                 </p>
-                {/* Only show the toggle if description is long enough */}
-                {productDetails.description.length > 250 && (
+                {/* Show toggle when: collapsed and overflowing, OR already expanded */}
+                {(descOverflows || showFullDesc) && (
                   <button
                     type="button"
                     onClick={() => setShowFullDesc((p) => !p)}

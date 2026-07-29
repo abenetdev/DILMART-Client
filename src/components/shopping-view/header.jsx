@@ -43,14 +43,14 @@ function HeaderSearchBar() {
   const debounceRef = useRef(null);
 
   const initialKeyword =
-    location.pathname === "/shop/search"
+    location.pathname === "/search"
       ? new URLSearchParams(location.search).get("keyword") || ""
       : "";
 
   const [value, setValue] = useState(initialKeyword);
 
   useEffect(() => {
-    if (location.pathname === "/shop/search") {
+    if (location.pathname === "/search") {
       const kw = new URLSearchParams(location.search).get("keyword") || "";
       setValue(kw);
     }
@@ -60,15 +60,15 @@ function HeaderSearchBar() {
     clearTimeout(debounceRef.current);
     if (value.trim().length === 0) {
       dispatch(resetSearchResults());
-      if (location.pathname === "/shop/search") {
-        navigate("/shop/search", { replace: true });
+      if (location.pathname === "/search") {
+        navigate("/search", { replace: true });
       }
       return;
     }
     debounceRef.current = setTimeout(() => {
       navigate(
-        `/shop/search?keyword=${encodeURIComponent(value.trim())}`,
-        { replace: location.pathname === "/shop/search" }
+        `/search?keyword=${encodeURIComponent(value.trim())}`,
+        { replace: location.pathname === "/search" }
       );
       dispatch(getSearchResults(value.trim()));
     }, 350);
@@ -79,7 +79,7 @@ function HeaderSearchBar() {
     e.preventDefault();
     if (!value.trim()) return;
     clearTimeout(debounceRef.current);
-    navigate(`/shop/search?keyword=${encodeURIComponent(value.trim())}`);
+    navigate(`/search?keyword=${encodeURIComponent(value.trim())}`);
     dispatch(getSearchResults(value.trim()));
     inputRef.current?.blur();
   }
@@ -87,8 +87,8 @@ function HeaderSearchBar() {
   function handleClear() {
     setValue("");
     dispatch(resetSearchResults());
-    if (location.pathname === "/shop/search") {
-      navigate("/shop/search", { replace: true });
+    if (location.pathname === "/search") {
+      navigate("/search", { replace: true });
     }
     inputRef.current?.focus();
   }
@@ -255,11 +255,11 @@ function AccountControls({ onAction }) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => go("/shop/account")}>
+          <DropdownMenuItem onClick={() => go("/account")}>
             <UserCog className="mr-2 h-4 w-4" />
             My Account
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => go("/shop/account")}>
+          <DropdownMenuItem onClick={() => go("/account")}>
             <Package className="mr-2 h-4 w-4" />
             My Orders
           </DropdownMenuItem>
@@ -283,7 +283,7 @@ function AccountControls({ onAction }) {
         <UserPlus className="h-4 w-4" />
         Register
       </Button>
-      <Button size="sm" onClick={() => go("/shop/become-seller")} className="gap-1.5 bg-green-600">
+      <Button size="sm" onClick={() => go("/become-seller")} className="gap-1.5 bg-green-600">
         <Store className="h-4 w-4" />
         Become Seller
       </Button>
@@ -319,7 +319,7 @@ function ShoppingHeader() {
       <div className="flex h-14 lg:h-16 items-center gap-2 px-3 md:px-6">
 
         {/* Logo */}
-        <Link to="/shop/home" className="flex shrink-0 items-center gap-1.5">
+        <Link to="/" className="flex shrink-0 items-center gap-1.5">
           <HousePlug className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
           <span className="hidden sm:inline font-bold text-base lg:text-lg">MarketPlace</span>
         </Link>
@@ -331,8 +331,8 @@ function ShoppingHeader() {
 
         {/* ── Mobile-only: wishlist + cart + hamburger ── */}
         <div className="flex items-center gap-2 lg:hidden">
-          <WishlistButton onClick={() => navigate("/shop/account/wishlist")} />
-          <CartButton onClick={() => navigate("/shop/cart")} />
+          <WishlistButton onClick={() => navigate("/account/wishlist")} />
+          <CartButton onClick={() => navigate("/cart")} />
 
           {/* Hamburger — account & nav only */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -356,8 +356,8 @@ function ShoppingHeader() {
 
         {/* ── Desktop-only: wishlist + cart + account ── */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
-          <WishlistButton onClick={() => navigate("/shop/account/wishlist")} />
-          <CartButton onClick={() => navigate("/shop/cart")} />
+          <WishlistButton onClick={() => navigate("/account/wishlist")} />
+          <CartButton onClick={() => navigate("/cart")} />
           <AccountControls />
         </div>
       </div>

@@ -118,7 +118,7 @@ export default function NotFound() {
             Go Back
           </Button>
           <Button
-            onClick={() => navigate("/shop/home", { replace: true })}
+            onClick={() => navigate("/", { replace: true })}
             className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/25"
           >
             <Home className="h-4 w-4" />

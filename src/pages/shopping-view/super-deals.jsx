@@ -71,7 +71,7 @@ function DealCard({ product, onAddToCart }) {
   return (
     <div
       className="group relative bg-white rounded-xl sm:rounded-2xl overflow-hidden border border-orange-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 cursor-pointer flex flex-col"
-      onClick={() => navigate(`/shop/product/${product._id}`)}
+      onClick={() => navigate(`/product/${product._id}`)}
     >
       {/* Discount ribbon */}
       <div className="absolute top-0 right-0 z-10">
@@ -258,7 +258,7 @@ export default function SuperDealsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/shop/home")}
+            onClick={() => navigate("/")}
             className="gap-1 text-muted-foreground hover:text-gray-900 px-2 sm:px-3"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
@@ -325,7 +325,7 @@ export default function SuperDealsPage() {
             <p className="text-muted-foreground text-sm max-w-sm">
               Check back soon for new super deals!
             </p>
-            <Button variant="outline" onClick={() => navigate("/shop/listing")} className="mt-2">
+            <Button variant="outline" onClick={() => navigate("/listing")} className="mt-2">
               Browse All Products
             </Button>
           </div>

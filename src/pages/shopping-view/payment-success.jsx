@@ -33,7 +33,7 @@ function PaymentSuccessPage() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
-            onClick={() => navigate("/shop/account/orders")}
+            onClick={() => navigate("/account/orders")}
             className="gap-2"
           >
             <Package className="h-4 w-4" />
@@ -41,7 +41,7 @@ function PaymentSuccessPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate("/shop/home")}
+            onClick={() => navigate("/")}
             className="gap-2"
           >
             <ShoppingBag className="h-4 w-4" />

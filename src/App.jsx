@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
@@ -55,6 +55,16 @@ import SuperDealsPage from "./pages/shopping-view/super-deals";
 import BecomeASeller from "./pages/become-seller/becomeSeller";
 import { SocketProvider } from "./context/SocketContext";
 
+// Legacy /shop/* redirect helpers
+function ProductRedirect() {
+  const { productId } = useParams();
+  return <Navigate to={`/product/${productId}`} replace />;
+}
+function AccountRedirect() {
+  const { "*": rest } = useParams();
+  return <Navigate to={`/account${rest ? `/${rest}` : ""}`} replace />;
+}
+
 function App() {
   const { user, isAuthenticated } = useSelector(
     (state) => state.auth
@@ -97,7 +107,18 @@ const location = useLocation();
       <SocketProvider>
 
       <Routes>
-        <Route path="/" element={<Navigate to="/shop/home" replace />} />
+        <Route path="/shop/home" element={<Navigate to="/" replace />} />
+        <Route path="/shop/listing" element={<Navigate to="/listing" replace />} />
+        <Route path="/shop/product/:productId" element={<ProductRedirect />} />
+        <Route path="/shop/search" element={<Navigate to="/search" replace />} />
+        <Route path="/shop/cart" element={<Navigate to="/cart" replace />} />
+        <Route path="/shop/checkout" element={<Navigate to="/checkout" replace />} />
+        <Route path="/shop/account/*" element={<AccountRedirect />} />
+        <Route path="/shop/stores" element={<Navigate to="/stores" replace />} />
+        <Route path="/shop/super-deals" element={<Navigate to="/super-deals" replace />} />
+        <Route path="/shop/become-seller" element={<Navigate to="/become-seller" replace />} />
+        <Route path="/shop/payment-success" element={<Navigate to="/payment-success" replace />} />
+        <Route path="/shop/chapa-return" element={<Navigate to="/chapa-return" replace />} />
 
         <Route
           path="/auth"
@@ -157,8 +178,8 @@ const location = useLocation();
           <Route path="notifications" element={<VendorNotifications />} />
         </Route>
 
-        <Route path="/shop" element={<ShoppingLayout />}>
-          <Route path="home" element={<ShoppingHome />} />
+        <Route path="/" element={<ShoppingLayout />}>
+          <Route index element={<ShoppingHome />} />
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="become-seller" element={<BecomeASeller />} />
           <Route path="product/:productId" element={<ProductDetailPage />} />
@@ -167,7 +188,7 @@ const location = useLocation();
             element={
               isAuthenticated
                 ? <ShoppingCheckout />
-                : <Navigate to="/auth/login?redirect=/shop/checkout" replace />
+                : <Navigate to="/auth/login?redirect=/checkout" replace />
             }
           />
           <Route path="account" element={<ShoppingAccount />}>
@@ -181,8 +202,8 @@ const location = useLocation();
           <Route path="chapa-return" element={<ChapaReturnPage />} />
           <Route path="paypal-cancel" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
-          <Route path="cart"    element={<CartPage />} />
-          <Route path="stores"  element={<AllStoresPage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="stores" element={<AllStoresPage />} />
           <Route path="super-deals" element={<SuperDealsPage />} />
         </Route>
 

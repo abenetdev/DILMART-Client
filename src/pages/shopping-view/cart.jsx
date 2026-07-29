@@ -94,7 +94,7 @@ export default function CartPage() {
               Looks like you haven't added anything yet
             </p>
             <Button asChild className="mt-2">
-              <Link to="/shop/listing">Start Shopping</Link>
+              <Link to="/listing">Start Shopping</Link>
             </Button>
           </div>
         ) : (
@@ -114,7 +114,7 @@ export default function CartPage() {
                   asChild
                   className="text-primary text-sm"
                 >
-                  <Link to="/shop/listing">+ Add more</Link>
+                  <Link to="/listing">+ Add more</Link>
                 </Button>
               </div>
 
@@ -158,16 +158,16 @@ export default function CartPage() {
                   className="w-full h-12 text-base font-semibold bg-green-700 hover:bg-green-600"
                   onClick={() => {
                     if (!isAuthenticated) {
-                      navigate("/auth/login?redirect=/shop/checkout");
+                      navigate("/auth/login?redirect=/checkout");
                     } else {
-                      navigate("/shop/checkout");
+                      navigate("/checkout");
                     }
                   }}
                 >
                   Proceed to Checkout
                 </Button>
                 <Button  variant="outline" className="w-full border-2" asChild>
-                  <Link to="/shop/listing">Continue Shopping</Link>
+                  <Link to="/listing">Continue Shopping</Link>
                 </Button>
               </div>
 

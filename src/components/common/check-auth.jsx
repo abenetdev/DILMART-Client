@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 function getHomeRoute(role) {
   if (role === "admin")  return "/admin/dashboard";
   if (role === "vendor") return "/vendor/dashboard";
-  return "/shop/home";
+  return "/";
 }
 
 function CheckAuth({ isAuthenticated, user, children }) {
@@ -11,9 +11,10 @@ function CheckAuth({ isAuthenticated, user, children }) {
   const homeRoute = getHomeRoute(user?.role);
   const path      = location.pathname;
 
-  // Root → redirect based on auth state
-  if (path === "/") {
-    return <Navigate to={isAuthenticated ? homeRoute : "/shop/home"} replace />;
+  // Root → if admin/vendor, redirect to their dashboard; otherwise render normally
+  if (path === "/" && isAuthenticated) {
+    if (user?.role === "admin")  return <Navigate to="/admin/dashboard" replace />;
+    if (user?.role === "vendor") return <Navigate to="/vendor/dashboard" replace />;
   }
 
   // ── Admin routes ──────────────────────────────────────────────────────────
@@ -63,8 +64,8 @@ function CheckAuth({ isAuthenticated, user, children }) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  // Authenticated admin browsing /shop/* → redirect to dashboard
-  if (isAuthenticated && user?.role === "admin" && path.startsWith("/shop")) {
+  // Authenticated admin browsing shop pages → redirect to dashboard
+  if (isAuthenticated && user?.role === "admin" && !path.startsWith("/admin") && !path.startsWith("/auth") && !path.startsWith("/vendor")) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 

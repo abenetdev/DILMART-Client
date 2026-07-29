@@ -8,10 +8,10 @@ export default function UnauthPage() {
   const navigate = useNavigate();
 
   function getHomeRoute() {
-    if (!isAuthenticated) return "/shop/home";
+    if (!isAuthenticated) return "/";
     if (user?.role === "admin")  return "/admin/dashboard";
     if (user?.role === "vendor") return "/vendor/dashboard";
-    return "/shop/home";
+    return "/";
   }
 
   const homeRoute  = getHomeRoute();

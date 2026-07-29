@@ -43,7 +43,7 @@ function StatusBanner({ status, application }) {
             <li>Once approved, you'll be redirected to your seller dashboard</li>
           </ul>
         </div>
-        <Button variant="outline" onClick={() => navigate("/shop/home")}>
+        <Button variant="outline" onClick={() => navigate("/")}>
           Continue Shopping
         </Button>
       </div>

@@ -152,7 +152,7 @@ function AccountWishlist() {
         </div>
         {items.length > 0 && (
           <Button variant="outline" size="sm" className="gap-1.5 shrink-0" asChild>
-            <Link to="/shop/listing">
+            <Link to="/listing">
               <Plus className="h-4 w-4" />
               Browse more
             </Link>
@@ -173,7 +173,7 @@ function AccountWishlist() {
               onRemove={handleRemove}
               onAddToCart={handleAddToCart}
               addingId={addingId}
-              onView={(id) => navigate(`/shop/product/${id}`)}
+              onView={(id) => navigate(`/product/${id}`)}
             />
           ))}
         </div>
@@ -187,7 +187,7 @@ function AccountWishlist() {
             Tap the heart on any product while shopping to save it here
           </p>
           <Button size="sm" asChild>
-            <Link to="/shop/listing">Explore Products</Link>
+            <Link to="/listing">Explore Products</Link>
           </Button>
         </div>
       )}

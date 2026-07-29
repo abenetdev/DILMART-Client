@@ -181,32 +181,32 @@ export const shoppingViewHeaderMenuItems = [
 {
 id: "home",
 label: "Home",
-path: "/shop/home",
+path: "/",
 },
 {
 id: "mobile-accessories",
 label: "Mobile & Accessories",
-path: "/shop/listing",
+path: "/listing",
 },
 {
 id: "computers-laptops",
 label: "Computers & Laptops",
-path: "/shop/listing",
+path: "/listing",
 },
 {
 id: "audio-entertainment",
 label: "Audio",
-path: "/shop/listing",
+path: "/listing",
 },
 {
 id: "gaming",
 label: "Gaming",
-path: "/shop/listing",
+path: "/listing",
 },
 {
 id: "smart-devices",
 label: "Smart Devices",
-path: "/shop/listing",
+path: "/listing",
 }
 ];
 

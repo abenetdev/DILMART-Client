@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,11 @@ import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useCart } from "@/hooks/useCart";
 import { CATEGORIES } from "@/config";
 
-// ── Data ────────────────────────────────────────────────────────────────────
+// -- Data --------------------------------------------------------------------
 
 
 
-// ── Skeleton Components ──────────────────────────────────────────────────────
+// -- Skeleton Components ------------------------------------------------------
 
 function ProductCardSkeleton() {
   return (
@@ -53,7 +53,7 @@ function StoreCardSkeleton() {
   );
 }
 
-// ── Countdown Timer ──────────────────────────────────────────────────────────
+// -- Countdown Timer ----------------------------------------------------------
 
 function CountdownTimer({ expiresAt }) {
   const calc = useCallback(() => {
@@ -91,7 +91,7 @@ function CountdownTimer({ expiresAt }) {
   );
 }
 
-// ── Super Deal Card ───────────────────────────────────────────────────────────
+// -- Super Deal Card -----------------------------------------------------------
 
 function SuperDealCard({ product, onAddToCart }) {
   const navigate = useNavigate();
@@ -103,7 +103,7 @@ function SuperDealCard({ product, onAddToCart }) {
   return (
     <div
       className="group relative bg-white rounded-2xl overflow-hidden border border-orange-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-      onClick={() => navigate(`/shop/product/${product._id}`)}
+      onClick={() => navigate(`/product/${product._id}`)}
     >
       {/* Discount badge */}
       <div className="absolute top-3 left-3 z-10">
@@ -133,7 +133,7 @@ function SuperDealCard({ product, onAddToCart }) {
       <div className="p-4">
         <p className="text-xs font-semibold text-orange-600 mb-1 flex items-center gap-1">
           <Zap className="h-3 w-3" />
-          {deal?.dealTitle || "⚡ Super Deal"}
+          {deal?.dealTitle || "? Super Deal"}
         </p>
         <h3 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug mb-2">
           {product.name || product.title}
@@ -174,7 +174,7 @@ function SuperDealCard({ product, onAddToCart }) {
   );
 }
 
-// ── Section Title ────────────────────────────────────────────────────────────
+// -- Section Title ------------------------------------------------------------
 
 function SectionTitle({ title, subtitle, action, onAction }) {  return (
     <div className="flex items-end justify-between mb-8">
@@ -198,7 +198,7 @@ function SectionTitle({ title, subtitle, action, onAction }) {  return (
   );
 }
 
-// ── Store Card ───────────────────────────────────────────────────────────────
+// -- Store Card ---------------------------------------------------------------
 
 function StoreCard({ store, onVisit }) {
   return (
@@ -253,7 +253,7 @@ function StoreCard({ store, onVisit }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// -- Main Component ------------------------------------------------------------
 
 export default function ShoppingHome() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -277,7 +277,7 @@ export default function ShoppingHome() {
     isLoading: homeLoading,
   } = useSelector((s) => s.shopHome);
 
-  // ── Fetch all data ─────────────────────────────────────────────────────────
+  // -- Fetch all data ---------------------------------------------------------
   useEffect(() => {
     dispatch(getFeatureImages());
     dispatch(getHomeData());
@@ -289,7 +289,7 @@ export default function ShoppingHome() {
     );
   }, [dispatch]);
 
-  // ── Banner auto-advance ───────────────────────────────────────────────────
+  // -- Banner auto-advance ---------------------------------------------------
   useEffect(() => {
     if (!featureImageList?.length) return;
     const t = setInterval(
@@ -299,16 +299,16 @@ export default function ShoppingHome() {
     return () => clearInterval(t);
   }, [featureImageList]);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // -- Handlers --------------------------------------------------------------
   function goToCategory(catId) {
     sessionStorage.setItem("filters", JSON.stringify({ category: [catId] }));
-    navigate("/shop/listing");
+    navigate("/listing");
   }
 
   function handleSearch(e) {
     e.preventDefault();
     if (!searchInput.trim()) return;
-    navigate(`/shop/search?keyword=${encodeURIComponent(searchInput.trim())}`);
+    navigate(`/search?keyword=${encodeURIComponent(searchInput.trim())}`);
   }
 
   async function handleAddtoCart(productId, totalStock) {
@@ -332,12 +332,12 @@ export default function ShoppingHome() {
   const slideNext = () =>
     setCurrentSlide((p) => (p + 1) % (featureImageList?.length || 1));
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // -- Render ----------------------------------------------------------------
   return (
     <main className="flex flex-col min-h-screen">
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           1. HERO SECTION
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       <section className="relative w-full min-h-[500px] md:h-[600px] overflow-hidden bg-slate-900">
         {/* Slides */}
         {featureImageList?.length > 0 ? (
@@ -361,7 +361,7 @@ export default function ShoppingHome() {
         {/* Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center text-white">
           <Badge className="mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
-            🛍️ Multi-Vendor Marketplace
+            ??? Multi-Vendor Marketplace
           </Badge>
           <h1 className="text-4xl md:text-6xl font-extrabold leading-tight max-w-3xl">
             Discover Amazing <span className="text-blue-400">Products</span>{" "}
@@ -394,7 +394,7 @@ export default function ShoppingHome() {
           <div className="mt-6 flex gap-3">
             <Button
               size="lg"
-              onClick={() => navigate("/shop/listing")}
+              onClick={() => navigate("/listing")}
               className="rounded-xl"
             >
               Shop Now
@@ -403,7 +403,7 @@ export default function ShoppingHome() {
               size="lg"
               variant="outline"
               className="rounded-xl border-white/50 text-white hover:bg-white/10"
-              onClick={() => navigate("/shop/listing")}
+              onClick={() => navigate("/listing")}
             >
               Browse Stores
             </Button>
@@ -442,9 +442,9 @@ export default function ShoppingHome() {
         )}
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           2. CATEGORIES
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionTitle
@@ -470,9 +470,9 @@ export default function ShoppingHome() {
         </div>
       </section>
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           4.5 SUPER DEALS
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
 
         {(homeLoading || superDeals?.length > 0) && (
         <section className="py-16 relative overflow-hidden">
@@ -493,7 +493,7 @@ export default function ShoppingHome() {
                   </div>
                   <div>
                     <h2 className="text-2xl md:text-3xl font-black text-white leading-tight">
-                      ⚡ Super Deals
+                      ? Super Deals
                     </h2>
                     <p className="text-orange-200 text-sm">Limited time offers grab them before they are gone!</p>
                   </div>
@@ -502,7 +502,7 @@ export default function ShoppingHome() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/shop/super-deals")}
+                onClick={() => navigate("/super-deals")}
                 className="gap-1 text-orange-200 hover:text-white hover:bg-white/10"
               >
                 View All <ArrowRight className="h-4 w-4" />
@@ -530,16 +530,16 @@ export default function ShoppingHome() {
         </section>
       )}
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           3. FEATURED PRODUCTS
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <SectionTitle
             title="Featured Products"
             subtitle="Handpicked for you"
             action="View All"
-            onAction={() => navigate("/shop/listing")}
+            onAction={() => navigate("/listing")}
           />
           {productsLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -569,16 +569,16 @@ export default function ShoppingHome() {
       
 
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           4. NEW ARRIVALS
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <SectionTitle
             title="New Arrivals"
             subtitle="Fresh products just added"
             action="See All"
-            onAction={() => navigate("/shop/listing")}
+            onAction={() => navigate("/listing")}
           />
           {homeLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -602,9 +602,9 @@ export default function ShoppingHome() {
 
       {/* become a seller */}
       
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           5. POPULAR STORES
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       {(homeLoading || popularStores?.length > 0) && (
         <section className="py-16">
           <div className="container mx-auto px-4">
@@ -612,7 +612,7 @@ export default function ShoppingHome() {
               title="Popular Stores"
               subtitle="Explore top vendors on our platform"
               action="View All Stores"
-              onAction={() => navigate("/shop/stores")}
+              onAction={() => navigate("/stores")}
             />
             {homeLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -636,7 +636,7 @@ export default function ShoppingHome() {
               <div className="flex justify-center mt-8">
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/shop/stores")}
+                  onClick={() => navigate("/stores")}
                   className="gap-2 px-8"
                 >
                   <Store className="h-4 w-4" />
@@ -648,9 +648,9 @@ export default function ShoppingHome() {
         </section>
       )}
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           6. TRENDING PRODUCTS
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
       {(homeLoading || trendingProducts?.length > 0) && (
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -658,7 +658,7 @@ export default function ShoppingHome() {
               title="Trending Now"
               subtitle="Most loved by our customers"
               action="View All"
-              onAction={() => navigate("/shop/listing")}
+              onAction={() => navigate("/listing")}
             />
             {homeLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -681,9 +681,9 @@ export default function ShoppingHome() {
         </section>
       )}
 
-      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      {/* ???????????????????????????????????????
           8. FOOTER (now rendered globally in App.jsx)
-      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      ??????????????????????????????????????? */}
     </main>
   );
 }

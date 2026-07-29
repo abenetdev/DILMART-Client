@@ -10,11 +10,11 @@ import { logoutUser } from "@/store/auth-slice";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/shop/account", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/shop/account/orders", label: "Orders", icon: Package },
-  { to: "/shop/account/wishlist", label: "Wishlist", icon: Heart },
-  { to: "/shop/account/cart", label: "Cart", icon: ShoppingCart },
-  { to: "/shop/account/settings", label: "Settings", icon: Settings },
+  { to: "/account", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/account/orders", label: "Orders", icon: Package },
+  { to: "/account/wishlist", label: "Wishlist", icon: Heart },
+  { to: "/account/cart", label: "Cart", icon: ShoppingCart },
+  { to: "/account/settings", label: "Settings", icon: Settings },
 ];
 
 function AccountSidebar({ onNavigate }) {
@@ -101,7 +101,7 @@ function AccountSidebar({ onNavigate }) {
       {user?.role === "user" && !sellerStatus && (
         <Button
           className="mt-3 w-full gap-2 bg-slate-900 hover:bg-slate-800 text-white"
-          onClick={() => { navigate("/shop/become-seller"); onNavigate?.(); }}
+          onClick={() => { navigate("/become-seller"); onNavigate?.(); }}
         >
           <Store className="h-4 w-4" />
           Become a Seller

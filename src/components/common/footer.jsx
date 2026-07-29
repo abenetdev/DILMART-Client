@@ -12,7 +12,7 @@ export default function Footer() {
     const navigate = useNavigate();
     function goToCategory(catId) {
     sessionStorage.setItem("filters", JSON.stringify({ category: [catId] }));
-    navigate("/shop/listing");
+    navigate("/listing");
   }
   return (
     <footer className="bg-slate-900 text-white">
@@ -46,10 +46,10 @@ export default function Footer() {
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm text-slate-400">
                 {[
-                  ["Home", "/shop/home"],
-                  ["All Products", "/shop/listing"],
-                  ["Search", "/shop/search"],
-                  ["My Account", "/shop/account"],
+                  ["Home", "/"],
+                  ["All Products", "/listing"],
+                  ["Search", "/search"],
+                  ["My Account", "/account"],
                 ].map(([label, path]) => (
                   <li key={label}>
                     <button
