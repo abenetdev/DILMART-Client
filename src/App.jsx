@@ -52,6 +52,9 @@ import StoreFront from "./pages/shopping-view/store";
 import ShoppingHeader from "./components/shopping-view/header";
 import Footer from "./components/common/footer";
 import SuperDealsPage from "./pages/shopping-view/super-deals";
+import PrivacyPolicyPage from "./pages/privacy-policy";
+import RefundPolicyPage from "./pages/refund-policy";
+import TermsPage from "./pages/terms";
 import BecomeASeller from "./pages/become-seller/becomeSeller";
 import { SocketProvider } from "./context/SocketContext";
 
@@ -209,6 +212,9 @@ const location = useLocation();
 
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="/store/:slug" element={<StoreFront />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/refund-policy" element={<RefundPolicyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 

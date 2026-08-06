@@ -32,7 +32,7 @@ function AuthRegister() {
     if (data?.payload?.success) {
       const userId = data.payload.user?.id;
       if (userId) dispatch(mergeGuestCart(userId));
-      toast({ title: "Account created with Google!" });
+      toast({ title: "Account created Successfully." });
       navigate("/", { replace: true });
     } else {
       toast({

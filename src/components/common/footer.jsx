@@ -1,6 +1,6 @@
 import { CATEGORIES } from "@/config";
 import { ShoppingBasket } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Facebook,
   Instagram,
@@ -87,9 +87,7 @@ export default function Footer() {
                 {[
                   "Help Center",
                   "Contact Us",
-                  "Return Policy",
                   "Track Order",
-                  "Privacy Policy",
                 ].map((item) => (
                   <li key={item}>
                     <a href="#" className="hover:text-white transition-colors">
@@ -97,6 +95,21 @@ export default function Footer() {
                     </a>
                   </li>
                 ))}
+                <li>
+                  <Link to="/terms" className="hover:text-white transition-colors">
+                    Terms & Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/refund-policy" className="hover:text-white transition-colors">
+                    Return & Refund Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy-policy" className="hover:text-white transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -109,15 +122,15 @@ export default function Footer() {
               © {new Date().getFullYear()} MarketPlace. All rights reserved.
             </span>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-white transition-colors">
+              <Link to="/terms" className="hover:text-white transition-colors">
                 Terms
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
+              </Link>
+              <Link to="/privacy-policy" className="hover:text-white transition-colors">
                 Privacy
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Cookies
-              </a>
+              </Link>
+              <Link to="/refund-policy" className="hover:text-white transition-colors">
+                Returns
+              </Link>
             </div>
           </div>
         </div>
