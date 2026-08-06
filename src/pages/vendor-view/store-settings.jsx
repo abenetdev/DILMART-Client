@@ -600,7 +600,7 @@ export default function StoreSettings() {
         </SectionCard> */}
 
         {/* ── 5. Store Policies ─────────────────────────────────────────────── */}
-        <SectionCard
+        {/* <SectionCard
           icon={FileText}
           title="Store Policies"
           description="Important policies that protect you and your customers"
@@ -638,72 +638,8 @@ export default function StoreSettings() {
               />
             </div>
           ))}
-        </SectionCard>
-
-        {/* ── 6. SEO Settings ───────────────────────────────────────────────── */}
-        {/* <SectionCard
-          icon={Search}
-          title="SEO Settings"
-          description="Optimize your store for search engines"
-        >
-          <div>
-            <Label>SEO Title</Label>
-            <Input
-              value={form.seoTitle}
-              onChange={(e) => set("seoTitle", e.target.value)}
-              placeholder="My Store – Best Products Online"
-              maxLength={70}
-              className="mt-1"
-            />
-            <div className="flex justify-between mt-1">
-              <p className="text-xs text-muted-foreground">
-                Appears in browser tabs and search results
-              </p>
-              <span
-                className={`text-xs ${form.seoTitle.length > 60 ? "text-orange-500" : "text-muted-foreground"}`}
-              >
-                {form.seoTitle.length}/70
-              </span>
-            </div>
-            <FieldError error={fieldErrors.seoTitle} />
-          </div>
-
-          <div>
-            <Label>Meta Description</Label>
-            <Textarea
-              value={form.seoDescription}
-              onChange={(e) => set("seoDescription", e.target.value)}
-              placeholder="A short description that appears in search results..."
-              rows={3}
-              maxLength={160}
-              className="mt-1 resize-none"
-            />
-            <div className="flex justify-between mt-1">
-              <p className="text-xs text-muted-foreground">
-                Recommended: 120–160 characters
-              </p>
-              <span
-                className={`text-xs ${form.seoDescription.length > 140 ? "text-orange-500" : "text-muted-foreground"}`}
-              >
-                {form.seoDescription.length}/160
-              </span>
-            </div>
-            <FieldError error={fieldErrors.seoDescription} />
-          </div>
-
-          <div>
-            <Label>Keywords</Label>
-            <Input
-              value={form.seoKeywords}
-              onChange={(e) => set("seoKeywords", e.target.value)}
-              placeholder="fashion, clothing, shoes, accessories"
-              className="mt-1"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Comma-separated keywords
-            </p>
-          </div>
         </SectionCard> */}
+        
 
         {/* Bottom Save Button */}
         <div className="flex justify-end pb-8">

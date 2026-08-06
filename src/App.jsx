@@ -102,7 +102,7 @@ const location = useLocation();
 
 
   return (
-   <div className="flex flex-col overflow-hidden bg-white">
+   <div className="flex flex-col min-h-screen bg-white">
       <ScrollToTop />
       {/* HEADER — hidden on auth / admin / vendor pages */}
       {!shouldHideHeader && <ShoppingHeader />}

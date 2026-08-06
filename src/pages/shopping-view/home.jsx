@@ -358,7 +358,6 @@ export default function ShoppingHome() {
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/50" />
 
-        {/* Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center text-white">
           <Badge className="mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
             ??? Multi-Vendor Marketplace
@@ -371,7 +370,6 @@ export default function ShoppingHome() {
             Shop from thousands of verified vendors. Best prices, fast delivery.
           </p>
 
-          {/* Search bar */}
           <form
             onSubmit={handleSearch}
             className="mt-8 flex w-full max-w-lg gap-2"
@@ -390,7 +388,6 @@ export default function ShoppingHome() {
             </Button>
           </form>
 
-          {/* CTA */}
           <div className="mt-6 flex gap-3">
             <Button
               size="lg"
