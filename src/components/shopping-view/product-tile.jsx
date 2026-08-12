@@ -112,6 +112,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
           <ProductShareButton
             productId={product?._id}
             productName={title}
+            productImage={image}
             variant="icon"
           />
         </div>

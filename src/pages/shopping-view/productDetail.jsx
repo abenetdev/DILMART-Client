@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeft,
@@ -94,6 +93,61 @@ function ProductDetailPage() {
     setDescOverflows(el.scrollHeight > el.clientHeight + 2);
   }, [productDetails?.description, showFullDesc]);
 
+  // ── Dynamic OG / Twitter meta tags ───────────────────────────────────────
+  useEffect(() => {
+    if (!productDetails) return;
+
+    const pageTitle   = productDetails.name || productDetails.title || "Product";
+    const description = productDetails.description
+      ? productDetails.description.slice(0, 200).replace(/\n/g, " ")
+      : `Buy ${pageTitle} on DilMart`;
+    const image       = productDetails.images?.[0] || productDetails.image || "";
+    const url         = `${window.location.origin}/product/${productDetails._id}`;
+
+    // Helper: upsert a <meta> tag by property or name attribute
+    const setMeta = (attr, value, content) => {
+      let el = document.querySelector(`meta[${attr}="${value}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, value);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+
+    // Page title
+    document.title = `${pageTitle} — DilMart`;
+
+    // Open Graph
+    setMeta("property", "og:type",        "product");
+    setMeta("property", "og:title",        pageTitle);
+    setMeta("property", "og:description",  description);
+    setMeta("property", "og:url",          url);
+    setMeta("property", "og:site_name",    "DilMart");
+    if (image) setMeta("property", "og:image", image);
+
+    // Twitter Card
+    setMeta("name", "twitter:card",        image ? "summary_large_image" : "summary");
+    setMeta("name", "twitter:title",       pageTitle);
+    setMeta("name", "twitter:description", description);
+    if (image) setMeta("name", "twitter:image", image);
+
+    // Canonical link
+    let canonical = document.querySelector("link[rel='canonical']");
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", url);
+
+    // Reset title when leaving the product page
+    return () => {
+      document.title = "DilMart";
+    };
+  }, [productDetails]);
+
+  // ── Redirect unauthenticated ───────────────────────────────────────────
   if (isLoading && !productDetails) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -476,6 +530,7 @@ function ProductDetailPage() {
               <ProductShareButton
                 productId={productDetails._id}
                 productName={title}
+                productImage={images[0] || ""}
                 variant="button"
               />
             </div>
