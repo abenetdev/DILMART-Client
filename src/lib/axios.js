@@ -9,9 +9,7 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// ── Request interceptor: attach token from localStorage as Bearer header ──
-// This is required for cross-origin deployments (Vercel → Render) because
-// Chrome incognito blocks SameSite=None third-party cookies.
+// ── Request interceptor 1: attach token ───────────────────────────────────
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -19,6 +17,22 @@ axiosInstance.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// ── Request interceptor 2: block requests when offline ────────────────────
+// Creates a recognisable error with code "ERR_NETWORK_OFFLINE" so
+// components can distinguish "no internet" from real server errors.
+axiosInstance.interceptors.request.use(
+  (config) => {
+    if (!navigator.onLine) {
+      const err = new Error("No internet connection");
+      err.code  = "ERR_NETWORK_OFFLINE";
+      err.isOffline = true;
+      return Promise.reject(err);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default axiosInstance;
 export { API_URL };

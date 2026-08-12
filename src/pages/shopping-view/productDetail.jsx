@@ -13,6 +13,7 @@ import {
   Package,
 } from "lucide-react";
 import ProductShareButton from "@/components/shopping-view/product-share-button";
+import OfflineBlock, { isOfflineError } from "@/components/common/offline-block";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -57,13 +58,17 @@ function ProductDetailPage() {
   const [rating, setRating] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [descOverflows, setDescOverflows] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const descRef = useRef(null);
 
   const userId = user?.id || user?._id;
 
   useEffect(() => {
     if (productId) {
-      dispatch(fetchProductDetails(productId));
+      setFetchError(null);
+      dispatch(fetchProductDetails(productId))
+        .unwrap()
+        .catch((err) => setFetchError(err));
       dispatch(getReviews(productId));
     }
     return () => {
@@ -147,9 +152,22 @@ function ProductDetailPage() {
     };
   }, [productDetails]);
 
-  // ── Redirect unauthenticated ───────────────────────────────────────────
-  if (isLoading && !productDetails) {
+  // ── Offline / fetch error ─────────────────────────────────────────────
+  if (fetchError && isOfflineError(fetchError) && !productDetails) {
     return (
+      <OfflineBlock
+        fullPage
+        onRetry={() => {
+          setFetchError(null);
+          dispatch(fetchProductDetails(productId))
+            .unwrap()
+            .catch((err) => setFetchError(err));
+        }}
+      />
+    );
+  }
+
+  if (isLoading && !productDetails) {    return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>

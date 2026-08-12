@@ -20,6 +20,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import { useCart } from "@/hooks/useCart";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import OfflineBlock from "@/components/common/offline-block";
 
 const PAGE_LIMIT = 12;
 
@@ -73,6 +75,8 @@ function ShoppingListing() {
   const sentinelRef    = useRef(null);
   const isFetchingRef  = useRef(false);
   const filterPanelRef = useRef(null);
+
+  const { isOnline } = useNetworkStatus();
 
   const categorySearchParam = searchParams.get("category");
 
@@ -259,6 +263,18 @@ function ShoppingListing() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* ── Offline ── */}
+        {!isOnline && !isLoading && productList.length === 0 && (
+          <OfflineBlock
+            onRetry={() => dispatch(fetchAllFilteredProducts({
+              filterParams: filters,
+              sortParams: sort,
+              page: 1,
+              limit: PAGE_LIMIT,
+            }))}
+          />
+        )}
 
         {/* ── Skeleton ── */}
         {isLoading && <ProductSkeleton />}

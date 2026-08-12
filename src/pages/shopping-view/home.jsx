@@ -24,6 +24,8 @@ import { getFeatureImages } from "@/store/common-slice";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useCart } from "@/hooks/useCart";
 import { CATEGORIES } from "@/config";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import OfflineBlock from "@/components/common/offline-block";
 
 // -- Data --------------------------------------------------------------------
 
@@ -323,6 +325,8 @@ export default function ShoppingHome() {
     }
   }
 
+  const { isOnline } = useNetworkStatus();
+
   const slidePrev = () =>
     setCurrentSlide(
       (p) =>
@@ -331,6 +335,17 @@ export default function ShoppingHome() {
     );
   const slideNext = () =>
     setCurrentSlide((p) => (p + 1) % (featureImageList?.length || 1));
+
+  const retryFetch = () => {
+    dispatch(getFeatureImages());
+    dispatch(getHomeData());
+    dispatch(fetchAllFilteredProducts({ filterParams: {}, sortParams: "price-lowtohigh" }));
+  };
+
+  // -- Offline guard ---------------------------------------------------------
+  if (!isOnline && !homeLoading && !newArrivals?.length) {
+    return <OfflineBlock fullPage onRetry={retryFetch} />;
+  }
 
   // -- Render ----------------------------------------------------------------
   return (

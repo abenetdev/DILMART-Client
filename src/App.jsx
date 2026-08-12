@@ -39,6 +39,7 @@ import AccountSettingsPage from "./pages/shopping-view/account-settings";
 import CheckAuth from "./components/common/check-auth";
 import ScrollToTop from "./components/common/scroll-to-top";
 import UnauthPage from "./pages/unauth-page";
+import OfflineBanner from "./components/common/offline-banner";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { checkAuth, clearAuth } from "./store/auth-slice";
@@ -105,6 +106,8 @@ const location = useLocation();
   return (
    <div className="flex flex-col min-h-screen bg-white">
       <ScrollToTop />
+      {/* Global offline indicator — always mounted, shows only when needed */}
+      <OfflineBanner />
       {/* HEADER — hidden on auth / admin / vendor pages */}
       {!shouldHideHeader && <ShoppingHeader />}
 
