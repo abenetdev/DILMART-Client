@@ -14,8 +14,9 @@ export const applyToBecomeSeller = createAsyncThunk(
   "shopSeller/apply",
   async (formData, { rejectWithValue }) => {
     try {
+      // formData is a native FormData object (supports file upload)
       const res = await axios.post(`${BASE}/apply`, formData, {
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
       return res.data;

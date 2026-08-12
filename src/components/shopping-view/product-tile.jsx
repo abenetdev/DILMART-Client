@@ -9,6 +9,7 @@ import { ShoppingCart, Loader2, Heart } from "lucide-react";
 import { addToWishlist, removeFromWishlist } from "@/store/shop/wishlist-slice";
 import { useToast } from "../ui/use-toast";
 import { currencyFormatter } from "@/utils";
+import ProductShareButton from "@/components/shopping-view/product-share-button";
 
 function ShoppingProductTile({ product, handleAddtoCart }) {
   const [adding, setAdding] = useState(false);
@@ -105,6 +106,15 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
             }`}
           />
         </button>
+
+        {/* Share — compact round button, below wishlist */}
+        <div className="absolute top-10 right-1.5 sm:top-11">
+          <ProductShareButton
+            productId={product?._id}
+            productName={title}
+            variant="icon"
+          />
+        </div>
       </div>
 
       {/* ── Text content ── */}

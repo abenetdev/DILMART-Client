@@ -74,6 +74,7 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
         </DialogHeader>
 
         <div className="space-y-3 py-2 text-sm">
+          {/* Applicant + Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-xs text-muted-foreground">Applicant</p>
@@ -90,18 +91,29 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
             </div>
           </div>
 
+          {/* Store Name */}
           <div>
             <p className="text-xs text-muted-foreground">Store Name</p>
             <p className="font-semibold">{app.storeName}</p>
           </div>
 
-          {app.storeDescription && (
-            <div>
-              <p className="text-xs text-muted-foreground">Description</p>
-              <p className="text-gray-700 leading-relaxed">{app.storeDescription}</p>
-            </div>
-          )}
+          {/* Location + Category */}
+          <div className="grid grid-cols-2 gap-3">
+            {app.storeLocation && (
+              <div>
+                <p className="text-xs text-muted-foreground">Physical Location</p>
+                <p>{app.storeLocation}</p>
+              </div>
+            )}
+            {app.category && (
+              <div>
+                <p className="text-xs text-muted-foreground">Category</p>
+                <p className="capitalize">{app.category.replace(/-/g, " ")}</p>
+              </div>
+            )}
+          </div>
 
+          {/* Phone */}
           {app.phone && (
             <div>
               <p className="text-xs text-muted-foreground">Phone</p>
@@ -109,11 +121,40 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
             </div>
           )}
 
+          {/* Vendor Email */}
+          {app.vendorEmail && app.vendorEmail !== app.userId?.email && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-600 font-medium">Requested Vendor Email</p>
+              <p className="text-sm text-blue-800">{app.vendorEmail}</p>
+              <p className="text-xs text-blue-500 mt-0.5">
+                This email will replace their current account email upon approval.
+              </p>
+            </div>
+          )}
+
+          {/* Licence Document */}
+          {app.licenceDocumentUrl && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Business Licence / Registration</p>
+              <a
+                href={app.licenceDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-xs text-primary underline underline-offset-2 hover:text-primary/80"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                View Document
+              </a>
+            </div>
+          )}
+
+          {/* Status */}
           <div className="flex items-center gap-2">
             <p className="text-xs text-muted-foreground">Status:</p>
             <StatusBadge status={app.status} />
           </div>
 
+          {/* Existing admin note */}
           {app.adminNote && (
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs text-muted-foreground">Admin Note</p>

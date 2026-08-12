@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  LayoutDashboard, Package, Heart, ShoppingCart,
+  LayoutDashboard, Package, Heart,
   Settings, LogOut, ChevronRight, Store, Clock,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,7 +13,6 @@ const navItems = [
   { to: "/account", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/account/orders", label: "Orders", icon: Package },
   { to: "/account/wishlist", label: "Wishlist", icon: Heart },
-  { to: "/account/cart", label: "Cart", icon: ShoppingCart },
   { to: "/account/settings", label: "Settings", icon: Settings },
 ];
 
@@ -33,9 +32,10 @@ function AccountSidebar({ onNavigate }) {
     return null;
   };
 
-  const handleLogout = async () => {
-    await dispatch(logoutUser());
-    navigate("/auth/login");
+  const handleLogout = () => {
+    // logoutUser.pending clears auth state synchronously — no need to await
+    dispatch(logoutUser());
+    navigate("/");
   };
 
   return (
@@ -54,7 +54,7 @@ function AccountSidebar({ onNavigate }) {
         </div>
       </div>
 
-      <nav className="mt-6 flex flex-col gap-1 flex-1">
+      <nav className="mt-10 flex flex-col gap-1 flex-1">
         {navItems.map(({ to, label, icon: Icon, end }) => {
           const badge = badgeFor(to);
           return (

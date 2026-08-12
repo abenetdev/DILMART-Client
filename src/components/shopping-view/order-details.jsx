@@ -1,23 +1,43 @@
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { DialogContent } from "../ui/dialog";
+import { Dialog, DialogContent } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { useToast } from "../ui/use-toast";
-import { CheckCircle, Package } from "lucide-react";
+import { CheckCircle, Package, RotateCcw } from "lucide-react";
 import {
   confirmDeliveryByCustomer,
   getAllOrdersByUserId,
   getOrderDetails,
 } from "@/store/shop/order-slice";
+import { fetchMyReturnRequests } from "@/store/shop/return-slice";
 import { currencyFormatter } from "@/utils";
+import ReturnStatusBadge from "@/components/common/return-status-badge";
+import ReturnTimeline from "@/components/common/return-timeline";
+import ReturnRequestForm from "./return-request-form";
 
 function ShoppingOrderDetailsView({ orderDetails }) {
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { user } = useSelector((state) => state.auth);
   const { isSubmitting } = useSelector((state) => state.shopOrder);
+  const { list: returnList } = useSelector((s) => s.shopReturn);
+
+  const [showReturnForm, setShowReturnForm] = useState(false);
+  const [showTimeline,   setShowTimeline]   = useState(false);
+
+  // Find existing return for this order
+  const existingReturn = returnList?.find(
+    (r) => r.orderId?.toString() === orderDetails?._id?.toString() ||
+           r.orderId?._id?.toString() === orderDetails?._id?.toString()
+  );
+
+  const canRequestReturn =
+    orderDetails?.paymentStatus === "paid" &&
+    orderDetails?.orderStatus === "delivered" &&
+    !existingReturn;
 
   const canConfirmDelivery =
     orderDetails?.paymentStatus === "paid" &&
@@ -54,8 +74,8 @@ function ShoppingOrderDetailsView({ orderDetails }) {
   };
 
   return (
-    <DialogContent className="sm:max-w-[600px] min-h-[90%]">
-      <div className="grid gap-6">
+    <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto px-1 py-1 grid gap-6">
         <div className="grid gap-2">
           <div className="flex mt-6 items-center justify-between">
             <p className="font-medium">Order ID</p>
@@ -143,7 +163,61 @@ function ShoppingOrderDetailsView({ orderDetails }) {
             </ul>
           </div>
         </div>
+
+        {/* ── Return & Refund section ── */}
+        <Separator />
+        {existingReturn ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-sm flex items-center gap-2">
+                <RotateCcw className="h-4 w-4 text-orange-500" />
+                Return Request
+              </p>
+              <ReturnStatusBadge status={existingReturn.status} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Reason: <span className="font-medium capitalize">{existingReturn.reason?.replace(/_/g," ")}</span>
+              {" · "}Resolution: <span className="font-medium capitalize">{existingReturn.requestedResolution}</span>
+            </p>
+            {existingReturn.vendorDecisionReason && (
+              <div className="rounded bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                Vendor note: {existingReturn.vendorDecisionReason}
+              </div>
+            )}
+            <Button
+              variant="outline" size="sm" className="w-full"
+              onClick={() => setShowTimeline((p) => !p)}
+            >
+              {showTimeline ? "Hide" : "Show"} Timeline
+            </Button>
+            {showTimeline && <ReturnTimeline timeline={existingReturn.timeline} />}
+          </div>
+        ) : canRequestReturn ? (
+          <Button
+            variant="outline" size="sm" className="w-full gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+            onClick={() => setShowReturnForm(true)}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Request Return / Refund
+          </Button>
+        ) : orderDetails?.orderStatus === "delivered" && !existingReturn ? (
+          <p className="text-xs text-muted-foreground text-center py-2">
+            Return window may have expired or this order is not eligible for a return.
+          </p>
+        ) : null}
+
       </div>
+
+      {/* Return form dialog */}
+      <Dialog open={showReturnForm} onOpenChange={setShowReturnForm}>
+        <ReturnRequestForm
+          order={orderDetails}
+          onSuccess={() => {
+            setShowReturnForm(false);
+            if (user?.id) dispatch(fetchMyReturnRequests());
+          }}
+        />
+      </Dialog>
     </DialogContent>
   );
 }

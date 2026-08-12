@@ -51,6 +51,7 @@ import ChapaReturnPage from "./pages/shopping-view/chapa-return";
 import StoreFront from "./pages/shopping-view/store";
 import ShoppingHeader from "./components/shopping-view/header";
 import Footer from "./components/common/footer";
+import MobileBottomNav from "./components/shopping-view/mobile-bottom-nav";
 import SuperDealsPage from "./pages/shopping-view/super-deals";
 import PrivacyPolicyPage from "./pages/privacy-policy";
 import RefundPolicyPage from "./pages/refund-policy";
@@ -222,6 +223,9 @@ const location = useLocation();
 
       {/* FOOTER — hidden on auth / admin / vendor pages */}
       {!shouldHideHeader && <Footer />}
+
+      {/* MOBILE BOTTOM NAV — hidden on auth / admin / vendor pages */}
+      {!shouldHideHeader && <MobileBottomNav />}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
+import AdminReturnRequestsTab from "@/components/admin-view/return-requests-tab";
 import {
   Table,
   TableBody,
@@ -118,6 +120,7 @@ export default function AdminOrders() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [activeTab, setActiveTab] = useState("orders");
 
   const { orderList, orderDetails, isListLoading, isSubmitting } =
     useSelector((s) => s.adminOrder);
@@ -255,6 +258,28 @@ export default function AdminOrders() {
           View and manage orders across the entire marketplace
         </p>
       </div>
+
+      {/* Tab switcher */}
+      <div className="flex gap-0 border-b mb-6">
+        {[
+          { id: "orders",  label: "Orders" },
+          { id: "returns", label: "Returns & Refunds", icon: <RotateCcw className="h-3.5 w-3.5" /> },
+        ].map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === id ? "border-gray-900 text-gray-900" : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            {icon}{label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "returns" && <AdminReturnRequestsTab />}
+
+      {activeTab === "orders" && (<>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
         <Card>
@@ -727,6 +752,7 @@ export default function AdminOrders() {
           </div>
         </DialogContent>
       </Dialog>
+    </>)}
     </Fragment>
   );
 }

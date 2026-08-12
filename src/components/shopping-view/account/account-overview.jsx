@@ -91,12 +91,9 @@ function AccountOverview() {
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           Welcome back, {user?.userName?.split(" ")[0]}!
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Here&apos;s what&apos;s happening with your account today.
-        </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, color, link, isText }) => (
           <Link key={label} to={link}>
             <Card className="group overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow">
@@ -117,7 +114,7 @@ function AccountOverview() {
             </Card>
           </Link>
         ))}
-      </div>
+      </div> */}
 
       <Card className="border-0 shadow-md">
         <CardHeader className="flex flex-row items-center justify-between">

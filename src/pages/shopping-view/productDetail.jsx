@@ -13,6 +13,7 @@ import {
   Tag,
   Package,
 } from "lucide-react";
+import ProductShareButton from "@/components/shopping-view/product-share-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -472,6 +473,11 @@ function ProductDetailPage() {
                   className={`h-5 w-5 ${isWishlisted ? "fill-red-500 text-red-500" : ""}`}
                 />
               </Button>
+              <ProductShareButton
+                productId={productDetails._id}
+                productName={title}
+                variant="button"
+              />
             </div>
           </div>
         </div>

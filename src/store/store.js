@@ -25,6 +25,9 @@ import shopStoreSlice from "./shop/store-slice";
 import shopWishlistSlice from "./shop/wishlist-slice";
 import shopSellerSlice from "./shop/seller-slice";
 import shopSuperDealsSlice from "./shop/super-deals-slice";
+import shopReturnSlice from "./shop/return-slice";
+import vendorReturnSlice from "./vendor/return-slice";
+import adminReturnSlice from "./admin/return-slice";
 import commonFeatureSlice from "./common-slice";
 import adminSellerApplicationsSlice from "./admin/seller-applications-slice";
 import adminCustomersSlice from "./admin/customers-slice";
@@ -59,6 +62,9 @@ const store = configureStore({
     shopWishlist: shopWishlistSlice,
     shopSeller: shopSellerSlice,
     shopSuperDeals: shopSuperDealsSlice,
+    shopReturn:     shopReturnSlice,
+    vendorReturn:   vendorReturnSlice,
+    adminReturn:    adminReturnSlice,
 
     adminSellerApplications: adminSellerApplicationsSlice,
     adminCustomers: adminCustomersSlice,

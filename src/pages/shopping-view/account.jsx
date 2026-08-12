@@ -1,18 +1,50 @@
-import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Menu, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Loader2 } from "lucide-react";
 import AccountSidebar from "@/components/shopping-view/account/account-sidebar";
 import { fetchWishlist } from "@/store/shop/wishlist-slice";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { getSellerStatus } from "@/store/shop/seller-slice";
+import { cn } from "@/lib/utils";
+
+// Horizontal scrollable tab bar for the account sub-sections on mobile
+// const accountTabs = [
+//   { to: "/account", label: "Overview", end: true },
+//   { to: "/account/orders", label: "Orders" },
+//   { to: "/account/wishlist", label: "Wishlist" },
+//   { to: "/account/settings", label: "Settings" },
+// ];
+
+function MobileAccountTabs() {
+  return (
+    <nav className="lg:hidden mb-5 -mx-4 px-4 overflow-x-auto scrollbar-none" aria-label="Account sections">
+      {/* <div className="flex gap-1 w-max pb-1">
+        {accountTabs.map(({ to, label, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              cn(
+                "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              )
+            }
+          >
+            {label}
+          </NavLink>
+        ))}
+      </div> */}
+    </nav>
+  );
+}
 
 function ShoppingAccount() {
   const dispatch = useDispatch();
   const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const userId = user?.id || user?._id;
 
@@ -20,7 +52,6 @@ function ShoppingAccount() {
     if (userId) {
       dispatch(fetchWishlist(userId));
       dispatch(fetchCartItems(userId));
-      // Load seller status so sidebar and overview can show the right CTA
       dispatch(getSellerStatus());
     }
   }, [dispatch, userId]);
@@ -37,7 +68,6 @@ function ShoppingAccount() {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Allow both "user" AND "vendor" — vendors keep customer access
   if (user?.role !== "user" && user?.role !== "vendor") {
     return <Navigate to="/unauth-page" replace />;
   }
@@ -55,21 +85,8 @@ function ShoppingAccount() {
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile nav toggle */}
-            <div className="lg:hidden mb-6">
-              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <Menu className="h-4 w-4" />
-                    Account Menu
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-6">
-                  <AccountSidebar onNavigate={() => setMobileOpen(false)} />
-                </SheetContent>
-              </Sheet>
-            </div>
-
+            {/* Mobile horizontal tab navigation */}
+            <MobileAccountTabs />
             <Outlet />
           </div>
         </div>

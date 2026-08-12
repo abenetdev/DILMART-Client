@@ -307,7 +307,7 @@ function ShoppingListing() {
         {/* ── End of list ── */}
         {!isLoading && !isLoadingMore && !hasMore && productList.length > 0 && (
           <div className="flex justify-center py-8">
-            <p className="text-sm text-muted-foreground">You've reached the end</p>
+            <p className="text-sm text-muted-foreground"></p>
           </div>
         )}
 

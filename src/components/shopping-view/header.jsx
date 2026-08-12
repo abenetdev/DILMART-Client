@@ -1,5 +1,5 @@
 import {
-  HousePlug, LogOut, Menu, ShoppingCart,
+  HousePlug, LogOut, ShoppingCart,
   UserCog, LogIn, UserPlus, Package,
   Store, Search, X, Heart,
 } from "lucide-react";
@@ -9,7 +9,6 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { shoppingViewHeaderMenuItems } from "@/config";
@@ -297,7 +296,6 @@ function ShoppingHeader() {
   const { user, isAuthenticated } = useSelector((s) => s.auth);
   const navigate   = useNavigate();
   const dispatch   = useDispatch();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Fetch cart and wishlist on mount / auth change
   useEffect(() => {
@@ -308,54 +306,35 @@ function ShoppingHeader() {
     }
   }, [dispatch, isAuthenticated, user?.id]);
 
-  function closeMobile() {
-    setMobileOpen(false);
-  }
-
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background shadow-sm">
 
-      {/* ── Main row ── */}
-      <div className="flex h-14 lg:h-16 items-center gap-2 px-3 md:px-6">
-
+      {/* ── Mobile header: logo + search only ── */}
+      <div className="flex lg:hidden h-14 items-center gap-2 px-3">
         {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center gap-1.5">
-          <HousePlug className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
-          <span className="hidden sm:inline font-bold text-base lg:text-lg">MarketPlace</span>
+        <Link to="/" className="flex shrink-0 items-center gap-1.5 mr-1">
+          <HousePlug className="h-5 w-5 text-primary" />
+          <span className="font-bold text-base text-primary">DilMart</span>
         </Link>
 
-        {/* Search — fills remaining space */}
-        <div className="flex flex-1 min-w-0 justify-center px-1">
+        {/* Search bar fills remaining width */}
+        <div className="flex flex-1 min-w-0">
+          <HeaderSearchBar />
+        </div>
+      </div>
+
+      {/* ── Desktop header: logo + search + actions ── */}
+      <div className="hidden lg:flex h-16 items-center gap-2 px-6">
+        <Link to="/" className="flex shrink-0 items-center gap-1.5">
+          <HousePlug className="h-6 w-6 text-primary" />
+          <span className="font-bold text-lg">DilMart</span>
+        </Link>
+
+        <div className="flex flex-1 min-w-0 justify-center px-4">
           <HeaderSearchBar />
         </div>
 
-        {/* ── Mobile-only: wishlist + cart + hamburger ── */}
-        <div className="flex items-center gap-2 lg:hidden">
-          <WishlistButton onClick={() => navigate("/account/wishlist")} />
-          <CartButton onClick={() => navigate("/cart")} />
-
-          {/* Hamburger — account & nav only */}
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72">
-              <div className="mt-6">
-                <MenuItems onNavigate={closeMobile} />
-              </div>
-              <div className="mt-6 border-t pt-6">
-                {/* No cart here on mobile — it's in the header */}
-                <AccountControls onAction={closeMobile} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* ── Desktop-only: wishlist + cart + account ── */}
-        <div className="hidden lg:flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <WishlistButton onClick={() => navigate("/account/wishlist")} />
           <CartButton onClick={() => navigate("/cart")} />
           <AccountControls />
@@ -363,7 +342,7 @@ function ShoppingHeader() {
       </div>
 
       {/* ── Desktop category nav row ── */}
-      <div className="hidden lg:flex h-10 items-center border-t px-4 md:px-6 bg-muted/30">
+      <div className="hidden lg:flex h-10 items-center border-t px-6 bg-muted/30">
         <MenuItems />
       </div>
     </header>

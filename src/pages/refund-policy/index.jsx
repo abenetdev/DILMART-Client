@@ -240,8 +240,43 @@ const sections = [
     ),
   },
   {
-    id: "disputes",
+    id: "change-of-mind",
     number: "9",
+    title: "Change-of-Mind Return by Customer",
+    content: (
+      <div className="space-y-3">
+        <p>
+          If the Seller delivers the exact product ordered and the Customer later changes their
+          mind, selects the wrong product, or returns it for a preference-based reason, the
+          Customer may be charged a <strong className="text-slate-800">20% return deduction</strong> from
+          the refunded product amount.
+        </p>
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+          <p className="text-sm text-amber-800 font-medium">
+            The 20% deduction belongs to the Seller and covers return handling, inspection,
+            repackaging, and related costs. It is <em>not</em> a DilMart commission or fee.
+          </p>
+        </div>
+        <p>This deduction <strong className="text-slate-800">does not apply</strong> to returns caused by:</p>
+        <BulletList items={[
+          "Product defects or damage",
+          "Wrong product delivered",
+          "Inaccurate product descriptions or images",
+          "Other circumstances for which the Seller is responsible",
+        ]} />
+        <p>
+          Where an available replacement of the same value is accepted by the Customer, the 20%
+          deduction does not apply.
+        </p>
+        <p className="text-sm text-slate-500 italic">
+          This provision is subject to any mandatory rights provided under applicable Ethiopian law.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "disputes",
+    number: "10",
     title: "Disputes and Fair Use",
     content: (
       <div>
@@ -271,7 +306,7 @@ const sections = [
   },
   {
     id: "help",
-    number: "10",
+    number: "11",
     title: "Need Help?",
     content: (
       <p>
@@ -284,7 +319,7 @@ const sections = [
   },
   {
     id: "changes",
-    number: "11",
+    number: "12",
     title: "Changes to This Policy",
     content: (
       <div className="space-y-3">

@@ -3,34 +3,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Eye,
-  Search,
-  ShoppingBag,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  Truck,
-} from "lucide-react";
+import { Eye, Search, ShoppingBag, TrendingUp, Clock, CheckCircle, Truck, RotateCcw } from "lucide-react";
 import { getAllOrdersForVendor } from "@/store/vendor/order-slice";
 import { currencyFormatter } from "@/utils";
+import VendorReturnRequestsTab from "@/components/vendor-view/return-requests-tab";
 
 // ── Status config ──────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -66,6 +50,7 @@ function NextActionHint({ status, paymentStatus }) {
 function VendorOrders() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm,   setSearchTerm]   = useState("");
+  const [activeTab,    setActiveTab]    = useState("orders");
 
   const { orderList, isListLoading } = useSelector((s) => s.vendorOrder);
   const { isAuthenticated, user }    = useSelector((s) => s.auth);
@@ -111,6 +96,29 @@ function VendorOrders() {
         <p className="text-muted-foreground">Manage and track your customer orders</p>
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-0 border-b mb-6">
+        {[
+          { id: "orders",  label: "Orders" },
+          { id: "returns", label: "Returns & Refunds", icon: <RotateCcw className="h-3.5 w-3.5" /> },
+        ].map(({ id, label, icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-1.5 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === id
+                ? "border-gray-900 text-gray-900"
+                : "border-transparent text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            {icon}{label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "returns" && <VendorReturnRequestsTab />}
+
+      {activeTab === "orders" && (<>
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4 mb-6">
         <StatCard label="Total Orders"  value={stats.total}      icon={<ShoppingBag className="h-4 w-4 text-muted-foreground" />} />
@@ -212,6 +220,7 @@ function VendorOrders() {
           </TableBody>
         </Table>
       </div>
+    </>)}
     </Fragment>
   );
 }

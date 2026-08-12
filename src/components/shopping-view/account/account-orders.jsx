@@ -10,6 +10,7 @@ import {
   getOrderDetails,
   resetOrderDetails,
 } from "@/store/shop/order-slice";
+import { fetchMyReturnRequests } from "@/store/shop/return-slice";
 import ShoppingOrderDetailsView from "../order-details";
 import Pagination from "@/components/common/pagination";
 import { currencyFormatter } from "@/utils";
@@ -40,7 +41,10 @@ function AccountOrders() {
   const userId = user?.id || user?._id;
 
   useEffect(() => {
-    if (userId) dispatch(getAllOrdersByUserId(userId));
+    if (userId) {
+      dispatch(getAllOrdersByUserId(userId));
+      dispatch(fetchMyReturnRequests());
+    }
   }, [dispatch, userId]);
 
   useEffect(() => {

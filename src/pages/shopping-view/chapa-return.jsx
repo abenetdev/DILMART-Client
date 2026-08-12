@@ -23,17 +23,19 @@ function ChapaReturnPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const params  = new URLSearchParams(location.search);
-    const txRef        = params.get("trx_ref")  || sessionStorage.getItem("currentTxRef") || "";
-    const orderId      = JSON.parse(sessionStorage.getItem("currentOrderId") || "null");
+    const params       = new URLSearchParams(location.search);
+    // Chapa appends ?trx_ref= to the return_url — that's our primary source
+    const txRef        = params.get("trx_ref") || params.get("tx_ref") || sessionStorage.getItem("currentTxRef") || "";
+    const orderId      = JSON.parse(sessionStorage.getItem("currentOrderId")      || "null");
     const orderGroupId = JSON.parse(sessionStorage.getItem("currentOrderGroupId") || "null");
 
-    if (!txRef || (!orderId && !orderGroupId)) {
+    if (!txRef) {
       setStatus("failed");
       setMessage("Missing transaction reference. Please contact support.");
       return;
     }
 
+    // txRef is enough — the server resolves the order from it
     dispatch(verifyPayment({ txRef, orderId, orderGroupId })).then((result) => {
       if (result?.payload?.success) {
         sessionStorage.removeItem("currentOrderId");
