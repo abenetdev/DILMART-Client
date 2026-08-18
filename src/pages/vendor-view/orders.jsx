@@ -76,6 +76,8 @@ function VendorOrders() {
     const q = searchTerm.toLowerCase();
     return (
       order._id?.toLowerCase().includes(q) ||
+      (order.vendorOrderId || "").toLowerCase().includes(q) ||
+      (order.parentOrderId || "").toLowerCase().includes(q) ||
       order.customerName?.toLowerCase().includes(q) ||
       order.addressInfo?.city?.toLowerCase().includes(q)
     );
@@ -180,7 +182,7 @@ function VendorOrders() {
               filtered.map((order) => (
                 <TableRow key={order._id} className="hover:bg-muted/40">
                   <TableCell className="font-mono text-sm">
-                    ORD-{order._id?.slice(-8).toUpperCase()}
+                    {order.vendorOrderId || `ORD-${order._id?.slice(-8).toUpperCase()}`}
                   </TableCell>
                   <TableCell>
                     <div>

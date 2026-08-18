@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { brandOptionsMap, categoryOptionsMap } from "@/config";
+import { brandOptionsMap, categoryOptionsMap, buildCategoryOptionsMap } from "@/config";
 import { ShoppingCart, Loader2, Heart } from "lucide-react";
 import { addToWishlist, removeFromWishlist } from "@/store/shop/wishlist-slice";
 import { useToast } from "../ui/use-toast";
@@ -24,14 +24,17 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
     (i) => i.productId?.toString() === product?._id?.toString()
   );
 
+  const { all: dbCategories } = useSelector((s) => s.shopCategory);
+  const liveCategoryMap = buildCategoryOptionsMap(dbCategories);
+
   const title      = product?.name        || product?.title      || "Unknown Product";
   const image      = product?.images?.[0] || product?.image      || "";
   const totalStock = product?.stock       ?? product?.totalStock ?? 0;
   const price      = product?.price       ?? 0;
   const salePrice  = product?.salePrice   ?? 0;
 
-  const categoryLabel = categoryOptionsMap[product?.category] || product?.category || "";
-  const brandLabel    = brandOptionsMap[product?.brand]       || product?.brand    || "";
+  const categoryLabel = liveCategoryMap[product?.category] || product?.category || "";
+  const brandLabel    = brandOptionsMap[product?.brand]    || product?.brand    || "";
 
   async function onAddToCart(e) {
     e.stopPropagation();
@@ -167,7 +170,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
           </Button>
         ) : (
           <Button
-            className="w-full h-7 sm:h-9 text-[10px] sm:text-xs gap-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-400 shadow-none px-1 sm:px-3"
+            className="w-full h-7 sm:h-9 text-[10px] sm:text-xs gap-1 px-1 sm:px-3"
             onClick={onAddToCart}
             disabled={adding}
           >
@@ -176,7 +179,6 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
             ) : (
               <>
                 <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                {/* Full label on sm+, icon-only on tiny screens */}
                 <span className="hidden xs:inline sm:inline truncate">Add to Cart</span>
               </>
             )}

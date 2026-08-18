@@ -66,7 +66,7 @@ export default function AdminVendors() {
   const [newPassword,       setNewPassword]       = useState("");
   const [registerOpen,      setRegisterOpen]      = useState(false);
   const [registerForm,      setRegisterForm]      = useState({
-    userName: "", email: "", password: "",
+    userName: "", email: "", password: "", phone: "",
     storeName: "", businessCategory: "other", city: "", description: "",
   });
 
@@ -144,7 +144,7 @@ export default function AdminVendors() {
     if (result?.payload?.success) {
       toast({ title: result.payload.message });
       setRegisterOpen(false);
-      setRegisterForm({ userName: "", email: "", password: "", storeName: "", businessCategory: "other", city: "", description: "" });
+      setRegisterForm({ userName: "", email: "", password: "", phone: "", storeName: "", businessCategory: "other", city: "", description: "" });
       refresh();
     } else {
       toast({ title: result?.payload?.message || "Registration failed", variant: "destructive" });
@@ -339,6 +339,9 @@ export default function AdminVendors() {
                 <div>
                   <p className="font-semibold">{vendorDetails.userName}</p>
                   <p className="text-sm text-muted-foreground">{vendorDetails.email}</p>
+                  {vendorDetails.phone && (
+                    <p className="text-sm text-muted-foreground">{vendorDetails.phone}</p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">Joined {formatDate(vendorDetails.joinedAt)}</p>
                 </div>
                 <AccountStatusBadge status={vendorDetails.accountStatus} />
@@ -540,7 +543,7 @@ export default function AdminVendors() {
       <Dialog open={registerOpen} onOpenChange={(v) => {
         if (!v) {
           setRegisterOpen(false);
-          setRegisterForm({ userName: "", email: "", password: "", storeName: "", businessCategory: "other", city: "", description: "" });
+          setRegisterForm({ userName: "", email: "", password: "", phone: "", storeName: "", businessCategory: "other", city: "", description: "" });
         }
       }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -578,6 +581,17 @@ export default function AdminVendors() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-phone">Phone Number</Label>
+                <Input
+                  id="reg-phone"
+                  type="tel"
+                  placeholder="+251 9XX XXX XXXX"
+                  value={registerForm.phone}
+                  onChange={(e) => setRF("phone", e.target.value)}
+                />
               </div>
 
               <div className="space-y-1.5">

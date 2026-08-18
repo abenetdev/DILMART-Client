@@ -48,6 +48,7 @@ import ProductImageUpload from "@/components/vendor-view/image-upload";
 import MediaUpload from "@/components/vendor-view/media-upload";
 import CommonForm from "@/components/common/form";
 import { addProductFormElements } from "@/config";
+import { useProductFormElements } from "@/hooks/useProductFormElements";
 import {
   addNewProduct,
   deleteProduct,
@@ -67,6 +68,12 @@ const initialFormData = {
   salePrice: "",
   stock: "",
   status: "active",
+  condition: "new",
+  hasWarranty: false,
+  warrantyPeriod: "",
+  warrantyDetails: "",
+  hasSize: false,
+  sizes: [],
   images: [],
   video: "",
 };
@@ -116,6 +123,9 @@ function VendorProducts() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
 
+  // Dynamic categories from DB (falls back to static config)
+  const { formElements: dynamicFormElements } = useProductFormElements();
+
   const { productList, isListLoading, isSubmitting } = useSelector((state) => state.vendorProducts);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -134,17 +144,38 @@ function VendorProducts() {
   };
 
   const handleEditProduct = (product) => {
+    const standardPeriods = ["1 Month", "3 Months", "6 Months", "1 Year", "2 Years", "3 Years"];
+    const savedPeriod = product.warrantyPeriod || "";
+    const isCustomPeriod = savedPeriod && !standardPeriods.includes(savedPeriod);
+
+    // Separate known sizes from any custom ones added via the "Other" input
+    const knownSizes = [
+      "XS","S","M","L","XL","XXL","XXXL",
+      "28","30","32","34","36","38","40","42","44","46","48",
+    ];
+    const savedSizes   = product.sizes || [];
+    const standardSizes = savedSizes.filter((s) => knownSizes.includes(s));
+    const customSize    = savedSizes.find((s) => !knownSizes.includes(s)) || "";
+
     setFormData({
-      name:        product.name || product.title || "",
-      description: product.description || "",
-      category:    product.category || "",
-      brand:       product.brand || "",
-      price:       product.price || "",
-      salePrice:   product.salePrice || "",
-      stock:       product.stock || "",
-      status:      product.status || "active",
-      images:      product.images || (product.image ? [product.image] : []),
-      video:       product.video  || "",
+      name:               product.name || product.title || "",
+      description:        product.description || "",
+      category:           product.category || "",
+      brand:              product.brand || "",
+      price:              product.price || "",
+      salePrice:          product.salePrice || "",
+      stock:              product.stock || "",
+      status:             product.status || "active",
+      condition:          product.condition || "new",
+      hasWarranty:        product.hasWarranty ?? false,
+      warrantyPeriod:     isCustomPeriod ? "other" : savedPeriod,
+      warrantyPeriodCustom: isCustomPeriod ? savedPeriod : "",
+      warrantyDetails:    product.warrantyDetails || "",
+      hasSize:            product.hasSize ?? false,
+      sizes:              standardSizes,
+      sizeCustom:         customSize,
+      images:             product.images || (product.image ? [product.image] : []),
+      video:              product.video  || "",
     });
     setCurrentEditedId(product._id);
     setOpenDialog(true);
@@ -168,7 +199,28 @@ function VendorProducts() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const productData = { ...formData };
+    // Resolve the actual warranty period — use custom text if "other" was chosen
+    const resolvedWarrantyPeriod =
+      formData.warrantyPeriod === "other"
+        ? (formData.warrantyPeriodCustom || "").trim()
+        : formData.warrantyPeriod;
+
+    // Merge standard sizes + custom size (if provided) into a single array
+    const resolvedSizes = formData.hasSize
+      ? [
+          ...formData.sizes,
+          ...(formData.sizeCustom?.trim() ? [formData.sizeCustom.trim()] : []),
+        ]
+      : [];
+
+    const productData = {
+      ...formData,
+      warrantyPeriod: resolvedWarrantyPeriod,
+      sizes: resolvedSizes,
+    };
+    // Remove UI-only helper fields before sending to the API
+    delete productData.warrantyPeriodCustom;
+    delete productData.sizeCustom;
 
     if (currentEditedId) {
       dispatch(editProduct({ id: currentEditedId, formData: productData })).then((data) => {
@@ -502,10 +554,209 @@ function VendorProducts() {
             formData={formData}
             setFormData={setFormData}
             buttonText={currentEditedId ? "Update Product" : "Add Product"}
-            formControls={addProductFormElements}
+            formControls={dynamicFormElements}
             isBtnDisabled={!isFormValid()}
             onSubmit={handleSubmit}
           />
+
+          {/* ── Warranty Section ── */}
+          <div className="border rounded-xl p-4 space-y-4 -mt-2">
+            <p className="text-sm font-semibold text-foreground">Warranty</p>
+
+            {/* Has Warranty toggle */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">Warranty</Label>
+              <Select
+                value={formData.hasWarranty ? "yes" : "no"}
+                onValueChange={(v) =>
+                  setFormData((p) => ({
+                    ...p,
+                    hasWarranty:     v === "yes",
+                    warrantyPeriod:  v === "no" ? "" : p.warrantyPeriod,
+                    warrantyDetails: v === "no" ? "" : p.warrantyDetails,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No Warranty</SelectItem>
+                  <SelectItem value="yes">Has Warranty</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Warranty Period + Details — only shown when hasWarranty */}
+            {formData.hasWarranty && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Warranty Period</Label>
+                  <Select
+                    value={formData.warrantyPeriod}
+                    onValueChange={(v) =>
+                      setFormData((p) => ({
+                        ...p,
+                        warrantyPeriod: v,
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1 Month">1 Month</SelectItem>
+                      <SelectItem value="3 Months">3 Months</SelectItem>
+                      <SelectItem value="6 Months">6 Months</SelectItem>
+                      <SelectItem value="1 Year">1 Year</SelectItem>
+                      <SelectItem value="2 Years">2 Years</SelectItem>
+                      <SelectItem value="3 Years">3 Years</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Custom period input when "Other" selected */}
+                {formData.warrantyPeriod === "other" && (
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Custom Warranty Period</Label>
+                    <Input
+                      placeholder="e.g. 18 Months, Lifetime"
+                      value={formData.warrantyPeriodCustom || ""}
+                      onChange={(e) =>
+                        setFormData((p) => ({ ...p, warrantyPeriodCustom: e.target.value }))
+                      }
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm">
+                    Warranty Details{" "}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    placeholder="e.g. Official manufacturer warranty, covers manufacturing defects only"
+                    value={formData.warrantyDetails}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, warrantyDetails: e.target.value }))
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── Size Section ── */}
+          <div className="border rounded-xl p-4 space-y-4 -mt-2">
+            <p className="text-sm font-semibold text-foreground">Size</p>
+
+            {/* Has Size toggle */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">Size</Label>
+              <Select
+                value={formData.hasSize ? "yes" : "no"}
+                onValueChange={(v) =>
+                  setFormData((p) => ({
+                    ...p,
+                    hasSize:    v === "yes",
+                    sizes:      v === "no" ? [] : p.sizes,
+                    sizeCustom: v === "no" ? "" : p.sizeCustom,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No Size</SelectItem>
+                  <SelectItem value="yes">Has Sizes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Size picker — only when hasSize */}
+            {formData.hasSize && (
+              <>
+                {/* Clothing sizes */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Clothing Sizes</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["XS","S","M","L","XL","XXL","XXXL"].map((sz) => {
+                      const selected = formData.sizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() =>
+                            setFormData((p) => ({
+                              ...p,
+                              sizes: selected
+                                ? p.sizes.filter((s) => s !== sz)
+                                : [...p.sizes, sz],
+                            }))
+                          }
+                          className={`px-3 py-1 rounded-md text-sm font-medium border transition-colors ${
+                            selected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:border-primary"
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Numeric sizes */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Numeric Sizes</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["28","30","32","34","36","38","40","42","44","46","48"].map((sz) => {
+                      const selected = formData.sizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() =>
+                            setFormData((p) => ({
+                              ...p,
+                              sizes: selected
+                                ? p.sizes.filter((s) => s !== sz)
+                                : [...p.sizes, sz],
+                            }))
+                          }
+                          className={`px-3 py-1 rounded-md text-sm font-medium border transition-colors ${
+                            selected
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:border-primary"
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom / Other size */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">
+                    Other / Custom Size{" "}
+                    <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    placeholder="e.g. Free Size, One Size, EU 42, US 10"
+                    value={formData.sizeCustom || ""}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, sizeCustom: e.target.value }))
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

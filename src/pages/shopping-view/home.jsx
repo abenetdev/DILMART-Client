@@ -2,18 +2,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ShoppingBasket,
-  Search,
   ArrowRight,
   Store,
-  Mail,
   Zap,
   Clock,
   Flame,
@@ -26,6 +20,8 @@ import { useCart } from "@/hooks/useCart";
 import { CATEGORIES } from "@/config";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import OfflineBlock from "@/components/common/offline-block";
+import { fetchFeaturedCategories } from "@/store/shop/category-slice";
+import BannerCarousel from "@/components/shopping-view/home-banner/BannerCarousel";
 
 // -- Data --------------------------------------------------------------------
 
@@ -255,14 +251,92 @@ function StoreCard({ store, onVisit }) {
   );
 }
 
+// -- Become a Seller Banner ---------------------------------------------------
+
+function BecomeSellerBanner({ onAction }) {
+  return (
+    <section className=" bg-white">
+      <div className="container mx-auto px-4">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/5 via-white to-primary/10 border border-primary/10">
+
+          {/* Decorative circles */}
+          <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-primary/5 pointer-events-none" />
+          <div className="absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-primary/5 pointer-events-none" />
+          <div className="absolute top-1/2 right-1/4 h-20 w-20 -translate-y-1/2 rounded-full bg-orange-400/10 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12 px-8 py-12 md:px-14 md:py-14">
+
+            {/* Left — illustration */}
+            {/* <div className="shrink-0 hidden md:block  flex items-center justify-center">
+              <div className="relative h-40 w-40 md:h-48 md:w-48">
+                <div className="absolute inset-0 rounded-full bg-primary/8 border border-primary/10" />
+                <div className="absolute inset-5 rounded-full bg-primary/10 border border-primary/15 flex items-center justify-center">
+                  <svg
+                    viewBox="0 0 80 80"
+                    className="h-20 w-20 text-primary"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <rect x="12" y="34" width="56" height="34" rx="3" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <path d="M8 22h64l-6 12H14L8 22z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <rect x="32" y="46" width="16" height="22" rx="2" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                    <rect x="15" y="46" width="12" height="10" rx="2" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="53" y="46" width="12" height="10" rx="2" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="24" y="14" width="32" height="10" rx="2" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+                    <circle cx="62" cy="22" r="9" fill="white" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M62 16l1.5 4.5H68l-3.75 2.75 1.4 4.25L62 24.75l-3.65 2.75 1.4-4.25L56 20.5h4.5L62 16z" fill="currentColor" fillOpacity="0.7"/>
+                  </svg>
+                </div>
+
+                <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-md border border-gray-100 px-3 py-1.5 flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="text-[10px] font-semibold text-gray-700 whitespace-nowrap">Sellers join daily</span>
+                </div>
+
+                <div className="absolute -bottom-2 -left-4 bg-white rounded-xl shadow-md border border-gray-100 px-3 py-1.5">
+                  <p className="text-[10px] text-gray-400 leading-none">Avg. monthly</p>
+                  <p className="text-sm font-bold text-primary leading-snug">ETB 12,000+</p>
+                </div>
+              </div>
+            </div> */}
+
+            {/* Right — copy */}
+            <div className="flex-1 text-center md:text-left">
+              <span className="inline-block text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full mb-4 tracking-wide uppercase">
+                Become a Seller
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight mb-4">
+                Start Selling on DilMart
+              </h2>
+              <p className="text-gray-500 text-sm sm:text-base leading-relaxed max-w-md mx-auto md:mx-0 mb-8">
+                Join thousands of vendors already growing their businesses on DilMart.
+                Reach more customers, manage your store with ease, and start earning today.
+              </p>
+
+              {/* Stats row */}
+             
+
+              <button
+                onClick={onAction}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold px-7 py-3 rounded-xl shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0"
+              >
+                Get Started for Free
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // -- Main Component ------------------------------------------------------------
 
 export default function ShoppingHome() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { handleAddToCart } = useCart();
@@ -278,11 +352,15 @@ export default function ShoppingHome() {
     superDeals,
     isLoading: homeLoading,
   } = useSelector((s) => s.shopHome);
+  const { featured: featuredCategories, isLoading: catsLoading } = useSelector(
+    (s) => s.shopCategory,
+  );
 
   // -- Fetch all data ---------------------------------------------------------
   useEffect(() => {
     dispatch(getFeatureImages());
     dispatch(getHomeData());
+    dispatch(fetchFeaturedCategories());
     dispatch(
       fetchAllFilteredProducts({
         filterParams: {},
@@ -291,50 +369,17 @@ export default function ShoppingHome() {
     );
   }, [dispatch]);
 
-  // -- Banner auto-advance ---------------------------------------------------
-  useEffect(() => {
-    if (!featureImageList?.length) return;
-    const t = setInterval(
-      () => setCurrentSlide((p) => (p + 1) % featureImageList.length),
-      5000,
-    );
-    return () => clearInterval(t);
-  }, [featureImageList]);
-
   // -- Handlers --------------------------------------------------------------
-  function goToCategory(catId) {
-    sessionStorage.setItem("filters", JSON.stringify({ category: [catId] }));
+  function goToCategory(slug) {
+    sessionStorage.setItem("filters", JSON.stringify({ category: [slug] }));
     navigate("/listing");
-  }
-
-  function handleSearch(e) {
-    e.preventDefault();
-    if (!searchInput.trim()) return;
-    navigate(`/search?keyword=${encodeURIComponent(searchInput.trim())}`);
   }
 
   async function handleAddtoCart(productId, totalStock) {
     await handleAddToCart(productId, totalStock);
   }
 
-  function handleSubscribe(e) {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-    }
-  }
-
   const { isOnline } = useNetworkStatus();
-
-  const slidePrev = () =>
-    setCurrentSlide(
-      (p) =>
-        (p - 1 + (featureImageList?.length || 1)) %
-        (featureImageList?.length || 1),
-    );
-  const slideNext = () =>
-    setCurrentSlide((p) => (p + 1) % (featureImageList?.length || 1));
 
   const retryFetch = () => {
     dispatch(getFeatureImages());
@@ -350,135 +395,117 @@ export default function ShoppingHome() {
   // -- Render ----------------------------------------------------------------
   return (
     <main className="flex flex-col min-h-screen">
-      {/* ???????????????????????????????????????
-          1. HERO SECTION
-      ??????????????????????????????????????? */}
-      <section className="relative w-full min-h-[500px] md:h-[600px] overflow-hidden bg-slate-900">
-        {/* Slides */}
-        {featureImageList?.length > 0 ? (
-          featureImageList.map((slide, i) => (
-            <img
-              key={i}
-              src={slide?.image}
-              alt={`Banner ${i + 1}`}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                i === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
-            />
-          ))
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
-        )}
+      {/* ═══════════════════════════════════════
+          1. HERO BANNER CAROUSEL
+      ═══════════════════════════════════════ */}
+      <BannerCarousel banners={featureImageList || []} />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/50" />
-
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center text-white">
-          <Badge className="mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm">
-            ??? Multi-Vendor Marketplace
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight max-w-3xl">
-            Discover Amazing <span className="text-blue-400">Products</span>{" "}
-            from Top Stores
-          </h1>
-          <p className="mt-4 text-lg max-w-xl text-green-500">
-            Shop from thousands of verified vendors. Best prices, fast delivery.
-          </p>
-
-          <form
-            onSubmit={handleSearch}
-            className="mt-8 flex w-full max-w-lg gap-2"
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search products, stores..."
-                className="pl-10 h-12 bg-white text-black border-0 rounded-xl"
-              />
-            </div>
-            <Button type="submit" size="lg" className="h-12 px-6 rounded-xl">
-              Search
-            </Button>
-          </form>
-
-          <div className="mt-6 flex gap-3">
-            <Button
-              size="lg"
-              onClick={() => navigate("/listing")}
-              className="rounded-xl"
-            >
-              Shop Now
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-xl border-white/50 text-white hover:bg-white/10"
-              onClick={() => navigate("/listing")}
-            >
-              Browse Stores
-            </Button>
-          </div>
-        </div>
-
-        {/* Arrows */}
-        {featureImageList?.length > 1 && (
-          <>
-            <button
-              onClick={slidePrev}
-              className="absolute top-1/2 left-4 -translate-y-1/2 z-20 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition"
-            >
-              <ChevronLeftIcon className="h-5 w-5" />
-            </button>
-            <button
-              onClick={slideNext}
-              className="absolute top-1/2 right-4 -translate-y-1/2 z-20 p-2 rounded-full bg-white/20 hover:bg-white/40 text-white transition"
-            >
-              <ChevronRightIcon className="h-5 w-5" />
-            </button>
-
-            {/* Dots */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-              {featureImageList.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentSlide(i)}
-                  className={`h-2 rounded-full transition-all ${
-                    i === currentSlide ? "w-8 bg-white" : "w-2 bg-white/40"
-                  }`}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* ???????????????????????????????????????
+      {/* ═══════════════════════════════════════
           2. CATEGORIES
       ??????????????????????????????????????? */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gray-50 overflow-hidden">
         <div className="container mx-auto px-4">
           <SectionTitle
             title="Shop by Category"
             subtitle="Find exactly what you're looking for"
           />
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => goToCategory(cat.id)}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border hover:shadow-md hover:-translate-y-1 transition-all duration-200 group"
-              >
-                <div className={`p-3 rounded-xl ${cat.color}`}>
-                  <cat.icon className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-semibold text-center leading-tight">
-                  {cat.label}
-                </span>
-              </button>
-            ))}
-          </div>
+
+          {catsLoading ? (
+            /* ── Skeleton ── */
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3">
+              {[...Array(9)].map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-[3/4] rounded-2xl bg-gray-200 animate-pulse overflow-hidden"
+                />
+              ))}
+            </div>
+
+          ) : featuredCategories.length > 0 ? (
+            <>
+              {/* ── Desktop grid ── */}
+              <div className="hidden sm:grid grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3">
+                {featuredCategories.map((cat) => (
+                  <button
+                    key={cat._id}
+                    onClick={() => goToCategory(cat.slug)}
+                    aria-label={cat.name}
+                    className="group flex flex-col items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl p-2 hover:bg-gray-100 transition-colors"
+                  >
+                    {/* Square image — no shadow, no overlay */}
+                    <div className="w-full aspect-square rounded-2xl overflow-hidden">
+                      {cat.image ? (
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div
+                          className="h-full w-full"
+                          style={{ backgroundColor: cat.color || "#e5e7eb" }}
+                        />
+                      )}
+                    </div>
+                    {/* Name below image */}
+                    <span className="text-[11px] font-semibold text-gray-800 text-center leading-tight line-clamp-2 w-full">
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* ── Mobile: 3-column wrapping grid, no scrollbar ── */}
+              <div className="sm:hidden grid grid-cols-3 gap-2.5">
+                {featuredCategories.map((cat) => (
+                  <button
+                    key={cat._id}
+                    onClick={() => goToCategory(cat.slug)}
+                    aria-label={cat.name}
+                    className="group flex flex-col items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1.5 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="w-full aspect-square rounded-xl overflow-hidden">
+                      {cat.image ? (
+                        <img
+                          src={cat.image}
+                          alt={cat.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div
+                          className="h-full w-full"
+                          style={{ backgroundColor: cat.color || "#e5e7eb" }}
+                        />
+                      )}
+                    </div>
+                    {/* Name below image */}
+                    <span className="text-[10px] font-semibold text-gray-800 text-center leading-tight line-clamp-2 w-full">
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+
+          ) : (
+            /* ── Fallback: static config icons while DB is empty ── */
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 gap-3">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => goToCategory(cat.id)}
+                  className="group flex flex-col items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl p-2 hover:bg-gray-100 transition-colors"
+                >
+                  <div className={`w-full aspect-square rounded-2xl overflow-hidden ${cat.color} flex items-center justify-center`}>
+                    <cat.icon className="h-8 w-8" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-gray-800 text-center leading-tight line-clamp-2 w-full">
+                    {cat.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -578,8 +605,8 @@ export default function ShoppingHome() {
         </div>
       </section>
 
-      
-
+      {/* ── Become a Seller Banner ───────────────────────────────────────── */}
+      <BecomeSellerBanner onAction={() => navigate("/become-seller")} />
 
       {/* ???????????????????????????????????????
           4. NEW ARRIVALS

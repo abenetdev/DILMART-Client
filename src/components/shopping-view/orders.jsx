@@ -60,10 +60,13 @@ function ShoppingOrders() {
           </TableHeader>
           <TableBody>
             {orderList && orderList.length > 0
-              ? orderList.map((orderItem) => (
-                  <TableRow key={orderItem._id}>
-                    <TableCell>{orderItem?._id}</TableCell>
-                    <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
+              ? orderList.map((orderItem) => {
+                  // orderItem._id is now the orderGroupId from the grouped API response
+                  const groupId = orderItem.orderGroupId || orderItem._id;
+                  return (
+                  <TableRow key={groupId}>
+                    <TableCell className="font-mono text-xs">ORD-{groupId?.slice(-8).toUpperCase()}</TableCell>
+                    <TableCell>{orderItem?.orderDate?.split("T")[0]}</TableCell>
                     <TableCell>
                       <Badge
                         className={`py-1 px-3 capitalize ${
@@ -78,13 +81,15 @@ function ShoppingOrders() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {orderItem?.paymentStatus === "paid" &&
-                      orderItem?.orderStatus === "delivered" &&
-                      !orderItem?.deliveryConfirmedByCustomer ? (
+                      {orderItem?.subOrders?.some(
+                        (s) => orderItem.paymentStatus === "paid" &&
+                               s.orderStatus === "shipped" &&
+                               !s.deliveryConfirmedByCustomer
+                      ) ? (
                         <Badge className="bg-orange-100 text-orange-800">
                           Confirm delivery
                         </Badge>
-                      ) : orderItem?.deliveryConfirmedByCustomer ? (
+                      ) : orderItem?.subOrders?.every((s) => s.deliveryConfirmedByCustomer) ? (
                         <Badge className="bg-green-100 text-green-800">Confirmed</Badge>
                       ) : (
                         <span className="text-muted-foreground text-sm">—</span>
@@ -100,9 +105,7 @@ function ShoppingOrders() {
                         }}
                       >
                         <Button
-                          onClick={() =>
-                            handleFetchOrderDetails(orderItem?._id)
-                          }
+                          onClick={() => handleFetchOrderDetails(groupId)}
                         >
                           View Details
                         </Button>
@@ -110,7 +113,7 @@ function ShoppingOrders() {
                       </Dialog>
                     </TableCell>
                   </TableRow>
-                ))
+                );})
               : null}
           </TableBody>
         </Table>

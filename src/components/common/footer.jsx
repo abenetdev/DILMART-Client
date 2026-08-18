@@ -1,139 +1,204 @@
 import { CATEGORIES } from "@/config";
-import { ShoppingBasket } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Facebook,
-  Instagram,
-  Youtube,
-  Twitter,
-} from "lucide-react"
+import { Facebook, Instagram, Youtube, Twitter } from "lucide-react";
 
 export default function Footer() {
-    const navigate = useNavigate();
-    function goToCategory(catId) {
+  const navigate = useNavigate();
+
+  function goToCategory(catId) {
     sessionStorage.setItem("filters", JSON.stringify({ category: [catId] }));
     navigate("/listing");
   }
+
   return (
-    <footer className="bg-slate-900 text-white">
-        <div className="container mx-auto px-4 py-14">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <ShoppingBasket className="h-7 w-7 text-blue-400" />
-                <span className="text-xl font-bold">MarketPlace</span>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Your one-stop multivendor marketplace. Shop from thousands of
-                verified stores.
-              </p>
-              <div className="flex gap-3 mt-5">
-                {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-blue-600 transition-colors"
+    /*
+      Cream background palette:
+        bg: #FAF7F2  (warm cream)
+        border: #E8E0D4  (warm sand divider)
+        heading text: #1C2E2D  (deep charcoal teal)
+        body text: #5C6B6A  (muted teal-gray)
+        link hover: DilMart primary teal via text-primary
+        social bg: #EDE8E1  (slightly deeper cream)
+        social hover: primary teal
+    */
+    <footer style={{ backgroundColor: "#FAF7F2" }}>
+
+      {/* ── Main grid ─────────────────────────────────────────────────── */}
+      <div className="container mx-auto px-4 py-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+
+          {/* ── Brand column ─────────────────────────────────────────── */}
+          <div>
+            <div className="mb-5">
+              <Link to="/">
+                <img
+                  src={logo}
+                  alt="DilMart"
+                  className="h-10 w-auto object-contain"
+                />
+              </Link>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "#5C6B6A" }}>
+              Your one-stop multivendor marketplace. Shop from thousands of
+              verified stores.
+            </p>
+            <div className="flex gap-3 mt-5">
+              {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="p-2 rounded-lg transition-colors group"
+                  style={{ backgroundColor: "#EDE8E1" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "hsl(176 84% 31%)";
+                    e.currentTarget.querySelector("svg").style.color = "#ffffff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#EDE8E1";
+                    e.currentTarget.querySelector("svg").style.color = "#5C6B6A";
+                  }}
+                  aria-label="Social link"
+                >
+                  <Icon className="h-4 w-4 transition-colors" style={{ color: "#5C6B6A" }} />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Quick Links ───────────────────────────────────────────── */}
+          <div>
+            <h4
+              className="font-semibold text-sm uppercase tracking-widest mb-5"
+              style={{ color: "#1C2E2D" }}
+            >
+              Quick Links
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {[
+                ["Home", "/"],
+                ["All Products", "/listing"],
+                ["Search", "/search"],
+                ["My Account", "/account"],
+              ].map(([label, path]) => (
+                <li key={label}>
+                  <button
+                    onClick={() => navigate(path)}
+                    className="transition-colors hover:text-primary"
+                    style={{ color: "#5C6B6A" }}
                   >
-                    <Icon className="h-4 w-4" />
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Categories ───────────────────────────────────────────── */}
+          <div>
+            <h4
+              className="font-semibold text-sm uppercase tracking-widest mb-5"
+              style={{ color: "#1C2E2D" }}
+            >
+              Categories
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {CATEGORIES.slice(0, 6).map((cat) => (
+                <li key={cat.id}>
+                  <button
+                    onClick={() => goToCategory(cat.id)}
+                    className="transition-colors hover:text-primary"
+                    style={{ color: "#5C6B6A" }}
+                  >
+                    {cat.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Support ───────────────────────────────────────────────── */}
+          <div>
+            <h4
+              className="font-semibold text-sm uppercase tracking-widest mb-5"
+              style={{ color: "#1C2E2D" }}
+            >
+              Support
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              {["Help Center", "Contact Us", "Track Order"].map((item) => (
+                <li key={item}>
+                  <a
+                    href="#"
+                    className="transition-colors hover:text-primary"
+                    style={{ color: "#5C6B6A" }}
+                  >
+                    {item}
                   </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                {[
-                  ["Home", "/"],
-                  ["All Products", "/listing"],
-                  ["Search", "/search"],
-                  ["My Account", "/account"],
-                ].map(([label, path]) => (
-                  <li key={label}>
-                    <button
-                      onClick={() => navigate(path)}
-                      className="hover:text-white transition-colors"
-                    >
-                      {label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Categories */}
-            <div>
-              <h4 className="font-semibold mb-4">Categories</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                {CATEGORIES.slice(0, 6).map((cat) => (
-                  <li key={cat.id}>
-                    <button
-                      onClick={() => goToCategory(cat.id)}
-                      className="hover:text-white transition-colors"
-                    >
-                      {cat.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                {[
-                  "Help Center",
-                  "Contact Us",
-                  "Track Order",
-                ].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="hover:text-white transition-colors">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-                <li>
-                  <Link to="/terms" className="hover:text-white transition-colors">
-                    Terms & Conditions
-                  </Link>
                 </li>
-                <li>
-                  <Link to="/refund-policy" className="hover:text-white transition-colors">
-                    Return & Refund Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy-policy" className="hover:text-white transition-colors">
-                    Privacy Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
+              ))}
+              <li>
+                <Link
+                  to="/terms"
+                  className="transition-colors hover:text-primary"
+                  style={{ color: "#5C6B6A" }}
+                >
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/refund-policy"
+                  className="transition-colors hover:text-primary"
+                  style={{ color: "#5C6B6A" }}
+                >
+                  Return &amp; Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className="transition-colors hover:text-primary"
+                  style={{ color: "#5C6B6A" }}
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Bottom bar ────────────────────────────────────────────────── */}
+      <div
+        className="py-5"
+        style={{ borderTop: "1px solid #E8E0D4" }}
+      >
+        <div
+          className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm"
+          style={{ color: "#7E8E8D" }}
+        >
+          <span>© {new Date().getFullYear()} DilMart. All rights reserved.</span>
+          <div className="flex gap-5">
+            {[
+              ["Terms", "/terms"],
+              ["Privacy", "/privacy-policy"],
+              ["Returns", "/refund-policy"],
+            ].map(([label, path]) => (
+              <Link
+                key={label}
+                to={path}
+                className="transition-colors hover:text-primary"
+                style={{ color: "#7E8E8D" }}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-slate-800 py-5">
-          <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
-            <span>
-              © {new Date().getFullYear()} MarketPlace. All rights reserved.
-            </span>
-            <div className="flex gap-4">
-              <Link to="/terms" className="hover:text-white transition-colors">
-                Terms
-              </Link>
-              <Link to="/privacy-policy" className="hover:text-white transition-colors">
-                Privacy
-              </Link>
-              <Link to="/refund-policy" className="hover:text-white transition-colors">
-                Returns
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-  )
+    </footer>
+  );
 }

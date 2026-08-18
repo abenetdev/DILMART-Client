@@ -28,7 +28,6 @@ export default function ReturnRequestForm({ order, onSuccess }) {
 
   const [reason,      setReason]      = useState("");
   const [description, setDescription] = useState("");
-  const [resolution,  setResolution]  = useState("refund");
   const [files,       setFiles]       = useState([]);
   const [eligErr,     setEligErr]     = useState(null);
   const fileRef = useRef(null);
@@ -70,7 +69,7 @@ export default function ReturnRequestForm({ order, onSuccess }) {
     fd.append("orderId",             order._id);
     fd.append("reason",              reason);
     fd.append("description",         description.trim());
-    fd.append("requestedResolution", resolution);
+    fd.append("requestedResolution", "refund");
     files.forEach((f) => fd.append("files", f));
 
     const result = await dispatch(createReturnRequest(fd));
@@ -110,18 +109,6 @@ export default function ReturnRequestForm({ order, onSuccess }) {
               {eligErr}
             </div>
           )}
-        </div>
-
-        {/* Resolution */}
-        <div className="space-y-1.5">
-          <Label>Requested Resolution *</Label>
-          <Select value={resolution} onValueChange={setResolution}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="refund">Refund</SelectItem>
-              <SelectItem value="replacement">Replacement</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Description */}

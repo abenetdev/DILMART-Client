@@ -349,7 +349,7 @@ export default function AdminOrders() {
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search order ID or customer..."
+            placeholder="Search by DM-XXXXX, ORD-XXXXX, or customer..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -411,7 +411,18 @@ export default function AdminOrders() {
             ) : orderList.length > 0 ? (
               orderList.map((order) => (
                 <TableRow key={order._id}>
-                  <TableCell className="font-mono text-sm">{order.orderId}</TableCell>
+                  <TableCell>
+                    <div className="space-y-0.5">
+                      <p className="font-mono text-xs font-semibold">
+                        {order.vendorOrderId || order.orderId}
+                      </p>
+                      {order.parentOrderId && (
+                        <p className="font-mono text-[10px] text-muted-foreground">
+                          Parent: {order.parentOrderId}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{order.customerName}</div>
@@ -489,12 +500,52 @@ export default function AdminOrders() {
           ) : orderDetails ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm">{orderDetails.orderId}</span>
+                <div className="space-y-1">
+                  <span className="font-mono text-sm font-semibold">
+                    {orderDetails.vendorOrderId || orderDetails.orderId}
+                  </span>
+                  {orderDetails.parentOrderId && (
+                    <p className="text-xs text-muted-foreground font-mono">
+                      Parent Order: <span className="font-semibold text-foreground">{orderDetails.parentOrderId}</span>
+                    </p>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <PaymentStatusBadge status={orderDetails.paymentStatus} />
                   <OrderStatusBadge status={orderDetails.orderStatus} />
                 </div>
               </div>
+
+              {/* ── Related vendor sub-orders from same checkout ── */}
+              {orderDetails.siblingOrders?.length > 0 && (
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Other vendor orders in {orderDetails.parentOrderId || "this checkout"}
+                  </p>
+                  <div className="space-y-1.5">
+                    {orderDetails.siblingOrders.map((sib) => (
+                      <div
+                        key={sib._id}
+                        className="flex items-center justify-between text-xs rounded border bg-background px-3 py-2"
+                      >
+                        <span className="font-mono font-semibold">
+                          {sib.vendorOrderId || sib.orderId}
+                        </span>
+                        <span className="text-muted-foreground">{sib.vendorName}</span>
+                        <OrderStatusBadge status={sib.orderStatus} />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => handleViewDetails(sib._id)}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -525,6 +576,36 @@ export default function AdminOrders() {
                   </div>
                 )}
               </div>
+
+              {/* ── Commission breakdown (locked at time of payment) ── */}
+              {orderDetails.paymentStatus === "paid" && orderDetails.commissionRate != null && (
+                <>
+                  <Separator />
+                  <div className="rounded-lg border bg-slate-50 p-3 space-y-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Financial Breakdown (locked at payment)
+                    </p>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Order Amount</span>
+                        <span className="font-medium">{currencyFormatter(orderDetails.totalAmount)}</span>
+                      </div>
+                      <div className="flex justify-between text-orange-700">
+                        <span>DilMart Commission ({orderDetails.commissionRate}%)</span>
+                        <span className="font-medium">− {currencyFormatter(orderDetails.commissionAmount)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold border-t pt-1.5 text-green-700">
+                        <span>Vendor Receives</span>
+                        <span>{currencyFormatter(orderDetails.vendorAmount)}</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Rate is locked at the time of payment — changing the global commission does not affect this order.
+                    </p>
+                  </div>
+                </>
+              )}
 
               <Separator />
 

@@ -4,7 +4,7 @@ import {
   fetchAllReturns, fetchAdminReturnById,
   adminApproveReturn, adminRejectReturn,
   adminApproveRefund, adminProcessRefund,
-  adminApproveReplacement, clearAdminReturnDetail,
+  clearAdminReturnDetail,
 } from "@/store/admin/return-slice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,6 @@ export default function AdminReturnRequestsTab() {
     }
     if (["under_inspection","escalated","approved"].includes(s)) {
       actions.push({ label: "Approve Refund",     color: "bg-blue-600 text-white hover:bg-blue-700",   fn: () => setActiveAction("refund") });
-      actions.push({ label: "Approve Replacement",color: "bg-teal-600 text-white hover:bg-teal-700",   fn: () => act(adminApproveReplacement, { note: "" }, "Replacement approved.") });
     }
     if (s === "refund_processing" && current.approvedAmount > 0) {
       actions.push({ label: "Process Refund Now", color: "bg-primary text-white",                      fn: () => act(adminProcessRefund, {}, "Refund processed successfully!") });
@@ -180,7 +179,6 @@ export default function AdminReturnRequestsTab() {
                 <div><p className="text-[10px] text-muted-foreground uppercase">Customer</p><p>{current.customerId?.userName}</p></div>
                 <div><p className="text-[10px] text-muted-foreground uppercase">Vendor</p><p>{current.vendorId?.userName}</p></div>
                 <div><p className="text-[10px] text-muted-foreground uppercase">Reason</p><p className="capitalize">{current.reason?.replace(/_/g," ")}</p></div>
-                <div><p className="text-[10px] text-muted-foreground uppercase">Resolution</p><p className="capitalize">{current.requestedResolution}</p></div>
                 <div><p className="text-[10px] text-muted-foreground uppercase">Requested</p><p className="font-semibold">{currencyFormatter(current.requestedAmount)}</p></div>
                 {current.approvedAmount != null && (
                   <div><p className="text-[10px] text-muted-foreground uppercase">Approved</p><p className="font-semibold text-green-700">{currencyFormatter(current.approvedAmount)}</p></div>

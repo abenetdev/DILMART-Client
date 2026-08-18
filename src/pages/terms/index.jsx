@@ -9,7 +9,7 @@ const sections = [
       <div className="space-y-3">
         <p>Welcome to DilMart.</p>
         <p>
-          DilMart is a digital marketplace that connects Customers with Sellers, allowing
+          DilMart is an E-commerce company that connects Customers with Sellers, allowing
           Customers to discover, purchase, and receive products from different businesses
           through one platform.
         </p>
@@ -32,7 +32,7 @@ const sections = [
     content: (
       <div>
         <p>
-          DilMart operates as a marketplace platform that connects Customers and Sellers.
+          DilMart operates as E-commerce platform that connects Customers and Sellers.
           DilMart provides services including:
         </p>
         <BulletList items={[

@@ -67,6 +67,18 @@ accessories: "Electronic Accessories",
 other: "Other Electronics",
 };
 
+/**
+ * buildCategoryOptionsMap(dbCategories)
+ * Merges live DB categories over the static fallback map.
+ * Any slug from the DB wins; unknown slugs still resolve via the static map.
+ */
+export function buildCategoryOptionsMap(dbCategories = []) {
+  if (!dbCategories.length) return categoryOptionsMap;
+  const map = { ...categoryOptionsMap };
+  dbCategories.forEach((c) => { map[c.slug] = c.name; });
+  return map;
+}
+
 export const brandOptionsMap = {
 samsung: "Samsung",
 apple: "Apple",
@@ -173,6 +185,15 @@ componentType: "select",
 options: [
 { id: "active", label: "Active" },
 { id: "inactive", label: "Inactive" },
+],
+},
+{
+label: "Product Condition",
+name: "condition",
+componentType: "select",
+options: [
+{ id: "new", label: "Brand New" },
+{ id: "used", label: "Used" },
 ],
 },
 ];

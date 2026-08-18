@@ -13,6 +13,9 @@ import AdminSellerApplications from "./pages/admin-view/seller-applications";
 import AdminCustomers from "./pages/admin-view/customers";
 import AdminProducts from "./pages/admin-view/products";
 import AdminProfile from "./pages/admin-view/profile";
+import AdminCategories from "./pages/admin-view/categories";
+import AdminBanners from "./pages/admin-view/banners";
+import AdminSettings from "./pages/admin-view/settings";
 import VendorLayout from "./components/vendor-view/layout";
 import VendorDashboard from "./pages/vendor-view/dashboard";
 import VendorProducts from "./pages/vendor-view/products";
@@ -50,6 +53,7 @@ import AllStoresPage from "./pages/shopping-view/all-stores";
 import SearchProducts from "./pages/shopping-view/search";
 import ChapaReturnPage from "./pages/shopping-view/chapa-return";
 import StoreFront from "./pages/shopping-view/store";
+import AllCategoriesPage from "./pages/shopping-view/all-categories";
 import ShoppingHeader from "./components/shopping-view/header";
 import Footer from "./components/common/footer";
 import MobileBottomNav from "./components/shopping-view/mobile-bottom-nav";
@@ -162,6 +166,9 @@ const location = useLocation();
           <Route path="withdrawals"  element={<AdminWithdrawals />} />
           <Route path="customers"    element={<AdminCustomers />} />
           <Route path="seller-applications" element={<AdminSellerApplications />} />
+          <Route path="categories"         element={<AdminCategories />} />
+          <Route path="banners"            element={<AdminBanners />} />
+          <Route path="settings"           element={<AdminSettings />} />
           <Route path="profile"     element={<AdminProfile />} />
         </Route>
 
@@ -211,6 +218,7 @@ const location = useLocation();
           <Route path="search" element={<SearchProducts />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="stores" element={<AllStoresPage />} />
+          <Route path="categories" element={<AllCategoriesPage />} />
           <Route path="super-deals" element={<SuperDealsPage />} />
         </Route>
 

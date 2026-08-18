@@ -180,7 +180,6 @@ export default function VendorReturnRequestsTab() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><p className="text-xs text-muted-foreground">Customer</p><p className="font-medium">{current.customerId?.userName}</p></div>
                 <div><p className="text-xs text-muted-foreground">Reason</p><p className="font-medium capitalize">{current.reason?.replace(/_/g," ")}</p></div>
-                <div><p className="text-xs text-muted-foreground">Resolution Requested</p><p className="font-medium capitalize">{current.requestedResolution}</p></div>
                 <div><p className="text-xs text-muted-foreground">Amount</p><p className="font-medium">{currencyFormatter(current.requestedAmount)}</p></div>
               </div>
 
@@ -270,7 +269,6 @@ export default function VendorReturnRequestsTab() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="refund">Approve Refund</SelectItem>
-                      <SelectItem value="replacement">Approve Replacement</SelectItem>
                       <SelectItem value="rejected">Reject (item condition not acceptable)</SelectItem>
                     </SelectContent>
                   </Select>

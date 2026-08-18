@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Store, ClipboardList,
-  Wallet, UserCheck, ShieldCheck, ChevronRight, Users, Package,
+  Wallet, UserCheck, ShieldCheck, ChevronRight, Users, Package, Tag, Image, Settings,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent } from "../ui/sheet";
@@ -9,10 +9,13 @@ const NAV_ITEMS = [
   { id: "dashboard",           label: "Dashboard",           path: "/admin/dashboard",            icon: LayoutDashboard },
   { id: "vendors",             label: "Vendors",             path: "/admin/vendors",              icon: Store           },
   { id: "products",            label: "Products",            path: "/admin/products",             icon: Package         },
+  { id: "categories",          label: "Categories",          path: "/admin/categories",           icon: Tag             },
+  { id: "banners",             label: "Banners",             path: "/admin/banners",              icon: Image           },
   { id: "customers",           label: "Customers",           path: "/admin/customers",            icon: Users           },
   { id: "seller-applications", label: "Seller Applications", path: "/admin/seller-applications",  icon: UserCheck       },
   { id: "orders",              label: "Orders",              path: "/admin/orders",               icon: ClipboardList   },
   { id: "withdrawals",         label: "Withdrawals",         path: "/admin/withdrawals",          icon: Wallet          },
+  { id: "settings",            label: "Settings",            path: "/admin/settings",             icon: Settings        },
 ];
 
 function Logo({ onClick }) {

@@ -174,10 +174,10 @@ function ShoppingListing() {
 
   return (
     <div className="p-2 sm:p-4 md:p-6">
-      <div className="bg-background w-full rounded-lg shadow-sm border">
+      <div className="bg-background w-full rounded-lg shadow-sm ">
 
         {/* ── Toolbar ── */}
-        <div className="p-3 border-b flex items-center justify-between gap-2">
+        <div className="p-3  flex items-center justify-between gap-2">
 
           {/* Left — filter button + active filter chips */}
           <div className="flex items-center gap-2 flex-wrap">

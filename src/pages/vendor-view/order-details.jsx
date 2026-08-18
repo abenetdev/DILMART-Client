@@ -169,7 +169,7 @@ function VendorOrderDetails() {
           <div>
             <h1 className="text-2xl font-bold">Order Details</h1>
             <p className="text-muted-foreground font-mono text-sm">
-              ORD-{orderDetails._id?.slice(-8).toUpperCase()}
+              {orderDetails.vendorOrderId || `ORD-${orderDetails._id?.slice(-8).toUpperCase()}`}
             </p>
           </div>
         </div>
@@ -321,10 +321,33 @@ function VendorOrderDetails() {
                   {orderDetails.paymentStatus}
                 </Badge>
               </div>
-              {orderDetails.paymentStatus === "paid" && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Payout</span>
-                  {orderDetails.escrowReleased
+
+              {/* ── Commission breakdown (locked at payment time) ── */}
+              {orderDetails.paymentStatus === "paid" && orderDetails.commissionRate != null && (
+                <div className="rounded-lg bg-slate-50 border p-3 space-y-1.5 mt-1">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Earnings Breakdown
+                  </p>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Order Amount</span>
+                    <span>{currencyFormatter(orderDetails.totalAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-orange-700">
+                    <span>Commission ({orderDetails.commissionRate}%)</span>
+                    <span>− {currencyFormatter(orderDetails.commissionAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-semibold border-t pt-1 text-green-700">
+                    <span>Your Earnings</span>
+                    <span>{currencyFormatter(orderDetails.vendorAmount)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Payout</span>
+                {orderDetails.paymentStatus !== "paid" ? (
+                  <Badge className="bg-gray-100 text-gray-800">N/A</Badge>
+                ) : orderDetails.escrowReleased
                     ? <Badge className="bg-green-100 text-green-800">Funds released</Badge>
                     : orderDetails.escrowRejected
                     ? <Badge className="bg-red-100 text-red-800">Release rejected</Badge>
@@ -333,9 +356,8 @@ function VendorOrderDetails() {
                     : status === "delivered"
                     ? <Badge className="bg-orange-100 text-orange-800">Awaiting customer confirmation</Badge>
                     : <Badge className="bg-yellow-100 text-yellow-800">In escrow</Badge>
-                  }
-                </div>
-              )}
+                }
+              </div>
               {orderDetails.escrowRejected && orderDetails.escrowRejectionNote && (
                 <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm mt-2">
                   <div className="flex items-center gap-2 font-medium text-red-800">

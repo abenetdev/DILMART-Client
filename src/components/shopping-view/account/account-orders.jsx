@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
-import { Package, Loader2 } from "lucide-react";
+import { Package, Loader2, Store } from "lucide-react";
 import {
   getAllOrdersByUserId,
   getOrderDetails,
@@ -51,11 +51,12 @@ function AccountOrders() {
     if (orderDetails) setOpenDetails(true);
   }, [orderDetails]);
 
-  // Reset to page 1 when order list changes
   useEffect(() => {
     setCurrentPage(1);
   }, [orderList?.length]);
 
+  // The server now returns grouped orders. Each item's "_id" is the orderGroupId,
+  // which is what we pass to getOrderDetails for the full grouped view.
   const handleView = (id) => dispatch(getOrderDetails(id));
 
   const handlePageChange = (page) => {
@@ -100,54 +101,97 @@ function AccountOrders() {
           ) : paginated.length > 0 ? (
             <>
               <div className="space-y-3">
-                {paginated.map((order) => (
-                  <div
-                    key={order._id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border p-4 hover:shadow-sm transition-shadow"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <Package className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold font-mono">
-                          ORD-{order._id?.slice(-8).toUpperCase()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(order.orderDate).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month:   "long",
-                            day:     "numeric",
-                            year:    "numeric",
-                          })}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <Badge className={statusColor(order.orderStatus)}>
-                            {order.orderStatus}
-                          </Badge>
-                          <Badge variant="outline" className="capitalize">
-                            {order.paymentStatus}
-                          </Badge>
-                          {order.paymentStatus === "paid" &&
-                            order.orderStatus === "shipped" &&
-                            !order.deliveryConfirmedByCustomer && (
-                              <a onClick={() => handleView(order._id)}>
-                                <Badge className="bg-orange-100 cursor-pointer text-orange-800 hover:bg-orange-100">
-                                  Confirm delivery
-                                </Badge>
-                              </a>
+                {paginated.map((order) => {
+                  // order._id here is the orderGroupId (or legacy order _id)
+                  const groupId    = order.orderGroupId || order._id;
+                  const subOrders  = order.subOrders || [];
+                  const itemCount  = subOrders.reduce((s, sub) =>
+                    s + (sub.cartItems?.length || 0), 0
+                  ) || order.cartItems?.length || 0;
+                  const vendorCount = subOrders.length;
+
+                  // Any sub-order needing delivery confirmation?
+                  const needsConfirm = subOrders.some(
+                    (sub) =>
+                      order.paymentStatus === "paid" &&
+                      sub.orderStatus === "shipped" &&
+                      !sub.deliveryConfirmedByCustomer
+                  );
+
+                  return (
+                    <div
+                      key={groupId}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border p-4 hover:shadow-sm transition-shadow"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                          <Package className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold font-mono">
+                            {order.parentOrderId
+                              ? order.parentOrderId
+                              : `ORD-${groupId?.slice(-8).toUpperCase()}`}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(order.orderDate).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month:   "long",
+                              day:     "numeric",
+                              year:    "numeric",
+                            })}
+                          </p>
+
+                          {/* Item count + vendor count */}
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {itemCount} item{itemCount !== 1 ? "s" : ""}
+                            {vendorCount > 1 && (
+                              <span className="ml-1.5 inline-flex items-center gap-0.5">
+                                <Store className="h-3 w-3" />
+                                {vendorCount} stores
+                              </span>
                             )}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {/* Overall status */}
+                            <Badge className={statusColor(order.orderStatus)}>
+                              {order.orderStatus}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {order.paymentStatus}
+                            </Badge>
+
+                            {/* Per-vendor status chips when multi-vendor */}
+                            {vendorCount > 1 && subOrders.map((sub) => (
+                              <Badge
+                                key={sub._id}
+                                className={`text-[10px] ${statusColor(sub.orderStatus)}`}
+                              >
+                                Store {sub._id?.toString().slice(-4).toUpperCase()}: {sub.orderStatus}
+                              </Badge>
+                            ))}
+
+                            {needsConfirm && (
+                              <Badge
+                                className="bg-orange-100 cursor-pointer text-orange-800 hover:bg-orange-100"
+                                onClick={() => handleView(groupId)}
+                              >
+                                Confirm delivery
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-4 sm:flex-col sm:items-end">
+                        <span className="text-lg font-bold">{currencyFormatter(order.totalAmount)}</span>
+                        <Button size="sm" variant="outline" onClick={() => handleView(groupId)}>
+                          View Details
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4 sm:flex-col sm:items-end">
-                      <span className="text-lg font-bold">{currencyFormatter(order.totalAmount)}</span>
-                      <Button size="sm" variant="outline" onClick={() => handleView(order._id)}>
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Pagination

@@ -60,7 +60,9 @@ function VendorOrdersView() {
             {orderList && orderList.length > 0
               ? orderList.map((orderItem) => (
                   <TableRow key={orderItem?._id}>
-                    <TableCell>{orderItem?._id}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {orderItem?.vendorOrderId || `ORD-${orderItem?._id?.slice(-8).toUpperCase()}`}
+                    </TableCell>
                     <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
                     <TableCell>
                       <Badge

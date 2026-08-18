@@ -1,8 +1,9 @@
 import {
-  HousePlug, LogOut, ShoppingCart,
+  LogOut, ShoppingCart,
   UserCog, LogIn, UserPlus, Package,
   Store, Search, X, Heart,
 } from "lucide-react";
+import logo from "@/assets/logo.png";
 import {
   Link,
   useLocation,
@@ -312,9 +313,8 @@ function ShoppingHeader() {
       {/* ── Mobile header: logo + search only ── */}
       <div className="flex lg:hidden h-14 items-center gap-2 px-3">
         {/* Logo */}
-        <Link to="/" className="flex shrink-0 items-center gap-1.5 mr-1">
-          <HousePlug className="h-5 w-5 text-primary" />
-          <span className="font-bold text-base text-primary">DilMart</span>
+        <Link to="/" className="flex shrink-0 items-center mr-1">
+          <img src={logo} alt="DilMart" className="h-8 w-auto object-contain" />
         </Link>
 
         {/* Search bar fills remaining width */}
@@ -325,9 +325,8 @@ function ShoppingHeader() {
 
       {/* ── Desktop header: logo + search + actions ── */}
       <div className="hidden lg:flex h-16 items-center gap-2 px-6">
-        <Link to="/" className="flex shrink-0 items-center gap-1.5">
-          <HousePlug className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">DilMart</span>
+        <Link to="/" className="flex shrink-0 items-center">
+          <img src={logo} alt="DilMart" className="h-9 w-auto object-contain" />
         </Link>
 
         <div className="flex flex-1 min-w-0 justify-center px-4">

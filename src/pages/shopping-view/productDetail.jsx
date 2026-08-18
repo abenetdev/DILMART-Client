@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import StarRatingComponent from "@/components/common/star-rating";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import { categoryOptionsMap, brandOptionsMap } from "@/config";
+import { categoryOptionsMap, brandOptionsMap, buildCategoryOptionsMap } from "@/config";
 import { useCart } from "@/hooks/useCart";
 import {
   fetchProductDetails,
@@ -50,9 +50,12 @@ function ProductDetailPage() {
   const { reviews } = useSelector((s) => s.shopReview);
   const { orderList } = useSelector((s) => s.shopOrder);
   const { items: wishlistItems } = useSelector((s) => s.shopWishlist);
+  const { all: dbCategories } = useSelector((s) => s.shopCategory);
+  const liveCategoryMap = buildCategoryOptionsMap(dbCategories);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState(null);
   const [adding, setAdding] = useState(false);
   const [reviewMsg, setReviewMsg] = useState("");
   const [rating, setRating] = useState(0);
@@ -86,6 +89,7 @@ function ProductDetailPage() {
   useEffect(() => {
     setSelectedImage(0);
     setQuantity(1);
+    setSelectedSize(null);
     setShowFullDesc(false);
     setDescOverflows(false);
   }, [productId]);
@@ -201,7 +205,7 @@ function ProductDetailPage() {
   const hasSale = salePrice > 0 && salePrice < price;
   const displayPrice = hasSale ? salePrice : price;
   const categoryLabel =
-    categoryOptionsMap[productDetails.category] || productDetails.category;
+    liveCategoryMap[productDetails.category] || productDetails.category;
   const brandLabel =
     brandOptionsMap[productDetails.brand] || productDetails.brand;
   const store = productDetails.store;
@@ -456,7 +460,80 @@ function ProductDetailPage() {
 
           <Separator />
 
-          {/* Description */}
+          {/* Condition & Warranty */}
+          {(productDetails.condition || productDetails.hasWarranty !== undefined) && (
+            <div className="space-y-2.5">
+              {/* Condition */}
+              {productDetails.condition && (
+                <div className="flex items-center gap-2.5">
+                  <span className="text-sm text-muted-foreground w-24 shrink-0">Condition</span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${
+                      productDetails.condition === "new"
+                        ? "bg-green-50 text-green-700 ring-green-600/20"
+                        : "bg-amber-50 text-amber-700 ring-amber-600/20"
+                    }`}
+                  >
+                    {productDetails.condition === "new" ? "Brand New" : "Used"}
+                  </span>
+                </div>
+              )}
+
+              {/* Warranty */}
+              <div className="flex items-start gap-2.5">
+                <span className="text-sm text-muted-foreground w-24 shrink-0 pt-0.5">Warranty</span>
+                {productDetails.hasWarranty ? (
+                  <div className="space-y-1">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20">
+                      {productDetails.warrantyPeriod || "Included"}
+                    </span>
+                    {productDetails.warrantyDetails && (
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        {productDetails.warrantyDetails}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground ring-1 ring-inset ring-border">
+                    No Warranty
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Available Sizes */}
+          {productDetails.hasSize && productDetails.sizes?.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h2 className="font-semibold mb-3">Available Sizes</h2>
+                <div className="flex flex-wrap gap-2">
+                  {productDetails.sizes.map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setSelectedSize((prev) => (prev === sz ? null : sz))}
+                      className={`min-w-[40px] px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                        selectedSize === sz
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-foreground border-border hover:border-primary"
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+                {selectedSize && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Selected: <span className="font-semibold text-foreground">{selectedSize}</span>
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
+          <Separator />
           {productDetails.description && (
             <div>
               <h2 className="font-semibold mb-2">Description</h2>
@@ -522,7 +599,7 @@ function ProductDetailPage() {
                 </Button>
               ) : (
                 <Button
-                  className="flex-1 gap-2 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 hover:border-gray-400 shadow-none"
+                  className="flex-1 gap-2"
                   size="lg"
                   disabled={adding}
                   onClick={handleAddToCartClick}

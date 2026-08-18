@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllActiveCategories } from "@/store/shop/category-slice";
 import { filterOptions } from "@/config";
-import { useState } from "react";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
 import { Separator } from "../ui/separator";
@@ -9,8 +11,7 @@ import { ChevronDown } from "lucide-react";
 function FilterSection({ sectionKey, options, filters, handleFilter }) {
   const [open, setOpen] = useState(true);
 
-  const activeCount =
-    filters?.[sectionKey]?.length || 0;
+  const activeCount = filters?.[sectionKey]?.length || 0;
 
   return (
     <div>
@@ -19,7 +20,7 @@ function FilterSection({ sectionKey, options, filters, handleFilter }) {
         onClick={() => setOpen((p) => !p)}
         className="w-full flex items-center justify-between py-1 cursor-pointer group"
       >
-        <span className="text-sm font-bold flex items-center gap-2">
+        <span className="text-sm font-bold flex items-center gap-2 capitalize">
           {sectionKey}
           {activeCount > 0 && (
             <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
@@ -42,14 +43,7 @@ function FilterSection({ sectionKey, options, filters, handleFilter }) {
               className="flex font-medium items-center gap-2 cursor-pointer"
             >
               <Checkbox
-                checked={
-                  !!(
-                    filters &&
-                    Object.keys(filters).length > 0 &&
-                    filters[sectionKey] &&
-                    filters[sectionKey].indexOf(option.id) > -1
-                  )
-                }
+                checked={!!(filters?.[sectionKey]?.indexOf(option.id) > -1)}
                 onCheckedChange={() => handleFilter(sectionKey, option.id)}
               />
               {option.label}
@@ -63,9 +57,24 @@ function FilterSection({ sectionKey, options, filters, handleFilter }) {
 
 // ── Main filter panel ─────────────────────────────────────────────────────
 function ProductFilter({ filters, handleFilter }) {
+  const dispatch = useDispatch();
+  const { all: dbCategories } = useSelector((s) => s.shopCategory);
+
+  // Fetch categories on mount if not already loaded
+  useEffect(() => {
+    if (dbCategories.length === 0) dispatch(fetchAllActiveCategories());
+  }, [dispatch, dbCategories.length]);
+
+  // Build the filter options: use DB categories for "category", keep static brand list
+  const dynamicFilterOptions = {
+    ...filterOptions,
+    category: dbCategories.length > 0
+      ? dbCategories.map((c) => ({ id: c.slug, label: c.name }))
+      : filterOptions.category,   // fallback to static while loading
+  };
+
   const totalActive = Object.values(filters || {}).reduce(
-    (sum, arr) => sum + (arr?.length || 0),
-    0
+    (sum, arr) => sum + (arr?.length || 0), 0
   );
 
   return (
@@ -83,11 +92,9 @@ function ProductFilter({ filters, handleFilter }) {
           <button
             type="button"
             onClick={() => {
-              Object.keys(filters || {}).forEach((key) => {
-                (filters[key] || []).forEach((val) =>
-                  handleFilter(key, val)
-                );
-              });
+              Object.keys(filters || {}).forEach((key) =>
+                (filters[key] || []).forEach((val) => handleFilter(key, val))
+              );
             }}
             className="text-xs text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
           >
@@ -97,15 +104,15 @@ function ProductFilter({ filters, handleFilter }) {
       </div>
 
       <div className="p-4 space-y-4">
-        {Object.keys(filterOptions).map((keyItem, idx) => (
+        {Object.keys(dynamicFilterOptions).map((keyItem, idx) => (
           <div key={keyItem}>
             <FilterSection
               sectionKey={keyItem}
-              options={filterOptions[keyItem]}
+              options={dynamicFilterOptions[keyItem]}
               filters={filters}
               handleFilter={handleFilter}
             />
-            {idx < Object.keys(filterOptions).length - 1 && (
+            {idx < Object.keys(dynamicFilterOptions).length - 1 && (
               <Separator className="mt-4" />
             )}
           </div>

@@ -29,7 +29,7 @@ export default function VendorProfile() {
   const { profile, isLoading, fieldErrors } = useSelector((s) => s.vendorProfile);
 
   // ── Personal info form ─────────────────────────────────────────────────
-  const [info, setInfo] = useState({ userName: "", email: "" });
+  const [info, setInfo] = useState({ userName: "", email: "", phone: "" });
 
   // ── Password form ──────────────────────────────────────────────────────
   const [pwd, setPwd] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -45,7 +45,7 @@ export default function VendorProfile() {
   // Sync profile into form once loaded
   useEffect(() => {
     if (profile) {
-      setInfo({ userName: profile.userName || "", email: profile.email || "" });
+      setInfo({ userName: profile.userName || "", email: profile.email || "", phone: profile.phone || "" });
     }
   }, [profile]);
 
@@ -130,6 +130,9 @@ export default function VendorProfile() {
             <div>
               <p className="font-semibold">{profile?.userName}</p>
               <p className="text-sm text-muted-foreground">{profile?.email}</p>
+              {profile?.phone && (
+                <p className="text-sm text-muted-foreground">{profile.phone}</p>
+              )}
               <span className="inline-flex items-center gap-1 mt-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                 <CheckCircle2 className="h-3 w-3" /> Verified Vendor
               </span>
@@ -161,6 +164,17 @@ export default function VendorProfile() {
                 />
                 <FieldError msg={fieldErrors?.email} />
               </div>
+            </div>
+
+            <div>
+              <Label>Phone Number</Label>
+              <Input
+                type="tel"
+                value={info.phone}
+                onChange={(e) => setInfo((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="+251 9XX XXX XXXX"
+                className="mt-1"
+              />
             </div>
 
             <div className="flex justify-end pt-2">

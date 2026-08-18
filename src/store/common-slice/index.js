@@ -6,25 +6,20 @@ const initialState = {
   featureImageList: [],
 };
 
+// Fetch active banners for the homepage from the new Banner collection
 export const getFeatureImages = createAsyncThunk(
-  "/order/getFeatureImages",
+  "commonFeature/getFeatureImages",
   async () => {
-    const response = await axios.get(
-      `/api/common/feature/get`
-    );
-
+    const response = await axios.get("/api/shop/home/banners");
     return response.data;
   }
 );
 
+// Legacy thunk kept for any remaining usages
 export const addFeatureImage = createAsyncThunk(
-  "/order/addFeatureImage",
+  "commonFeature/addFeatureImage",
   async (image) => {
-    const response = await axios.post(
-      `/api/common/feature/add`,
-      { image }
-    );
-
+    const response = await axios.post("/api/common/feature/add", { image });
     return response.data;
   }
 );

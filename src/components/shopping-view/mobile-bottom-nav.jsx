@@ -116,18 +116,21 @@ function MobileBottomNav() {
       icon:  Home,
       path:  "/",
       badge: null,
+      badgeClass: "",
     },
     {
       label: "Cart",
       icon:  ShoppingCart,
       path:  "/cart",
       badge: cartCount > 0 ? cartCount : null,
+      badgeClass: "bg-primary text-primary-foreground",
     },
     {
       label: "Wishlist",
       icon:  Heart,
       path:  "/account/wishlist",
       badge: isAuthenticated && wishlistCount > 0 ? wishlistCount : null,
+      badgeClass: "bg-red-500 text-white",
     },
   ];
 
@@ -169,7 +172,7 @@ function MobileBottomNav() {
                   strokeWidth={active ? 2.5 : 1.75}
                 />
                 {item.badge !== null && (
-                  <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground px-1 leading-none">
+                  <span className={`absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full text-[10px] font-bold px-1 leading-none ${item.badgeClass}`}>
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}

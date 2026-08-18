@@ -24,19 +24,7 @@ import {
   X as XIcon,
 } from "lucide-react";
 
-// ── Category options (mirrors Store model enum) ────────────────────────────
-const CATEGORIES = [
-  { value: "fashion",        label: "Fashion & Apparel" },
-  { value: "electronics",    label: "Electronics & Tech" },
-  { value: "beauty",         label: "Beauty & Personal Care" },
-  { value: "home-living",    label: "Home & Living" },
-  { value: "automotive",     label: "Automotive" },
-  { value: "sports",         label: "Sports & Outdoors" },
-  { value: "food-beverage",  label: "Food & Beverage" },
-  { value: "health-wellness",label: "Health & Wellness" },
-  { value: "books",          label: "Books & Stationery" },
-  { value: "other",          label: "Other" },
-];
+import { fetchAllActiveCategories } from "@/store/shop/category-slice";
 
 // ── Status Banner ──────────────────────────────────────────────────────────
 function StatusBanner({ status, application }) {
@@ -247,6 +235,12 @@ export default function BecomeASeller() {
 
   const { user, isAuthenticated }                           = useSelector((s) => s.auth);
   const { isLoading, sellerStatus, application, error }    = useSelector((s) => s.shopSeller);
+  const { all: dbCategories }                              = useSelector((s) => s.shopCategory);
+
+  // Fetch categories for the form
+  useEffect(() => {
+    if (dbCategories.length === 0) dispatch(fetchAllActiveCategories());
+  }, [dispatch, dbCategories.length]);
 
   const [form, setForm] = useState({
     storeName:     "",
@@ -358,20 +352,23 @@ export default function BecomeASeller() {
   // ── Already approved — role not yet synced (needs re-login) ─────────────
   if (sellerStatus === "active" && user?.role !== "vendor") {
     return (
-      <div className="max-w-xl mx-auto mt-16 text-center space-y-6 px-4">
+      <div className="max-w-xl mx-auto mt-16 mb-5 text-center space-y-6 px-4">
         <div className="flex justify-center">
           <div className="h-20 w-20 rounded-full bg-green-50 flex items-center justify-center">
             <CheckCircle className="h-10 w-10 text-green-500" />
           </div>
         </div>
-        <div>
+        <div className="flex flex-col gap-5">
+          <div className="">
           <h1 className="text-2xl font-bold text-gray-900">Application Approved!</h1>
           <p className="text-gray-500 mt-2 text-sm leading-relaxed">
             Your seller application has been approved. Please log out and log back in
             to activate your vendor account.
           </p>
-        </div>
+           </div>
         <Button onClick={() => navigate("/auth/login")}>Log out & Re-login</Button>
+       
+        </div>
       </div>
     );
   }
@@ -494,8 +491,8 @@ export default function BecomeASeller() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    {(dbCategories.length > 0 ? dbCategories : []).map((c) => (
+                      <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
