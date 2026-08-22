@@ -129,6 +129,32 @@ export const googleLogin = createAsyncThunk(
   }
 );
 
+export const forgotPassword = createAsyncThunk(
+  "/auth/forgotPassword",
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/forgot-password", { email });
+      return response.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data || { message: e.message });
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  "/auth/resetPassword",
+  async ({ email, otp, newPassword, verifyOnly }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post("/api/auth/reset-password", {
+        email, otp, newPassword, verifyOnly,
+      });
+      return response.data;
+    } catch (e) {
+      return rejectWithValue(e.response?.data || { message: e.message });
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,

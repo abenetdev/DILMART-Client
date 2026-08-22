@@ -3,6 +3,7 @@ import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
 import VerifyOtp from "./pages/auth/verify-otp";
+import ForgotPassword from "./pages/auth/forgot-password";
 import AdminLayout from "./components/admin-view/layout";
 import AdminLogin from "./pages/admin-view/login";
 import AdminDashboard from "./pages/admin-view/dashboard";
@@ -139,9 +140,10 @@ const location = useLocation();
             </CheckAuth>
           }
         >
-          <Route path="login" element={<AuthLogin />} />
-          <Route path="register" element={<AuthRegister />} />
-          <Route path="verify-otp" element={<VerifyOtp />} />
+          <Route path="login"            element={<AuthLogin />} />
+          <Route path="register"         element={<AuthRegister />} />
+          <Route path="verify-otp"       element={<VerifyOtp />} />
+          <Route path="forgot-password"  element={<ForgotPassword />} />
         </Route>
 
         {/* ── Admin auth (standalone, no layout) ── */}

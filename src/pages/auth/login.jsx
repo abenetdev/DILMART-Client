@@ -183,6 +183,15 @@ function AuthLogin() {
               <span>Wait {formatTime(timeRemaining)} before trying again</span>
             </div>
           )}
+          {/* Forgot password link */}
+          <div className="flex justify-end mt-1">
+            <Link
+              to="/auth/forgot-password"
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {/* Submit */}

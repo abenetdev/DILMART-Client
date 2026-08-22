@@ -357,7 +357,7 @@ function VendorProducts() {
             </SelectContent>
           </Select>
 
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
+          {/* <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -371,7 +371,7 @@ function VendorProducts() {
               <SelectItem value="electronics">Electronics</SelectItem>
               <SelectItem value="home">Home & Living</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
         </div>
       </div>
 
