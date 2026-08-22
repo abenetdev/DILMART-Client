@@ -1,4 +1,4 @@
-﻿import { Fragment, useEffect, useState } from "react";
+﻿import { Fragment, useEffect, useRef, useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +43,7 @@ import {
   XCircle,
   Clock,
   Tag,
+  Loader2,
 } from "lucide-react";
 import ProductImageUpload from "@/components/vendor-view/image-upload";
 import MediaUpload from "@/components/vendor-view/media-upload";
@@ -54,6 +55,8 @@ import {
   deleteProduct,
   editProduct,
   fetchAllProducts,
+  fetchProductsPage,
+  resetProducts,
   setSuperDeal,
   cancelSuperDeal,
 } from "@/store/vendor/products-slice";
@@ -78,7 +81,7 @@ const initialFormData = {
   video: "",
 };
 
-// â”€â”€ Countdown display â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Countdown display ──────────────────────────────────────────────────────
 function CountdownBadge({ expiresAt }) {
   const [timeLeft, setTimeLeft] = useState("");
 
@@ -110,32 +113,293 @@ function CountdownBadge({ expiresAt }) {
   );
 }
 
+// ── Status badges helper (reused in both table and card) ───────────────────
+function StatusBadges({ product }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      <Badge variant={product.status === "active" ? "default" : "secondary"}>
+        {product.status}
+      </Badge>
+      {product.adminStatus === "unpublished" && (
+        <Badge className="bg-orange-100 text-orange-800 border-0 text-[10px]">
+          Admin hidden
+        </Badge>
+      )}
+      {product.isDeleted && (
+        <Badge className="bg-red-100 text-red-800 border-0 text-[10px]">
+          Admin deleted
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+// ── Action dropdown (reused in both table and card) ────────────────────────
+function ProductActions({ product, dealLive, onEdit, onOpenDeal, onCancelDeal, onDelete }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEdit(product)} className="gap-2">
+          <Edit className="h-4 w-4" /> Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => onOpenDeal(product)}
+          className="gap-2 text-orange-600 focus:text-orange-600"
+        >
+          <Zap className="h-4 w-4" />
+          {dealLive ? "Edit Super Deal" : "Create Super Deal"}
+        </DropdownMenuItem>
+        {dealLive && (
+          <DropdownMenuItem
+            onClick={() => onCancelDeal(product._id)}
+            className="gap-2 text-muted-foreground"
+          >
+            <XCircle className="h-4 w-4" /> Cancel Deal
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem
+          onClick={() => onDelete(product._id)}
+          className="gap-2 text-red-600"
+        >
+          <Trash2 className="h-4 w-4" /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ── Mobile product card ────────────────────────────────────────────────────
+function ProductCard({ product, onEdit, onOpenDeal, onCancelDeal, onDelete }) {
+  const deal    = product.superDeal;
+  const dealLive = deal?.isActive && deal?.expiresAt && new Date(deal.expiresAt) > new Date();
+  const thumb   = product.images?.[0] || product.image;
+
+  return (
+    <div className="bg-background border rounded-xl p-3 space-y-3">
+      {/* Top row: image + name + actions */}
+      <div className="flex items-start gap-3">
+        {/* Thumbnail */}
+        <div className="relative h-16 w-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+          {thumb ? (
+            <img src={thumb} alt={product.name || product.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center">
+              <Package className="h-7 w-7 text-muted-foreground" />
+            </div>
+          )}
+          {dealLive && (
+            <span className="absolute -top-1 -right-1 h-4 w-4 bg-orange-500 rounded-full flex items-center justify-center">
+              <Zap className="h-2.5 w-2.5 text-white" />
+            </span>
+          )}
+        </div>
+
+        {/* Name + category */}
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm leading-tight line-clamp-2">
+            {product.name || product.title}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+            {product.category}
+          </p>
+          {product.brand && (
+            <p className="text-xs text-muted-foreground">{product.brand}</p>
+          )}
+        </div>
+
+        {/* Actions menu — top-right */}
+        <div className="flex-shrink-0 -mt-1 -mr-1">
+          <ProductActions
+            product={product}
+            dealLive={dealLive}
+            onEdit={onEdit}
+            onOpenDeal={onOpenDeal}
+            onCancelDeal={onCancelDeal}
+            onDelete={onDelete}
+          />
+        </div>
+      </div>
+
+      {/* Details grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+        <div>
+          <span className="text-xs text-muted-foreground block">Price</span>
+          <span className="font-semibold">ETB {currencyFormatter(product.price)}</span>
+          {product.salePrice > 0 && (
+            <span className="text-xs text-green-600 block">
+              Sale: ETB {currencyFormatter(product.salePrice)}
+            </span>
+          )}
+          {dealLive && (
+            <span className="text-xs font-bold text-orange-600 block">
+              ⚡ ETB {currencyFormatter(deal.dealPrice)}
+            </span>
+          )}
+        </div>
+
+        <div>
+          <span className="text-xs text-muted-foreground block">Stock</span>
+          <span className={`font-semibold ${
+            product.stock === 0 ? "text-red-600" : product.stock < 10 ? "text-orange-600" : ""
+          }`}>
+            {product.stock} units
+          </span>
+        </div>
+
+        <div>
+          <span className="text-xs text-muted-foreground block">Condition</span>
+          <span className="capitalize">{product.condition || "—"}</span>
+        </div>
+
+        <div>
+          <span className="text-xs text-muted-foreground block">Status</span>
+          <StatusBadges product={product} />
+        </div>
+      </div>
+
+      {/* Super Deal row (shown only when active) */}
+      {dealLive && (
+        <div className="flex items-center justify-between bg-amber-50 border border-amber-100 rounded-lg px-3 py-1.5">
+          <span className="text-xs font-semibold text-orange-600 truncate mr-2">
+            {deal.dealTitle || "⚡ Super Deal"}
+          </span>
+          <CountdownBadge expiresAt={deal.expiresAt} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mobile skeleton card ───────────────────────────────────────────────────
+function CardSkeleton() {
+  return (
+    <div className="bg-background border rounded-xl p-3 space-y-3 animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="h-16 w-16 rounded-lg bg-muted flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-muted rounded w-3/4" />
+          <div className="h-3 bg-muted rounded w-1/2" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-8 bg-muted rounded" />
+        <div className="h-8 bg-muted rounded" />
+        <div className="h-8 bg-muted rounded" />
+        <div className="h-8 bg-muted rounded" />
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
 function VendorProducts() {
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog]           = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [openDealDialog, setOpenDealDialog] = useState(false);
-  const [dealTarget, setDealTarget] = useState(null);
-  const [dealForm, setDealForm] = useState({ dealPrice: "", dealTitle: "", expiresAt: "" });
-  const [formData, setFormData] = useState(initialFormData);
+  const [openDealDialog, setOpenDealDialog]   = useState(false);
+  const [dealTarget, setDealTarget]           = useState(null);
+  const [dealForm, setDealForm]               = useState({ dealPrice: "", dealTitle: "", expiresAt: "" });
+  const [formData, setFormData]               = useState(initialFormData);
   const [currentEditedId, setCurrentEditedId] = useState(null);
   const [deleteProductId, setDeleteProductId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [searchTerm, setSearchTerm]           = useState("");
+  const [filterStatus, setFilterStatus]       = useState("all");
 
-  // Dynamic categories from DB (falls back to static config)
   const { formElements: dynamicFormElements } = useProductFormElements();
 
-  const { productList, isListLoading, isSubmitting } = useSelector((state) => state.vendorProducts);
+  const {
+    productList,
+    isListLoading,
+    isLoadingMore,
+    isSubmitting,
+    hasNextPage,
+    currentPage,
+  } = useSelector((state) => state.vendorProducts);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const dispatch  = useDispatch();
   const { toast } = useToast();
 
+  // ── Sentinel ref for IntersectionObserver ─────────────────────────────
+  const sentinelRef = useRef(null);
+
+  // ── Current filter values as a stable ref for the observer callback ───
+  const filtersRef = useRef({ searchTerm: "", filterStatus: "all" });
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      dispatch(fetchAllProducts({}));
-    }
-  }, [dispatch, isAuthenticated, user?.id]);
+    filtersRef.current = { searchTerm, filterStatus };
+  }, [searchTerm, filterStatus]);
+
+  // ── Load a single page and append ─────────────────────────────────────
+  const loadPage = useCallback(
+    (page) => {
+      if (!isAuthenticated || !user?.id) return;
+      dispatch(
+        fetchProductsPage({
+          page,
+          limit:    20,
+          status:   filtersRef.current.filterStatus,
+          search:   filtersRef.current.searchTerm,
+        })
+      );
+    },
+    [dispatch, isAuthenticated, user?.id]
+  );
+
+  // ── Initial load + filter/search change: reset then fetch page 1 ──────
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+    dispatch(resetProducts());
+    // Let the reset flush, then kick off page 1
+    // (requestAnimationFrame ensures the reset action is processed first)
+    const raf = requestAnimationFrame(() => {
+      dispatch(
+        fetchProductsPage({
+          page:    1,
+          limit:   20,
+          status:  filterStatus,
+          search:  searchTerm,
+        })
+      );
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [dispatch, isAuthenticated, user?.id, filterStatus, searchTerm]);
+
+  // ── IntersectionObserver — fires when sentinel enters the viewport ─────
+  // Store guard state in refs so the observer callback always reads fresh
+  // values without needing to be re-created on every render.
+  const hasNextPageRef  = useRef(true);
+  const isLoadingRef    = useRef(false);
+  const currentPageRef  = useRef(0);
+
+  // Keep refs in sync with Redux state on every render
+  hasNextPageRef.current = hasNextPage;
+  isLoadingRef.current   = isListLoading || isLoadingMore;
+  currentPageRef.current = currentPage;
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (!hasNextPageRef.current || isLoadingRef.current) return;
+        loadPage(currentPageRef.current + 1);
+      },
+      { rootMargin: "200px" } // start fetching 200px before sentinel is visible
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadPage]); // loadPage is stable (useCallback with no deps that change)
+
+  // ── Post-mutation refresh (keeps the currently-loaded pages) ──────────
+  const refreshAfterMutation = useCallback(() => {
+    dispatch(fetchAllProducts({ status: filterStatus, search: searchTerm }));
+  }, [dispatch, filterStatus, searchTerm]);
 
   const handleOpenDialog = () => {
     setFormData(initialFormData);
@@ -145,37 +409,36 @@ function VendorProducts() {
 
   const handleEditProduct = (product) => {
     const standardPeriods = ["1 Month", "3 Months", "6 Months", "1 Year", "2 Years", "3 Years"];
-    const savedPeriod = product.warrantyPeriod || "";
-    const isCustomPeriod = savedPeriod && !standardPeriods.includes(savedPeriod);
+    const savedPeriod     = product.warrantyPeriod || "";
+    const isCustomPeriod  = savedPeriod && !standardPeriods.includes(savedPeriod);
 
-    // Separate known sizes from any custom ones added via the "Other" input
     const knownSizes = [
       "XS","S","M","L","XL","XXL","XXXL",
       "28","30","32","34","36","38","40","42","44","46","48",
     ];
-    const savedSizes   = product.sizes || [];
+    const savedSizes    = product.sizes || [];
     const standardSizes = savedSizes.filter((s) => knownSizes.includes(s));
     const customSize    = savedSizes.find((s) => !knownSizes.includes(s)) || "";
 
     setFormData({
-      name:               product.name || product.title || "",
-      description:        product.description || "",
-      category:           product.category || "",
-      brand:              product.brand || "",
-      price:              product.price || "",
-      salePrice:          product.salePrice || "",
-      stock:              product.stock || "",
-      status:             product.status || "active",
-      condition:          product.condition || "new",
-      hasWarranty:        product.hasWarranty ?? false,
-      warrantyPeriod:     isCustomPeriod ? "other" : savedPeriod,
+      name:                product.name || product.title || "",
+      description:         product.description || "",
+      category:            product.category || "",
+      brand:               product.brand || "",
+      price:               product.price || "",
+      salePrice:           product.salePrice || "",
+      stock:               product.stock || "",
+      status:              product.status || "active",
+      condition:           product.condition || "new",
+      hasWarranty:         product.hasWarranty ?? false,
+      warrantyPeriod:      isCustomPeriod ? "other" : savedPeriod,
       warrantyPeriodCustom: isCustomPeriod ? savedPeriod : "",
-      warrantyDetails:    product.warrantyDetails || "",
-      hasSize:            product.hasSize ?? false,
-      sizes:              standardSizes,
-      sizeCustom:         customSize,
-      images:             product.images || (product.image ? [product.image] : []),
-      video:              product.video  || "",
+      warrantyDetails:     product.warrantyDetails || "",
+      hasSize:             product.hasSize ?? false,
+      sizes:               standardSizes,
+      sizeCustom:          customSize,
+      images:              product.images || (product.image ? [product.image] : []),
+      video:               product.video  || "",
     });
     setCurrentEditedId(product._id);
     setOpenDialog(true);
@@ -189,7 +452,7 @@ function VendorProducts() {
   const handleConfirmDelete = () => {
     dispatch(deleteProduct(deleteProductId)).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchAllProducts({}));
+        refreshAfterMutation();
         toast({ title: "Product deleted successfully" });
       }
     });
@@ -199,13 +462,11 @@ function VendorProducts() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Resolve the actual warranty period — use custom text if "other" was chosen
     const resolvedWarrantyPeriod =
       formData.warrantyPeriod === "other"
         ? (formData.warrantyPeriodCustom || "").trim()
         : formData.warrantyPeriod;
 
-    // Merge standard sizes + custom size (if provided) into a single array
     const resolvedSizes = formData.hasSize
       ? [
           ...formData.sizes,
@@ -213,19 +474,14 @@ function VendorProducts() {
         ]
       : [];
 
-    const productData = {
-      ...formData,
-      warrantyPeriod: resolvedWarrantyPeriod,
-      sizes: resolvedSizes,
-    };
-    // Remove UI-only helper fields before sending to the API
+    const productData = { ...formData, warrantyPeriod: resolvedWarrantyPeriod, sizes: resolvedSizes };
     delete productData.warrantyPeriodCustom;
     delete productData.sizeCustom;
 
     if (currentEditedId) {
       dispatch(editProduct({ id: currentEditedId, formData: productData })).then((data) => {
         if (data?.payload?.success) {
-          dispatch(fetchAllProducts({}));
+          refreshAfterMutation();
           setOpenDialog(false);
           setFormData(initialFormData);
           toast({ title: "Product updated successfully" });
@@ -234,7 +490,7 @@ function VendorProducts() {
     } else {
       dispatch(addNewProduct(productData)).then((data) => {
         if (data?.payload?.success) {
-          dispatch(fetchAllProducts({}));
+          refreshAfterMutation();
           setOpenDialog(false);
           setFormData(initialFormData);
           toast({ title: "Product added successfully" });
@@ -249,11 +505,11 @@ function VendorProducts() {
     }
   };
 
-  // â”€â”€ Super Deal handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Super Deal handlers ────────────────────────────────────────────────
   const handleOpenDealDialog = (product) => {
     setDealTarget(product);
     const existing = product.superDeal;
-    const isLive = existing?.isActive && existing?.expiresAt && new Date(existing.expiresAt) > new Date();
+    const isLive   = existing?.isActive && existing?.expiresAt && new Date(existing.expiresAt) > new Date();
     setDealForm({
       dealPrice: isLive ? existing.dealPrice : "",
       dealTitle: isLive ? existing.dealTitle : "",
@@ -268,15 +524,18 @@ function VendorProducts() {
       return;
     }
     dispatch(setSuperDeal({
-      id:         dealTarget._id,
-      dealPrice:  Number(dealForm.dealPrice),
-      dealTitle:  dealForm.dealTitle || "âš¡ Super Deal",
-      expiresAt:  dealForm.expiresAt,
+      id:        dealTarget._id,
+      dealPrice: Number(dealForm.dealPrice),
+      dealTitle: dealForm.dealTitle || "⚡ Super Deal",
+      expiresAt: dealForm.expiresAt,
     })).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchAllProducts({}));
+        refreshAfterMutation();
         setOpenDealDialog(false);
-        toast({ title: "âš¡ Super Deal activated!", description: `Deal will end on ${new Date(dealForm.expiresAt).toLocaleString()}` });
+        toast({
+          title: "⚡ Super Deal activated!",
+          description: `Deal will end on ${new Date(dealForm.expiresAt).toLocaleString()}`,
+        });
       } else {
         toast({ title: data?.payload?.message || "Failed to set deal", variant: "destructive" });
       }
@@ -286,68 +545,54 @@ function VendorProducts() {
   const handleCancelDeal = (productId) => {
     dispatch(cancelSuperDeal(productId)).then((data) => {
       if (data?.payload?.success) {
-        dispatch(fetchAllProducts({}));
+        refreshAfterMutation();
         toast({ title: "Super Deal cancelled" });
       }
     });
   };
 
-  const isFormValid = () => {
-    return (
-      formData.name &&
-      formData.description &&
-      formData.category &&
-      formData.price &&
-      formData.stock !== "" &&
-      formData.images.length > 0
-    );
-  };
+  const isFormValid = () =>
+    formData.name &&
+    formData.description &&
+    formData.category &&
+    formData.price &&
+    formData.stock !== "" &&
+    formData.images.length > 0;
 
-  // Filter products
-  const filteredProducts = productList?.filter((product) => {
-    const displayName = product.name || product.title || "";
-    const sku = `#${product._id?.slice(-8).toUpperCase()}`;
-    const matchesSearch =
-      displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || product.status === filterStatus;
-    const matchesCategory = filterCategory === "all" || product.category === filterCategory;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
-
-  // Min datetime for deal expiry picker â€” now + 5 min
   const minDealDate = new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16);
+
+  // Products come pre-filtered from the server — no client-side filter needed.
+  const displayProducts = productList || [];
 
   return (
     <Fragment>
-      {/* Header */}
+      {/* ── Page header ─────────────────────────────────────────────────── */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="text-muted-foreground">Manage your product inventory</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Products</h1>
+            <p className="text-muted-foreground text-sm">Manage your product inventory</p>
           </div>
-          <Button onClick={handleOpenDialog} className="gap-2">
+          <Button onClick={handleOpenDialog} className="gap-2 shrink-0">
             <Plus className="h-4 w-4" />
-            Add Product
+            <span className="hidden sm:inline">Add Product</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex gap-4 items-center">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="relative flex-1 min-w-0" style={{ minWidth: "160px" }}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, SKU (#XXXXXXXX)..."
+              placeholder="Search products…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-[130px] shrink-0">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -356,27 +601,149 @@ function VendorProducts() {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-
-          {/* <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="men">Men</SelectItem>
-              <SelectItem value="women">Women</SelectItem>
-              <SelectItem value="kids">Kids</SelectItem>
-              <SelectItem value="accessories">Accessories</SelectItem>
-              <SelectItem value="footwear">Footwear</SelectItem>
-              <SelectItem value="electronics">Electronics</SelectItem>
-              <SelectItem value="home">Home & Living</SelectItem>
-            </SelectContent>
-          </Select> */}
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="border rounded-lg">
+      {/* ═══════════════════════════════════════════════════════════════
+          MOBILE — card grid  (visible below md)
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="md:hidden space-y-3">
+        {isListLoading ? (
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : displayProducts.length > 0 ? (
+          displayProducts.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              onEdit={handleEditProduct}
+              onOpenDeal={handleOpenDealDialog}
+              onCancelDeal={handleCancelDeal}
+              onDelete={handleDeleteClick}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col items-center gap-3 py-16 border rounded-xl">
+            <Package className="h-12 w-12 text-muted-foreground" />
+            <p className="text-muted-foreground text-sm">No products found</p>
+            <Button onClick={handleOpenDialog} variant="outline">
+              Add Your First Product
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          TABLET — simplified table  (md → xl)
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="hidden md:block xl:hidden border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[56px]">Image</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-[60px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isListLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">Loading products…</TableCell>
+              </TableRow>
+            ) : displayProducts.length > 0 ? (
+              displayProducts.map((product) => {
+                const deal    = product.superDeal;
+                const dealLive = deal?.isActive && deal?.expiresAt && new Date(deal.expiresAt) > new Date();
+                const thumb   = product.images?.[0] || product.image;
+                return (
+                  <TableRow key={product._id}>
+                    {/* Image */}
+                    <TableCell>
+                      <div className="relative h-10 w-10 rounded overflow-hidden bg-muted">
+                        {thumb ? (
+                          <img src={thumb} alt={product.name || product.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        {dealLive && (
+                          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-orange-500 rounded-full flex items-center justify-center">
+                            <Zap className="h-2 w-2 text-white" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Product name + category */}
+                    <TableCell>
+                      <p className="font-medium text-sm line-clamp-1">{product.name || product.title}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{product.category}</p>
+                    </TableCell>
+
+                    {/* Price */}
+                    <TableCell>
+                      <p className="font-medium text-sm">ETB {currencyFormatter(product.price)}</p>
+                      {dealLive && (
+                        <p className="text-xs font-bold text-orange-600">
+                          ⚡ ETB {currencyFormatter(deal.dealPrice)}
+                        </p>
+                      )}
+                    </TableCell>
+
+                    {/* Stock */}
+                    <TableCell>
+                      <span className={`text-sm font-medium ${
+                        product.stock === 0 ? "text-red-600" : product.stock < 10 ? "text-orange-600" : ""
+                      }`}>
+                        {product.stock}
+                      </span>
+                    </TableCell>
+
+                    {/* Status */}
+                    <TableCell>
+                      <StatusBadges product={product} />
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell>
+                      <ProductActions
+                        product={product}
+                        dealLive={dealLive}
+                        onEdit={handleEditProduct}
+                        onOpenDeal={handleOpenDealDialog}
+                        onCancelDeal={handleCancelDeal}
+                        onDelete={handleDeleteClick}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <Package className="h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground">No products found</p>
+                    <Button onClick={handleOpenDialog} variant="outline">Add Your First Product</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          DESKTOP — full table  (xl+)
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="hidden xl:block border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
@@ -394,24 +761,19 @@ function VendorProducts() {
           <TableBody>
             {isListLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  Loading products...
-                </TableCell>
+                <TableCell colSpan={9} className="text-center py-8">Loading products…</TableCell>
               </TableRow>
-            ) : filteredProducts && filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => {
-                const deal = product.superDeal;
+            ) : displayProducts.length > 0 ? (
+              displayProducts.map((product) => {
+                const deal    = product.superDeal;
                 const dealLive = deal?.isActive && deal?.expiresAt && new Date(deal.expiresAt) > new Date();
+                const thumb   = product.images?.[0] || product.image;
                 return (
                   <TableRow key={product._id}>
                     <TableCell>
                       <div className="h-12 w-12 rounded overflow-hidden bg-muted relative">
-                        {(product.images?.[0] || product.image) ? (
-                          <img
-                            src={product.images?.[0] || product.image}
-                            alt={product.name || product.title}
-                            className="h-full w-full object-cover"
-                          />
+                        {thumb ? (
+                          <img src={thumb} alt={product.name || product.title} className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center">
                             <Package className="h-6 w-6 text-muted-foreground" />
@@ -438,11 +800,11 @@ function VendorProducts() {
                       <div>
                         <div className="font-medium">ETB {currencyFormatter(product.price)}</div>
                         {product.salePrice > 0 && (
-                          <div className="text-sm text-green-600">Sale: ETB  {currencyFormatter(product.salePrice)}</div>
+                          <div className="text-sm text-green-600">Sale: ETB {currencyFormatter(product.salePrice)}</div>
                         )}
                         {dealLive && (
                           <div className="text-sm font-bold text-orange-600">
-                            âš¡ ETB  {currencyFormatter(deal.dealPrice)}
+                            ⚡ ETB {currencyFormatter(deal.dealPrice)}
                           </div>
                         )}
                       </div>
@@ -453,68 +815,29 @@ function VendorProducts() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant={product.status === "active" ? "default" : "secondary"}>
-                          {product.status}
-                        </Badge>
-                        {product.adminStatus === "unpublished" && (
-                          <Badge className="bg-orange-100 text-orange-800 border-0 text-[10px]">
-                            Admin hidden
-                          </Badge>
-                        )}
-                        {product.isDeleted && (
-                          <Badge className="bg-red-100 text-red-800 border-0 text-[10px]">
-                            Admin deleted
-                          </Badge>
-                        )}
-                      </div>
+                      <StatusBadges product={product} />
                     </TableCell>
                     <TableCell>
                       {dealLive ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-semibold text-orange-600 truncate max-w-[120px]">
-                            {deal.dealTitle || "âš¡ Super Deal"}
+                            {deal.dealTitle || "⚡ Super Deal"}
                           </span>
                           <CountdownBadge expiresAt={deal.expiresAt} />
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">â€”</span>
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditProduct(product)} className="gap-2">
-                            <Edit className="h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleOpenDealDialog(product)}
-                            className="gap-2 text-orange-600 focus:text-orange-600"
-                          >
-                            <Zap className="h-4 w-4" />
-                            {dealLive ? "Edit Super Deal" : "Create Super Deal"}
-                          </DropdownMenuItem>
-                          {dealLive && (
-                            <DropdownMenuItem
-                              onClick={() => handleCancelDeal(product._id)}
-                              className="gap-2 text-muted-foreground"
-                            >
-                              <XCircle className="h-4 w-4" /> Cancel Deal
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteClick(product._id)}
-                            className="gap-2 text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <ProductActions
+                        product={product}
+                        dealLive={dealLive}
+                        onEdit={handleEditProduct}
+                        onOpenDeal={handleOpenDealDialog}
+                        onCancelDeal={handleCancelDeal}
+                        onDelete={handleDeleteClick}
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -525,9 +848,7 @@ function VendorProducts() {
                   <div className="flex flex-col items-center gap-2">
                     <Package className="h-12 w-12 text-muted-foreground" />
                     <p className="text-muted-foreground">No products found</p>
-                    <Button onClick={handleOpenDialog} variant="outline">
-                      Add Your First Product
-                    </Button>
+                    <Button onClick={handleOpenDialog} variant="outline">Add Your First Product</Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -536,13 +857,25 @@ function VendorProducts() {
         </Table>
       </div>
 
-      {/* â”€â”€ Add/Edit Product Dialog â”€â”€ */}
+      {/* ── Infinite scroll sentinel + "loading more" indicator ───────── */}
+      {/* The sentinel is always rendered — IntersectionObserver watches it.
+          The loading spinner only shows when isLoadingMore is true.          */}
+      <div className="flex flex-col items-center gap-2 py-4">
+        {isLoadingMore && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more products…
+          </div>
+        )}
+        {/* Invisible sentinel — 1px tall, observed by IntersectionObserver */}
+        <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />
+      </div>
+
+      {/* ── Add / Edit Product Dialog ──────────────────────────────────── */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {currentEditedId ? "Edit Product" : "Add New Product"}
-            </DialogTitle>
+            <DialogTitle>{currentEditedId ? "Edit Product" : "Add New Product"}</DialogTitle>
           </DialogHeader>
           <MediaUpload
             images={formData.images}
@@ -559,11 +892,9 @@ function VendorProducts() {
             onSubmit={handleSubmit}
           />
 
-          {/* ── Warranty Section ── */}
+          {/* Warranty Section */}
           <div className="border rounded-xl p-4 space-y-4 -mt-2">
             <p className="text-sm font-semibold text-foreground">Warranty</p>
-
-            {/* Has Warranty toggle */}
             <div className="space-y-1.5">
               <Label className="text-sm">Warranty</Label>
               <Select
@@ -577,33 +908,22 @@ function VendorProducts() {
                   }))
                 }
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no">No Warranty</SelectItem>
                   <SelectItem value="yes">Has Warranty</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Warranty Period + Details — only shown when hasWarranty */}
             {formData.hasWarranty && (
               <>
                 <div className="space-y-1.5">
                   <Label className="text-sm">Warranty Period</Label>
                   <Select
                     value={formData.warrantyPeriod}
-                    onValueChange={(v) =>
-                      setFormData((p) => ({
-                        ...p,
-                        warrantyPeriod: v,
-                      }))
-                    }
+                    onValueChange={(v) => setFormData((p) => ({ ...p, warrantyPeriod: v }))}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select period" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select period" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1 Month">1 Month</SelectItem>
                       <SelectItem value="3 Months">3 Months</SelectItem>
@@ -615,21 +935,16 @@ function VendorProducts() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Custom period input when "Other" selected */}
                 {formData.warrantyPeriod === "other" && (
                   <div className="space-y-1.5">
                     <Label className="text-sm">Custom Warranty Period</Label>
                     <Input
                       placeholder="e.g. 18 Months, Lifetime"
                       value={formData.warrantyPeriodCustom || ""}
-                      onChange={(e) =>
-                        setFormData((p) => ({ ...p, warrantyPeriodCustom: e.target.value }))
-                      }
+                      onChange={(e) => setFormData((p) => ({ ...p, warrantyPeriodCustom: e.target.value }))}
                     />
                   </div>
                 )}
-
                 <div className="space-y-1.5">
                   <Label className="text-sm">
                     Warranty Details{" "}
@@ -638,20 +953,16 @@ function VendorProducts() {
                   <Input
                     placeholder="e.g. Official manufacturer warranty, covers manufacturing defects only"
                     value={formData.warrantyDetails}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, warrantyDetails: e.target.value }))
-                    }
+                    onChange={(e) => setFormData((p) => ({ ...p, warrantyDetails: e.target.value }))}
                   />
                 </div>
               </>
             )}
           </div>
 
-          {/* ── Size Section ── */}
+          {/* Size Section */}
           <div className="border rounded-xl p-4 space-y-4 -mt-2">
             <p className="text-sm font-semibold text-foreground">Size</p>
-
-            {/* Has Size toggle */}
             <div className="space-y-1.5">
               <Label className="text-sm">Size</Label>
               <Select
@@ -665,20 +976,15 @@ function VendorProducts() {
                   }))
                 }
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no">No Size</SelectItem>
                   <SelectItem value="yes">Has Sizes</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Size picker — only when hasSize */}
             {formData.hasSize && (
               <>
-                {/* Clothing sizes */}
                 <div className="space-y-1.5">
                   <Label className="text-sm">Clothing Sizes</Label>
                   <div className="flex flex-wrap gap-2">
@@ -708,8 +1014,6 @@ function VendorProducts() {
                     })}
                   </div>
                 </div>
-
-                {/* Numeric sizes */}
                 <div className="space-y-1.5">
                   <Label className="text-sm">Numeric Sizes</Label>
                   <div className="flex flex-wrap gap-2">
@@ -739,8 +1043,6 @@ function VendorProducts() {
                     })}
                   </div>
                 </div>
-
-                {/* Custom / Other size */}
                 <div className="space-y-1.5">
                   <Label className="text-sm">
                     Other / Custom Size{" "}
@@ -749,9 +1051,7 @@ function VendorProducts() {
                   <Input
                     placeholder="e.g. Free Size, One Size, EU 42, US 10"
                     value={formData.sizeCustom || ""}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, sizeCustom: e.target.value }))
-                    }
+                    onChange={(e) => setFormData((p) => ({ ...p, sizeCustom: e.target.value }))}
                   />
                 </div>
               </>
@@ -760,12 +1060,10 @@ function VendorProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* â”€â”€ Delete Confirmation Dialog â”€â”€ */}
+      {/* ── Delete Confirmation Dialog ─────────────────────────────────── */}
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Delete Product</DialogTitle></DialogHeader>
           <div className="py-4">
             <p>Are you sure you want to delete this product?</p>
             <p className="text-sm text-muted-foreground mt-2">This action cannot be undone.</p>
@@ -777,7 +1075,7 @@ function VendorProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* â”€â”€ Super Deal Dialog â”€â”€ */}
+      {/* ── Super Deal Dialog ──────────────────────────────────────────── */}
       <Dialog open={openDealDialog} onOpenChange={setOpenDealDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -786,7 +1084,6 @@ function VendorProducts() {
               Create Super Deal
             </DialogTitle>
           </DialogHeader>
-
           {dealTarget && (
             <div className="space-y-5 pt-1">
               {/* Product preview */}
@@ -834,7 +1131,7 @@ function VendorProducts() {
                 />
                 {dealForm.dealPrice && Number(dealForm.dealPrice) < dealTarget.price && (
                   <p className="text-xs text-green-600 font-medium">
-                    ðŸ’° {Math.round((1 - Number(dealForm.dealPrice) / dealTarget.price) * 100)}% off â€” customers save ETB {(dealTarget.price - Number(dealForm.dealPrice)).toFixed(2)}
+                    💰 {Math.round((1 - Number(dealForm.dealPrice) / dealTarget.price) * 100)}% off — customers save ETB {(dealTarget.price - Number(dealForm.dealPrice)).toFixed(2)}
                   </p>
                 )}
               </div>

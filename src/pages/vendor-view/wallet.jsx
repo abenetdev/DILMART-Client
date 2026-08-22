@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,48 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  Wallet as WalletIcon,
-  DollarSign,
-  TrendingUp,
-  Download,
-  Clock,
-  Loader2,
-  ArrowUpRight,
-  ArrowDownRight,
-  Settings,
-  Building2,
-  Smartphone,
-  AlertTriangle,
-  ChevronRight,
-  CheckCircle2,
+  Wallet as WalletIcon, DollarSign, TrendingUp, Download, Clock,
+  Loader2, ArrowUpRight, ArrowDownRight, Settings, Building2,
+  Smartphone, AlertTriangle, ChevronRight, CheckCircle2,
 } from "lucide-react";
 import {
   getWallet,
   getTransactions,
   getWithdrawals,
+  fetchTransactionsPage,
+  fetchWithdrawalsPage,
+  resetTransactions,
+  resetWithdrawals,
   requestWithdrawal,
   getEarningsBreakdown,
   getPayoutSettings,
@@ -61,6 +41,9 @@ const formatDate = (d) =>
     year: "numeric", month: "short", day: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
+
+const formatDateShort = (d) =>
+  new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 // ── Status badge ───────────────────────────────────────────────────────────
 const STATUS_CFG = {
@@ -95,17 +78,14 @@ const TypeBadge = ({ type }) => {
   );
 };
 
-// ── Method display helper ──────────────────────────────────────────────────
+// ── Payout method card ─────────────────────────────────────────────────────
 function PayoutMethodCard({ settings }) {
   if (!settings) return null;
   const method = settings.preferredMethod;
-
   if (method === "bank") {
     return (
       <div className="flex items-start gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50">
-        <div className="p-2 rounded-lg bg-blue-100 text-blue-600 shrink-0">
-          <Building2 className="h-5 w-5" />
-        </div>
+        <div className="p-2 rounded-lg bg-blue-100 text-blue-600 shrink-0"><Building2 className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Bank Transfer</p>
           <p className="text-sm font-semibold text-gray-900 truncate">{settings.bankName || "—"}</p>
@@ -119,13 +99,10 @@ function PayoutMethodCard({ settings }) {
       </div>
     );
   }
-
   if (method === "telebirr") {
     return (
       <div className="flex items-start gap-3 p-4 rounded-xl border border-green-100 bg-green-50">
-        <div className="p-2 rounded-lg bg-green-100 text-green-600 shrink-0">
-          <Smartphone className="h-5 w-5" />
-        </div>
+        <div className="p-2 rounded-lg bg-green-100 text-green-600 shrink-0"><Smartphone className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="text-xs font-semibold text-green-700 uppercase tracking-wide">Telebirr</p>
           <p className="text-sm font-semibold text-gray-900">{settings.telebirrName || "—"}</p>
@@ -135,8 +112,113 @@ function PayoutMethodCard({ settings }) {
       </div>
     );
   }
-
   return null;
+}
+
+// ── Mobile transaction card ────────────────────────────────────────────────
+function TransactionCard({ txn }) {
+  const amountPositive = txn.amount >= 0;
+  return (
+    <div className="flex items-start gap-3 py-3 border-b last:border-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <TypeBadge type={txn.type} />
+          <StatusBadge status={txn.status} />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">{formatDate(txn.createdAt)}</p>
+        {(txn.description || txn.reference) && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+            {txn.description || txn.reference}
+          </p>
+        )}
+      </div>
+      <p className={`font-semibold text-sm shrink-0 ${amountPositive ? "text-green-600" : "text-red-600"}`}>
+        {amountPositive ? "+" : ""}{currencyFormatter(txn.amount)}
+      </p>
+    </div>
+  );
+}
+
+// ── Mobile withdrawal card ─────────────────────────────────────────────────
+function WithdrawalCard({ w }) {
+  const methodLabel =
+    w.payoutMethod === "telebirr" ? "Telebirr" :
+    w.payoutMethod === "bank"     ? "Bank Transfer" :
+    w.payoutMethod || "—";
+  return (
+    <div className="bg-background border rounded-xl p-3 space-y-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-mono text-sm font-semibold">WD-{w._id?.slice(-6).toUpperCase()}</p>
+        <StatusBadge status={w.status} />
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+        <div>
+          <span className="text-xs text-muted-foreground block">Amount</span>
+          <span className="font-semibold">{currencyFormatter(w.amount)}</span>
+        </div>
+        <div>
+          <span className="text-xs text-muted-foreground block">Method</span>
+          <span>{methodLabel}</span>
+        </div>
+        <div>
+          <span className="text-xs text-muted-foreground block">Requested</span>
+          <span className="text-xs">{formatDateShort(w.requestedAt)}</span>
+        </div>
+        <div>
+          <span className="text-xs text-muted-foreground block">Processed</span>
+          <span className="text-xs">{w.processedAt ? formatDateShort(w.processedAt) : "—"}</span>
+        </div>
+      </div>
+      {w.status === "REJECTED" && w.adminNote && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5">
+          {w.adminNote}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Loading-more indicator ─────────────────────────────────────────────────
+function LoadingMore({ text = "Loading more…" }) {
+  return (
+    <div className="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      {text}
+    </div>
+  );
+}
+
+// ── useInfiniteScroll hook ─────────────────────────────────────────────────
+// Watches a sentinel element and calls loadNextPage when it enters the viewport.
+function useInfiniteScroll({ loadNextPage, hasNextPage, isLoading, currentPage }) {
+  const sentinelRef  = useRef(null);
+  const hasNextRef   = useRef(hasNextPage);
+  const isLoadingRef = useRef(isLoading);
+  const pageRef      = useRef(currentPage);
+
+  // Keep refs in sync every render
+  hasNextRef.current   = hasNextPage;
+  isLoadingRef.current = isLoading;
+  pageRef.current      = currentPage;
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (!hasNextRef.current || isLoadingRef.current) return;
+        loadNextPage(pageRef.current + 1);
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadNextPage]);
+
+  return sentinelRef;
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
@@ -145,36 +227,84 @@ export default function VendorWallet() {
   const navigate  = useNavigate();
   const { toast } = useToast();
   const { user }  = useSelector((s) => s.auth);
-  const { wallet, transactions, withdrawals, isLoading, payoutSettings } =
-    useSelector((s) => s.vendorWallet);
+  const {
+    wallet, transactions, withdrawals, isLoading,
+    isLoadingMoreTxns, isLoadingMoreWds,
+    txnCurrentPage, txnHasNextPage,
+    wdCurrentPage, wdHasNextPage,
+    payoutSettings,
+  } = useSelector((s) => s.vendorWallet);
 
-  // Dialog state — 2 steps: "method" → "amount"
-  const [dialogOpen,     setDialogOpen]     = useState(false);
-  const [dialogStep,     setDialogStep]      = useState("method"); // "method" | "amount"
-  const [withdrawAmount, setWithdrawAmount]  = useState("");
-  const [filterStatus,   setFilterStatus]   = useState("all");
-  const [isSubmitting,   setIsSubmitting]   = useState(false);
+  const [dialogOpen,     setDialogOpen]    = useState(false);
+  const [dialogStep,     setDialogStep]    = useState("method");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [txnFilterStatus, setTxnFilterStatus] = useState("all");
+  const [isSubmitting,   setIsSubmitting]  = useState(false);
 
   const vendorId = user?._id || user?.id;
 
-  // ── Load data ──────────────────────────────────────────────────────────────
+  // ── Keep filter ref stable for observer callbacks ──────────────────────
+  const txnFilterRef = useRef("all");
+  useEffect(() => { txnFilterRef.current = txnFilterStatus; }, [txnFilterStatus]);
+
+  // ── Initial data load ──────────────────────────────────────────────────
   useEffect(() => {
     if (!vendorId) return;
     dispatch(getWallet(vendorId));
-    dispatch(getTransactions({ vendorId }));
-    dispatch(getWithdrawals({ vendorId }));
     dispatch(getEarningsBreakdown(vendorId));
     dispatch(getPayoutSettings(vendorId));
+    // Load first page of transactions (for Overview tab + Transactions tab)
+    dispatch(fetchTransactionsPage({ page: 1, limit: 20 }));
+    // Load first page of withdrawals
+    dispatch(fetchWithdrawalsPage({ page: 1, limit: 20 }));
   }, [dispatch, vendorId]);
 
-  // ── Open dialog ────────────────────────────────────────────────────────────
+  // ── Transactions: reset + reload when filter changes ──────────────────
+  useEffect(() => {
+    dispatch(resetTransactions());
+    const raf = requestAnimationFrame(() => {
+      dispatch(fetchTransactionsPage({
+        page: 1, limit: 20,
+        status: txnFilterStatus !== "all" ? txnFilterStatus.toUpperCase() : undefined,
+      }));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [dispatch, txnFilterStatus]);
+
+  // ── loadNextTxnPage / loadNextWdPage ───────────────────────────────────
+  const loadNextTxnPage = useCallback((page) => {
+    dispatch(fetchTransactionsPage({
+      page, limit: 20,
+      status: txnFilterRef.current !== "all" ? txnFilterRef.current.toUpperCase() : undefined,
+    }));
+  }, [dispatch]);
+
+  const loadNextWdPage = useCallback((page) => {
+    dispatch(fetchWithdrawalsPage({ page, limit: 20 }));
+  }, [dispatch]);
+
+  // ── Sentinel refs via hook ─────────────────────────────────────────────
+  const txnSentinelRef = useInfiniteScroll({
+    loadNextPage: loadNextTxnPage,
+    hasNextPage:  txnHasNextPage,
+    isLoading:    isLoading || isLoadingMoreTxns,
+    currentPage:  txnCurrentPage,
+  });
+
+  const wdSentinelRef = useInfiniteScroll({
+    loadNextPage: loadNextWdPage,
+    hasNextPage:  wdHasNextPage,
+    isLoading:    isLoading || isLoadingMoreWds,
+    currentPage:  wdCurrentPage,
+  });
+
+  // ── Withdrawal dialog ──────────────────────────────────────────────────
   const openDialog = () => {
     setWithdrawAmount("");
     setDialogStep("method");
     setDialogOpen(true);
   };
 
-  // ── Submit withdrawal ──────────────────────────────────────────────────────
   const handleWithdraw = () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
@@ -189,7 +319,6 @@ export default function VendorWallet() {
       toast({ title: "Insufficient balance", description: `Max available: ${currencyFormatter(wallet?.availableBalance)}`, variant: "destructive" });
       return;
     }
-
     setIsSubmitting(true);
     dispatch(requestWithdrawal({ vendorId, amount }))
       .unwrap()
@@ -198,39 +327,27 @@ export default function VendorWallet() {
         setDialogOpen(false);
         setWithdrawAmount("");
         dispatch(getWallet(vendorId));
-        dispatch(getWithdrawals({ vendorId }));
-        dispatch(getTransactions({ vendorId }));
+        // Refresh withdrawals from page 1
+        dispatch(resetWithdrawals());
+        requestAnimationFrame(() => dispatch(fetchWithdrawalsPage({ page: 1, limit: 20 })));
+        // Refresh transactions from page 1
+        dispatch(resetTransactions());
+        requestAnimationFrame(() => dispatch(fetchTransactionsPage({ page: 1, limit: 20 })));
       })
       .catch((err) => {
-        toast({
-          title: "Withdrawal Failed",
-          description: err?.message || "Something went wrong",
-          variant: "destructive",
-        });
+        toast({ title: "Withdrawal Failed", description: err?.message || "Something went wrong", variant: "destructive" });
       })
       .finally(() => setIsSubmitting(false));
   };
 
-  // ── Payout settings validity ───────────────────────────────────────────────
   const payoutConfigured = (() => {
     if (!payoutSettings) return false;
     const m = payoutSettings.preferredMethod;
-    if (m === "bank") {
-      return !!(payoutSettings.bankName && payoutSettings.accountHolderName && payoutSettings.accountNumber);
-    }
-    if (m === "telebirr") {
-      return !!(payoutSettings.telebirrName && payoutSettings.telebirrNumber);
-    }
+    if (m === "bank")     return !!(payoutSettings.bankName && payoutSettings.accountHolderName && payoutSettings.accountNumber);
+    if (m === "telebirr") return !!(payoutSettings.telebirrName && payoutSettings.telebirrNumber);
     return false;
   })();
 
-  // ── Filter transactions ────────────────────────────────────────────────────
-  const filteredTransactions =
-    filterStatus === "all"
-      ? transactions
-      : transactions?.filter((t) => t.status === filterStatus.toUpperCase());
-
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading && !wallet) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -239,135 +356,136 @@ export default function VendorWallet() {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold">Wallet & Earnings</h1>
-          <p className="text-muted-foreground">Track your revenue and manage withdrawals</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Wallet & Earnings</h1>
+          <p className="text-muted-foreground text-sm">Track your revenue and manage withdrawals</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/vendor/payout-settings")}
-            className="gap-2"
-          >
+        <div className="flex gap-2 shrink-0 flex-wrap">
+          <Button variant="outline" onClick={() => navigate("/vendor/payout-settings")} className="gap-2">
             <Settings className="h-4 w-4" />
-            Payout Settings
+            <span className="hidden sm:inline">Payout Settings</span>
+            <span className="sm:hidden">Settings</span>
           </Button>
-          <Button
-            onClick={openDialog}
-            className="gap-2"
-            disabled={!wallet || wallet.availableBalance <= 0}
-          >
+          <Button onClick={openDialog} className="gap-2" disabled={!wallet || wallet.availableBalance <= 0}>
             <Download className="h-4 w-4" />
-            Request Withdrawal
+            <span className="hidden sm:inline">Request Withdrawal</span>
+            <span className="sm:hidden">Withdraw</span>
           </Button>
         </div>
       </div>
 
       {/* ── Overview cards ── */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currencyFormatter(wallet?.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">All completed orders</p>
+            <div className="text-xl sm:text-2xl font-bold">{currencyFormatter(wallet?.totalRevenue)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden sm:block">All completed orders</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Available</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{currencyFormatter(wallet?.availableBalance)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Ready for withdrawal</p>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{currencyFormatter(wallet?.availableBalance)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden sm:block">Ready for withdrawal</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Balance</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-4 w-4 text-orange-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{currencyFormatter(wallet?.pendingBalance)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Released after delivery is confirmed
-            </p>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{currencyFormatter(wallet?.pendingBalance)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden sm:block">Released after delivery</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Withdrawn</CardTitle>
-            <WalletIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">Withdrawn</CardTitle>
+            <WalletIcon className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currencyFormatter(wallet?.withdrawnAmount)}</div>
-            <p className="text-xs text-muted-foreground mt-1">{wallet?.totalOrders || 0} orders</p>
+            <div className="text-xl sm:text-2xl font-bold">{currencyFormatter(wallet?.withdrawnAmount)}</div>
+            <p className="text-xs text-muted-foreground mt-1 hidden sm:block">{wallet?.totalOrders || 0} orders</p>
           </CardContent>
         </Card>
       </div>
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="overview"     className="flex-1 sm:flex-none">Overview</TabsTrigger>
+          <TabsTrigger value="transactions" className="flex-1 sm:flex-none">Transactions</TabsTrigger>
+          <TabsTrigger value="withdrawals"  className="flex-1 sm:flex-none">Withdrawals</TabsTrigger>
         </TabsList>
 
-        {/* Overview */}
+        {/* ════════════════════════════════════════════════════════════════
+            OVERVIEW TAB — recent 5 from the already-loaded transactions
+        ════════════════════════════════════════════════════════════════ */}
         <TabsContent value="overview" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
+            <CardContent className="p-0 sm:p-6 sm:pt-0">
               {transactions?.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  {/* Mobile */}
+                  <div className="sm:hidden px-4 pb-2">
                     {transactions.slice(0, 5).map((txn) => (
-                      <TableRow key={txn._id}>
-                        <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
-                        <TableCell><TypeBadge type={txn.type} /></TableCell>
-                        <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
-                        </TableCell>
-                        <TableCell><StatusBadge status={txn.status} /></TableCell>
-                      </TableRow>
+                      <TransactionCard key={txn._id} txn={txn} />
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                  {/* Tablet+ */}
+                  <div className="hidden sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.slice(0, 5).map((txn) => (
+                          <TableRow key={txn._id}>
+                            <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
+                            <TableCell><TypeBadge type={txn.type} /></TableCell>
+                            <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
+                            </TableCell>
+                            <TableCell><StatusBadge status={txn.status} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-6">No transactions yet</p>
+                <p className="text-sm text-muted-foreground text-center py-6 px-4">No transactions yet</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Transactions */}
+        {/* ════════════════════════════════════════════════════════════════
+            TRANSACTIONS TAB — infinite scroll
+        ════════════════════════════════════════════════════════════════ */}
         <TabsContent value="transactions" className="space-y-4">
           <div className="flex items-center gap-2">
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[200px]">
+            <Select value={txnFilterStatus} onValueChange={setTxnFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -382,104 +500,186 @@ export default function VendorWallet() {
 
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Transaction ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Description</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions?.length > 0 ? (
-                    filteredTransactions.map((txn) => (
-                      <TableRow key={txn._id}>
-                        <TableCell className="font-mono text-xs">
-                          {txn._id?.slice(-8).toUpperCase()}
-                        </TableCell>
-                        <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
-                        <TableCell><TypeBadge type={txn.type} /></TableCell>
-                        <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
-                        </TableCell>
-                        <TableCell><StatusBadge status={txn.status} /></TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[220px]">
-                          {txn.description || txn.reference || "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No transactions found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              {/* First-page loading skeleton */}
+              {isLoading && transactions.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground text-sm">Loading transactions…</p>
+              ) : transactions?.length > 0 ? (
+                <>
+                  {/* ── Mobile: card-list ── */}
+                  <div className="sm:hidden px-4 pb-2 pt-3">
+                    {transactions.map((txn) => (
+                      <TransactionCard key={txn._id} txn={txn} />
+                    ))}
+                  </div>
+
+                  {/* ── Tablet (sm → xl) ── */}
+                  <div className="hidden sm:block xl:hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.map((txn) => (
+                          <TableRow key={txn._id}>
+                            <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
+                            <TableCell><TypeBadge type={txn.type} /></TableCell>
+                            <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
+                            </TableCell>
+                            <TableCell><StatusBadge status={txn.status} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* ── Desktop (xl+) ── */}
+                  <div className="hidden xl:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Transaction ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Description</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {transactions.map((txn) => (
+                          <TableRow key={txn._id}>
+                            <TableCell className="font-mono text-xs">
+                              {txn._id?.slice(-8).toUpperCase()}
+                            </TableCell>
+                            <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
+                            <TableCell><TypeBadge type={txn.type} /></TableCell>
+                            <TableCell className={`font-medium ${txn.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
+                              {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
+                            </TableCell>
+                            <TableCell><StatusBadge status={txn.status} /></TableCell>
+                            <TableCell className="text-xs text-muted-foreground max-w-[220px]">
+                              {txn.description || txn.reference || "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              ) : (
+                <p className="text-center py-8 text-muted-foreground text-sm px-4">No transactions found</p>
+              )}
+
+              {/* Loading more + sentinel */}
+              {isLoadingMoreTxns && <LoadingMore text="Loading more transactions…" />}
+              <div ref={txnSentinelRef} className="h-px w-full" aria-hidden="true" />
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Withdrawals */}
+        {/* ════════════════════════════════════════════════════════════════
+            WITHDRAWALS TAB — infinite scroll
+        ════════════════════════════════════════════════════════════════ */}
         <TabsContent value="withdrawals" className="space-y-4">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Request ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Note</TableHead>
-                    <TableHead>Processed</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {withdrawals?.length > 0 ? (
-                    withdrawals.map((w) => (
-                      <TableRow key={w._id}>
-                        <TableCell className="font-mono text-xs">
-                          WD-{w._id?.slice(-6).toUpperCase()}
-                        </TableCell>
-                        <TableCell className="text-sm">{formatDate(w.requestedAt)}</TableCell>
-                        <TableCell className="font-medium">{currencyFormatter(w.amount)}</TableCell>
-                        <TableCell className="text-sm capitalize">
-                          {w.payoutMethod === "telebirr" ? "Telebirr" :
-                           w.payoutMethod === "bank"     ? "Bank Transfer" :
-                           w.payoutMethod || "—"}
-                        </TableCell>
-                        <TableCell><StatusBadge status={w.status} /></TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-[200px]">
-                          {w.status === "REJECTED" && w.adminNote
-                            ? <span className="text-red-600">{w.adminNote}</span>
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {w.processedAt ? formatDate(w.processedAt) : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No withdrawal requests yet
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              {/* First-page loading skeleton */}
+              {isLoading && withdrawals.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground text-sm">Loading withdrawals…</p>
+              ) : withdrawals?.length > 0 ? (
+                <>
+                  {/* ── Mobile: card-list ── */}
+                  <div className="sm:hidden p-3 space-y-3">
+                    {withdrawals.map((w) => (
+                      <WithdrawalCard key={w._id} w={w} />
+                    ))}
+                  </div>
+
+                  {/* ── Tablet (sm → xl) ── */}
+                  <div className="hidden sm:block xl:hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {withdrawals.map((w) => (
+                          <TableRow key={w._id}>
+                            <TableCell className="font-mono text-xs">WD-{w._id?.slice(-6).toUpperCase()}</TableCell>
+                            <TableCell className="font-medium">{currencyFormatter(w.amount)}</TableCell>
+                            <TableCell className="text-sm capitalize">
+                              {w.payoutMethod === "telebirr" ? "Telebirr" : w.payoutMethod === "bank" ? "Bank Transfer" : w.payoutMethod || "—"}
+                            </TableCell>
+                            <TableCell><StatusBadge status={w.status} /></TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {formatDateShort(w.requestedAt)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* ── Desktop (xl+) ── */}
+                  <div className="hidden xl:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Request ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Note</TableHead>
+                          <TableHead>Processed</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {withdrawals.map((w) => (
+                          <TableRow key={w._id}>
+                            <TableCell className="font-mono text-xs">WD-{w._id?.slice(-6).toUpperCase()}</TableCell>
+                            <TableCell className="text-sm">{formatDate(w.requestedAt)}</TableCell>
+                            <TableCell className="font-medium">{currencyFormatter(w.amount)}</TableCell>
+                            <TableCell className="text-sm capitalize">
+                              {w.payoutMethod === "telebirr" ? "Telebirr" : w.payoutMethod === "bank" ? "Bank Transfer" : w.payoutMethod || "—"}
+                            </TableCell>
+                            <TableCell><StatusBadge status={w.status} /></TableCell>
+                            <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                              {w.status === "REJECTED" && w.adminNote ? <span className="text-red-600">{w.adminNote}</span> : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {w.processedAt ? formatDate(w.processedAt) : "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              ) : (
+                <p className="text-center py-8 text-muted-foreground text-sm px-4">No withdrawal requests yet</p>
+              )}
+
+              {/* Loading more + sentinel */}
+              {isLoadingMoreWds && <LoadingMore text="Loading more withdrawals…" />}
+              <div ref={wdSentinelRef} className="h-px w-full" aria-hidden="true" />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* ── Withdrawal Dialog ── */}
+      {/* ── Withdrawal Dialog (unchanged) ─────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -491,11 +691,11 @@ export default function VendorWallet() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* ── Step indicator ── */}
+          {/* Step indicator */}
           <div className="flex items-center gap-2 py-1">
             {["method", "amount"].map((step, i) => {
-              const active  = dialogStep === step;
-              const done    = (dialogStep === "amount" && step === "method");
+              const active = dialogStep === step;
+              const done   = dialogStep === "amount" && step === "method";
               return (
                 <div key={step} className="flex items-center gap-2">
                   <span className={`h-6 w-6 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
@@ -514,32 +714,23 @@ export default function VendorWallet() {
             })}
           </div>
 
-          {/* ── Step 1: Payout method ── */}
+          {/* Step 1: Payout method */}
           {dialogStep === "method" && (
             <div className="space-y-4 py-2">
               {payoutConfigured ? (
                 <>
-                  <p className="text-sm text-muted-foreground">
-                    Your withdrawal will be sent to:
-                  </p>
+                  <p className="text-sm text-muted-foreground">Your withdrawal will be sent to:</p>
                   <PayoutMethodCard settings={payoutSettings} />
                   <p className="text-xs text-muted-foreground">
                     Need to change this?{" "}
-                    <button
-                      className="text-primary underline underline-offset-2"
-                      onClick={() => { setDialogOpen(false); navigate("/vendor/payout-settings"); }}
-                    >
+                    <button className="text-primary underline underline-offset-2"
+                      onClick={() => { setDialogOpen(false); navigate("/vendor/payout-settings"); }}>
                       Update payout settings
                     </button>
                   </p>
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      className="flex-1 gap-2"
-                      onClick={() => setDialogStep("amount")}
-                    >
+                    <Button variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                    <Button className="flex-1 gap-2" onClick={() => setDialogStep("amount")}>
                       Continue <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -556,15 +747,9 @@ export default function VendorWallet() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      className="flex-1 gap-2"
-                      onClick={() => { setDialogOpen(false); navigate("/vendor/payout-settings"); }}
-                    >
-                      <Settings className="h-4 w-4" />
-                      Configure Now
+                    <Button variant="outline" className="flex-1" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                    <Button className="flex-1 gap-2" onClick={() => { setDialogOpen(false); navigate("/vendor/payout-settings"); }}>
+                      <Settings className="h-4 w-4" />Configure Now
                     </Button>
                   </div>
                 </>
@@ -572,10 +757,9 @@ export default function VendorWallet() {
             </div>
           )}
 
-          {/* ── Step 2: Amount ── */}
+          {/* Step 2: Amount */}
           {dialogStep === "amount" && (
             <div className="space-y-4 py-2">
-              {/* Balance display */}
               <div className="bg-muted/50 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Available Balance</p>
@@ -583,67 +767,36 @@ export default function VendorWallet() {
                 </div>
                 <DollarSign className="h-8 w-8 text-green-300" />
               </div>
-
-              {/* Amount input */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">
                   Withdrawal Amount (ETB) <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  type="number"
-                  placeholder="0.00"
-                  min="100"
-                  max={wallet?.availableBalance}
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="text-lg font-semibold"
-                  autoFocus
+                  type="number" placeholder="0.00" min="100" max={wallet?.availableBalance}
+                  value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="text-lg font-semibold" autoFocus
                 />
                 <p className="text-xs text-muted-foreground">Minimum withdrawal: ETB 100.00</p>
               </div>
-
-              {/* Quick amount buttons */}
               {wallet?.availableBalance > 0 && (
                 <div className="flex gap-2 flex-wrap">
-                  {[100, 500, 1000].filter(v => v <= wallet.availableBalance).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setWithdrawAmount(String(v))}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-primary transition-colors font-medium"
-                    >
+                  {[100, 500, 1000].filter((v) => v <= wallet.availableBalance).map((v) => (
+                    <button key={v} type="button" onClick={() => setWithdrawAmount(String(v))}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-primary transition-colors font-medium">
                       ETB {v.toLocaleString()}
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setWithdrawAmount(String(wallet.availableBalance.toFixed(2)))}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-primary transition-colors font-medium"
-                  >
+                  <button type="button" onClick={() => setWithdrawAmount(String(wallet.availableBalance.toFixed(2)))}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-primary transition-colors font-medium">
                     Max
                   </button>
                 </div>
               )}
-
               <div className="flex gap-2 pt-1">
-                <Button variant="outline" className="flex-1" onClick={() => setDialogStep("method")}>
-                  Back
-                </Button>
-                <Button
-                  className="flex-1 gap-2"
-                  onClick={handleWithdraw}
-                  disabled={
-                    isSubmitting ||
-                    !withdrawAmount ||
-                    parseFloat(withdrawAmount) < 100 ||
-                    parseFloat(withdrawAmount) > (wallet?.availableBalance || 0)
-                  }
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
+                <Button variant="outline" className="flex-1" onClick={() => setDialogStep("method")}>Back</Button>
+                <Button className="flex-1 gap-2" onClick={handleWithdraw}
+                  disabled={isSubmitting || !withdrawAmount || parseFloat(withdrawAmount) < 100 || parseFloat(withdrawAmount) > (wallet?.availableBalance || 0)}>
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                   {isSubmitting ? "Submitting…" : "Request Withdrawal"}
                 </Button>
               </div>

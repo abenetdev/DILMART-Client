@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Eye, Package, RotateCcw } from "lucide-react";
+import { Loader2, Eye, RotateCcw } from "lucide-react";
 import ReturnStatusBadge from "@/components/common/return-status-badge";
 import ReturnTimeline from "@/components/common/return-timeline";
 import { currencyFormatter } from "@/utils";
@@ -33,19 +33,86 @@ const STATUS_FILTERS = [
   { value: "completed",        label: "Completed" },
 ];
 
-export default function VendorReturnRequestsTab() {
-  const dispatch = useDispatch();
-  const { toast } = useToast();
-  const { list, current, isLoading, isSubmitting, error } = useSelector((s) => s.vendorReturn);
+// ── Mobile return card ─────────────────────────────────────────────────────
+function ReturnCard({ r, onView }) {
+  return (
+    <div className="bg-background border rounded-xl p-3 space-y-3">
+      {/* Top row: order ID + status + view button */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-mono text-sm font-semibold">
+            ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {r.customerId?.userName || "—"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <ReturnStatusBadge status={r.status} />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0"
+            onClick={() => onView(r._id)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [search,       setSearch]       = useState("");
-  const [openDetail,   setOpenDetail]   = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-  const [rejectOpen,   setRejectOpen]   = useState(false);
-  const [inspectResult, setInspectResult] = useState("");
-  const [inspectNote,   setInspectNote]   = useState("");
-  const [inspectOpen,   setInspectOpen]   = useState(false);
+      {/* Detail grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+        <div>
+          <span className="text-xs text-muted-foreground block">Reason</span>
+          <span className="capitalize">{r.reason?.replace(/_/g, " ") || "—"}</span>
+        </div>
+        <div>
+          <span className="text-xs text-muted-foreground block">Amount</span>
+          <span className="font-semibold">{currencyFormatter(r.requestedAmount)}</span>
+        </div>
+        <div className="col-span-2">
+          <span className="text-xs text-muted-foreground block">Date</span>
+          <span className="text-xs">{new Date(r.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Mobile skeleton ────────────────────────────────────────────────────────
+function ReturnCardSkeleton() {
+  return (
+    <div className="bg-background border rounded-xl p-3 space-y-3 animate-pulse">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1.5 flex-1">
+          <div className="h-4 bg-muted rounded w-2/3" />
+          <div className="h-3 bg-muted rounded w-1/3" />
+        </div>
+        <div className="h-6 w-24 bg-muted rounded-full" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-8 bg-muted rounded" />
+        <div className="h-8 bg-muted rounded" />
+        <div className="col-span-2 h-6 bg-muted rounded" />
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────
+export default function VendorReturnRequestsTab() {
+  const dispatch   = useDispatch();
+  const { toast }  = useToast();
+  const { list, current, isLoading, isSubmitting } = useSelector((s) => s.vendorReturn);
+
+  const [statusFilter,   setStatusFilter]   = useState("all");
+  const [search,         setSearch]         = useState("");
+  const [openDetail,     setOpenDetail]     = useState(false);
+  const [rejectReason,   setRejectReason]   = useState("");
+  const [rejectOpen,     setRejectOpen]     = useState(false);
+  const [inspectResult,  setInspectResult]  = useState("");
+  const [inspectNote,    setInspectNote]    = useState("");
+  const [inspectOpen,    setInspectOpen]    = useState(false);
 
   useEffect(() => {
     dispatch(fetchVendorReturns(statusFilter !== "all" ? { status: statusFilter } : {}));
@@ -66,7 +133,7 @@ export default function VendorReturnRequestsTab() {
 
   async function handleApprove() {
     const result = await dispatch(approveVendorReturn({ id: current._id }));
-    if (result?.payload?.success) { toast({ title: "Return request approved." }); }
+    if (result?.payload?.success) toast({ title: "Return request approved." });
     else toast({ title: result?.payload?.message || "Error", variant: "destructive" });
   }
 
@@ -102,13 +169,18 @@ export default function VendorReturnRequestsTab() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* ── Filters ───────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Input placeholder="Search by order / customer…" value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 text-sm" />
+        <div className="relative flex-1 sm:max-w-xs">
+          <Input
+            placeholder="Search by order / customer…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 text-sm"
+          />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px] h-9 text-sm">
+          <SelectTrigger className="w-full sm:w-[180px] h-9 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -119,68 +191,158 @@ export default function VendorReturnRequestsTab() {
         </Select>
       </div>
 
-      {/* Table */}
+      {/* ── Loading / empty ───────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        <>
+          {/* Mobile skeletons */}
+          <div className="md:hidden space-y-3">
+            <ReturnCardSkeleton />
+            <ReturnCardSkeleton />
+            <ReturnCardSkeleton />
+          </div>
+          {/* Tablet / Desktop spinner */}
+          <div className="hidden md:flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center py-16 gap-3">
+        <div className="flex flex-col items-center py-16 gap-3 border rounded-xl">
           <RotateCcw className="h-10 w-10 text-muted-foreground/40" />
           <p className="text-muted-foreground text-sm">No return requests found.</p>
         </div>
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b">
-              <tr>
-                {["Order", "Customer", "Reason", "Amount", "Status", "Date", ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => (
-                <tr key={r._id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs">ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}</td>
-                  <td className="px-4 py-3">{r.customerId?.userName || "—"}</td>
-                  <td className="px-4 py-3 capitalize text-xs">{r.reason?.replace(/_/g," ")}</td>
-                  <td className="px-4 py-3">{currencyFormatter(r.requestedAmount)}</td>
-                  <td className="px-4 py-3"><ReturnStatusBadge status={r.status} /></td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
-                    <Button size="sm" variant="ghost" onClick={() => openRequestDetail(r._id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </td>
+        <>
+          {/* ═══════════════════════════════════════════════════════════
+              MOBILE — return cards  (below md)
+          ═══════════════════════════════════════════════════════════ */}
+          <div className="md:hidden space-y-3">
+            {filtered.map((r) => (
+              <ReturnCard key={r._id} r={r} onView={openRequestDetail} />
+            ))}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════
+              TABLET — simplified table  (md → xl)
+          ═══════════════════════════════════════════════════════════ */}
+          <div className="hidden md:block xl:hidden rounded-xl border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  {["Order", "Customer", "Amount", "Status", "Date", ""].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((r) => (
+                  <tr key={r._id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <p className="font-mono text-xs font-semibold">
+                        ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {r.reason?.replace(/_/g, " ")}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 text-sm">{r.customerId?.userName || "—"}</td>
+                    <td className="px-4 py-3 font-medium text-sm">
+                      {currencyFormatter(r.requestedAmount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ReturnStatusBadge status={r.status} />
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button size="sm" variant="ghost" onClick={() => openRequestDetail(r._id)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════
+              DESKTOP — full table  (xl+)
+          ═══════════════════════════════════════════════════════════ */}
+          <div className="hidden xl:block rounded-xl border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  {["Order", "Customer", "Reason", "Amount", "Status", "Date", ""].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 font-semibold text-slate-700 text-xs">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r) => (
+                  <tr key={r._id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 font-mono text-xs">
+                      ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
+                    </td>
+                    <td className="px-4 py-3">{r.customerId?.userName || "—"}</td>
+                    <td className="px-4 py-3 capitalize text-xs">{r.reason?.replace(/_/g, " ")}</td>
+                    <td className="px-4 py-3">{currencyFormatter(r.requestedAmount)}</td>
+                    <td className="px-4 py-3"><ReturnStatusBadge status={r.status} /></td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button size="sm" variant="ghost" onClick={() => openRequestDetail(r._id)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* Detail Dialog */}
+      {/* ── Detail Dialog (unchanged) ──────────────────────────────────── */}
       <Dialog open={openDetail} onOpenChange={(o) => { if (!o) closeDetail(); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Return Request Detail</DialogTitle>
           </DialogHeader>
           {!current ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
           ) : (
             <div className="space-y-4 mt-2">
               {/* Header row */}
               <div className="flex flex-wrap gap-3 items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Order</p>
-                  <p className="font-mono font-semibold">ORD-{current.orderId?._id?.toString().slice(-8).toUpperCase()}</p>
+                  <p className="font-mono font-semibold">
+                    ORD-{current.orderId?._id?.toString().slice(-8).toUpperCase()}
+                  </p>
                 </div>
                 <ReturnStatusBadge status={current.status} />
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><p className="text-xs text-muted-foreground">Customer</p><p className="font-medium">{current.customerId?.userName}</p></div>
-                <div><p className="text-xs text-muted-foreground">Reason</p><p className="font-medium capitalize">{current.reason?.replace(/_/g," ")}</p></div>
-                <div><p className="text-xs text-muted-foreground">Amount</p><p className="font-medium">{currencyFormatter(current.requestedAmount)}</p></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Customer</p>
+                  <p className="font-medium">{current.customerId?.userName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Reason</p>
+                  <p className="font-medium capitalize">{current.reason?.replace(/_/g, " ")}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="font-medium">{currencyFormatter(current.requestedAmount)}</p>
+                </div>
               </div>
 
               <div>
@@ -194,11 +356,17 @@ export default function VendorReturnRequestsTab() {
                   <p className="text-xs text-muted-foreground mb-2">Evidence</p>
                   <div className="flex flex-wrap gap-2">
                     {current.evidence.map((e, i) => (
-                      <a key={i} href={e.fileUrl} target="_blank" rel="noopener noreferrer"
-                        className="block h-20 w-20 rounded-lg overflow-hidden border bg-slate-100 hover:opacity-80">
+                      <a
+                        key={i}
+                        href={e.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block h-20 w-20 rounded-lg overflow-hidden border bg-slate-100 hover:opacity-80"
+                      >
                         {e.fileType === "image" || !e.fileType
                           ? <img src={e.fileUrl} alt="" className="h-full w-full object-cover" />
-                          : <div className="h-full flex items-center justify-center text-xs text-muted-foreground">video</div>}
+                          : <div className="h-full flex items-center justify-center text-xs text-muted-foreground">video</div>
+                        }
                       </a>
                     ))}
                   </div>
@@ -217,7 +385,9 @@ export default function VendorReturnRequestsTab() {
                 <div className="rounded bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800 space-y-0.5">
                   <p>Courier: <strong>{current.shipment.courier || "—"}</strong></p>
                   <p>Tracking: <strong>{current.shipment.trackingNumber}</strong></p>
-                  {current.shipment.shippedAt && <p>Shipped: {new Date(current.shipment.shippedAt).toLocaleDateString()}</p>}
+                  {current.shipment.shippedAt && (
+                    <p>Shipped: {new Date(current.shipment.shippedAt).toLocaleDateString()}</p>
+                  )}
                 </div>
               )}
 
@@ -227,7 +397,12 @@ export default function VendorReturnRequestsTab() {
               <div className="flex flex-wrap gap-2">
                 {current.status === "vendor_reviewing" && (
                   <>
-                    <Button size="sm" onClick={handleApprove} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button
+                      size="sm"
+                      onClick={handleApprove}
+                      disabled={isSubmitting}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
                       {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Approve"}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => setRejectOpen(true)} disabled={isSubmitting}>
@@ -251,9 +426,16 @@ export default function VendorReturnRequestsTab() {
               {rejectOpen && (
                 <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
                   <Label className="text-sm text-red-800">Rejection Reason *</Label>
-                  <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={2} placeholder="Explain why you are rejecting this request…" />
+                  <Textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    rows={2}
+                    placeholder="Explain why you are rejecting this request…"
+                  />
                   <div className="flex gap-2">
-                    <Button size="sm" variant="destructive" onClick={handleReject} disabled={isSubmitting}>Confirm Reject</Button>
+                    <Button size="sm" variant="destructive" onClick={handleReject} disabled={isSubmitting}>
+                      Confirm Reject
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => setRejectOpen(false)}>Cancel</Button>
                   </div>
                 </div>
@@ -272,7 +454,13 @@ export default function VendorReturnRequestsTab() {
                       <SelectItem value="rejected">Reject (item condition not acceptable)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Textarea value={inspectNote} onChange={(e) => setInspectNote(e.target.value)} rows={2} placeholder="Notes (optional)…" className="bg-white" />
+                  <Textarea
+                    value={inspectNote}
+                    onChange={(e) => setInspectNote(e.target.value)}
+                    rows={2}
+                    placeholder="Notes (optional)…"
+                    className="bg-white"
+                  />
                   <div className="flex gap-2">
                     <Button size="sm" onClick={handleInspection} disabled={isSubmitting}>Submit</Button>
                     <Button size="sm" variant="ghost" onClick={() => setInspectOpen(false)}>Cancel</Button>

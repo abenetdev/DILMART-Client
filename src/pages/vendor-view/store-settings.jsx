@@ -305,26 +305,18 @@ export default function StoreSettings() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col xl:flex-row gap-6">
       {/* ── Left: Form Sections ─────────────────────────────────────────────── */}
       <div className="flex-1 space-y-6 min-w-0">
 
         {/* Page Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold">Store Settings</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Store Settings</h1>
+            <p className="text-muted-foreground text-sm">
               Manage your store profile, branding, and policies
             </p>
           </div>
-          {/* <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            {isSaving ? "Saving..." : isNew ? "Create Store" : "Save Changes"}
-          </Button> */}
         </div>
 
         {/* ── 1. Store Information ──────────────────────────────────────────── */}
@@ -413,7 +405,7 @@ export default function StoreSettings() {
           </div>
 
           {/* Business Category & Status */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Business Category</Label>
               <Select
@@ -471,7 +463,7 @@ export default function StoreSettings() {
           title="Branding"
           description="Customize your store's visual identity"
         >
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <ImageUploader
               label="Store Logo"
               value={form.logo}
@@ -490,7 +482,7 @@ export default function StoreSettings() {
 
           <Separator />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Primary Brand Color</Label>
               <div className="flex items-center gap-3 mt-1">
@@ -538,7 +530,7 @@ export default function StoreSettings() {
           title="Address Information"
           description="Where your customer's can get you"
         >
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>City</Label>
               <Input
@@ -655,8 +647,8 @@ export default function StoreSettings() {
       </div>
 
       {/* ── Right: Live Preview ──────────────────────────────────────────────── */}
-      <div className="w-80 flex-shrink-0">
-        <div className="sticky top-6">
+      <div className="xl:w-80 xl:flex-shrink-0">
+        <div className="xl:sticky xl:top-6">
           <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">

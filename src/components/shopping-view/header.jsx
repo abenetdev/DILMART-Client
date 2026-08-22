@@ -12,7 +12,6 @@ import {
 } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
-import { shoppingViewHeaderMenuItems } from "@/config";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +25,8 @@ import { logoutUser } from "@/store/auth-slice";
 import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlist } from "@/store/shop/wishlist-slice";
-import { Label } from "../ui/label";
 import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice";
+import { fetchAllActiveCategories } from "@/store/shop/category-slice";
 
 function getCartUserId(user, isAuthenticated) {
   return isAuthenticated && user?.id ? user.id : null;
@@ -129,43 +128,63 @@ function HeaderSearchBar() {
   );
 }
 
-// ── Nav menu items ────────────────────────────────────────────────────────
+// ── Category nav (dynamic, horizontally scrollable) ──────────────────────
+// Used in both the desktop nav row and the mobile strip below the search bar.
 
-function MenuItems({ onNavigate }) {
+function CategoryNav({ onNavigate }) {
   const navigate  = useNavigate();
   const location  = useLocation();
   const [, setSearchParams] = useSearchParams();
+  const { all: categories } = useSelector((s) => s.shopCategory);
 
-  function handleNavigate(menuItem) {
+  function handleCategoryClick(cat) {
+    sessionStorage.setItem("filters", JSON.stringify({ category: [cat.slug] }));
+
+    if (location.pathname.includes("listing")) {
+      setSearchParams(new URLSearchParams(`?category=${cat.slug}`));
+    } else {
+      navigate(`/listing?category=${cat.slug}`);
+    }
+    onNavigate?.();
+  }
+
+  function handleHomeClick() {
     sessionStorage.removeItem("filters");
-    const currentFilter =
-      menuItem.id !== "home" &&
-      menuItem.id !== "products" &&
-      menuItem.id !== "search"
-        ? { category: [menuItem.id] }
-        : null;
-
-    sessionStorage.setItem("filters", JSON.stringify(currentFilter));
-
-    location.pathname.includes("listing") && currentFilter !== null
-      ? setSearchParams(new URLSearchParams(`?category=${menuItem.id}`))
-      : navigate(menuItem.path);
-
+    sessionStorage.setItem("filters", JSON.stringify(null));
+    navigate("/");
     onNavigate?.();
   }
 
   return (
-    <nav className="flex flex-col mb-3 lg:mb-0 lg:items-center gap-6 lg:flex-row">
-      {shoppingViewHeaderMenuItems.map((menuItem) => (
-        <Label
-          key={menuItem.id}
-          onClick={() => handleNavigate(menuItem)}
-          className="text-sm font-medium cursor-pointer hover:text-primary transition-colors"
+    <div
+      className="flex items-center gap-1 overflow-x-auto scrollbar-hide"
+    >
+      {/* Static "Home" link */}
+      <button
+        onClick={handleHomeClick}
+        className={`
+          flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap
+          transition-colors
+          ${location.pathname === "/"
+            ? "text-primary bg-primary/10"
+            : "text-foreground/70 hover:text-primary hover:bg-primary/5"
+          }
+        `}
+      >
+        Home
+      </button>
+
+      {/* Dynamic categories from backend */}
+      {categories.map((cat) => (
+        <button
+          key={cat._id}
+          onClick={() => handleCategoryClick(cat)}
+          className="flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors text-foreground/70 hover:text-primary hover:bg-primary/5"
         >
-          {menuItem.label}
-        </Label>
+          {cat.name}
+        </button>
       ))}
-    </nav>
+    </div>
   );
 }
 
@@ -298,7 +317,11 @@ function ShoppingHeader() {
   const navigate   = useNavigate();
   const dispatch   = useDispatch();
 
-  // Fetch cart and wishlist on mount / auth change
+  // Fetch categories + cart + wishlist on mount / auth change
+  useEffect(() => {
+    dispatch(fetchAllActiveCategories());
+  }, [dispatch]);
+
   useEffect(() => {
     const cartUserId = getCartUserId(user, isAuthenticated);
     dispatch(fetchCartItems(cartUserId));
@@ -323,6 +346,11 @@ function ShoppingHeader() {
         </div>
       </div>
 
+      {/* ── Mobile category strip (below search bar) ── */}
+      <div className="lg:hidden border-t bg-muted/30 px-3 py-1 overflow-hidden">
+        <CategoryNav />
+      </div>
+
       {/* ── Desktop header: logo + search + actions ── */}
       <div className="hidden lg:flex h-16 items-center gap-2 px-6">
         <Link to="/" className="flex shrink-0 items-center">
@@ -341,8 +369,10 @@ function ShoppingHeader() {
       </div>
 
       {/* ── Desktop category nav row ── */}
-      <div className="hidden lg:flex h-10 items-center border-t px-6 bg-muted/30">
-        <MenuItems />
+      <div className="hidden lg:block border-t bg-muted/30 px-6 py-0 h-10 overflow-hidden">
+        <div className="h-full flex items-center">
+          <CategoryNav />
+        </div>
       </div>
     </header>
   );
