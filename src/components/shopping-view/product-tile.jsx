@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { brandOptionsMap, categoryOptionsMap, buildCategoryOptionsMap } from "@/config";
+import { brandOptionsMap, categoryOptionsMap, buildCategoryOptionsMap, buildBrandOptionsMap } from "@/config";
 import { ShoppingCart, Loader2, Heart } from "lucide-react";
 import { addToWishlist, removeFromWishlist } from "@/store/shop/wishlist-slice";
 import { useToast } from "../ui/use-toast";
@@ -25,7 +25,9 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
   );
 
   const { all: dbCategories } = useSelector((s) => s.shopCategory);
+  const { all: dbBrands } = useSelector((s) => s.shopBrand);
   const liveCategoryMap = buildCategoryOptionsMap(dbCategories);
+  const liveBrandMap = buildBrandOptionsMap(dbBrands);
 
   const title      = product?.name        || product?.title      || "Unknown Product";
   const image      = product?.images?.[0] || product?.image      || "";
@@ -34,7 +36,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
   const salePrice  = product?.salePrice   ?? 0;
 
   const categoryLabel = liveCategoryMap[product?.category] || product?.category || "";
-  const brandLabel    = brandOptionsMap[product?.brand]    || product?.brand    || "";
+  const brandLabel    = liveBrandMap[product?.brand]    || product?.brand    || "";
 
   async function onAddToCart(e) {
     e.stopPropagation();

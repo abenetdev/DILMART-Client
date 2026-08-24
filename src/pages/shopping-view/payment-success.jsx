@@ -33,7 +33,7 @@ function PaymentSuccessPage() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
-            onClick={() => navigate("/account/orders")}
+            onClick={() => navigate("/orders")}
             className="gap-2"
           >
             <Package className="h-4 w-4" />

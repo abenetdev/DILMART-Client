@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { User, Lock, MapPin, Loader2 } from "lucide-react";
-import { updateProfile, changePassword } from "@/store/auth-slice";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import { User, Lock, MapPin, Loader2, LogOut } from "lucide-react";
+import { updateProfile, changePassword, logoutUser } from "@/store/auth-slice";
 import { fetchAllAddresses } from "@/store/shop/address-slice";
 import Address from "../address";
 import { useToast } from "@/components/ui/use-toast";
 
 function AccountSettings() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useSelector((state) => state.auth);
 
@@ -25,6 +30,7 @@ function AccountSettings() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const userId = user?.id || user?._id;
 
@@ -84,6 +90,12 @@ function AccountSettings() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate("/", { replace: true });
+    toast({ title: "Logged out successfully" });
   };
 
   return (
@@ -208,6 +220,60 @@ function AccountSettings() {
         </div>
         <Address />
       </div>
+
+      <Separator />
+
+      {/* Logout Section */}
+      <Card className="border-0 shadow-md border-red-100">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg text-red-600">
+            <LogOut className="h-5 w-5" />
+            Logout
+          </CardTitle>
+          <CardDescription>
+            Sign out of your account on this device
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={() => setLogoutDialogOpen(true)}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout from Account
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Logout from your account?</DialogTitle>
+            <DialogDescription>
+              You will be signed out and redirected to the home page. You can log back in anytime.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="destructive"
+              className="flex-1 gap-2"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setLogoutDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

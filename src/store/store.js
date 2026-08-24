@@ -27,6 +27,7 @@ import shopSellerSlice from "./shop/seller-slice";
 import shopSuperDealsSlice from "./shop/super-deals-slice";
 import shopReturnSlice from "./shop/return-slice";
 import shopCategorySlice from "./shop/category-slice";
+import shopBrandSlice from "./shop/brand-slice";
 import vendorReturnSlice from "./vendor/return-slice";
 import adminReturnSlice from "./admin/return-slice";
 import commonFeatureSlice from "./common-slice";
@@ -35,6 +36,7 @@ import adminCustomersSlice from "./admin/customers-slice";
 import adminCategorySlice from "./admin/category-slice";
 import adminBannerSlice from "./admin/banner-slice";
 import adminSettingsSlice from "./admin/settings-slice";
+import adminBrandSlice from "./admin/brand-slice";
 
 const store = configureStore({
   reducer: {
@@ -68,6 +70,7 @@ const store = configureStore({
     shopSuperDeals: shopSuperDealsSlice,
     shopReturn:     shopReturnSlice,
     shopCategory:   shopCategorySlice,
+    shopBrand:      shopBrandSlice,
     vendorReturn:   vendorReturnSlice,
     adminReturn:    adminReturnSlice,
 
@@ -76,6 +79,7 @@ const store = configureStore({
     adminCategory:  adminCategorySlice,
     adminBanner:    adminBannerSlice,
     adminSettings:  adminSettingsSlice,
+    adminBrand:     adminBrandSlice,
 
     commonFeature: commonFeatureSlice,
   },

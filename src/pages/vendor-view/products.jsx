@@ -883,14 +883,19 @@ function VendorProducts() {
             onImagesChange={(imgs) => setFormData((p) => ({ ...p, images: imgs }))}
             onVideoChange={(vid)  => setFormData((p) => ({ ...p, video: vid }))}
           />
-          <CommonForm
-            formData={formData}
-            setFormData={setFormData}
-            buttonText={currentEditedId ? "Update Product" : "Add Product"}
-            formControls={dynamicFormElements}
-            isBtnDisabled={!isFormValid()}
-            onSubmit={handleSubmit}
-          />
+
+          {/* Hide the button that CommonForm renders internally — the real
+              submit button lives below the Size and Warranty sections.      */}
+          <div className="[&>form>button]:hidden">
+            <CommonForm
+              formData={formData}
+              setFormData={setFormData}
+              buttonText={currentEditedId ? "Update Product" : "Add Product"}
+              formControls={dynamicFormElements}
+              isBtnDisabled={!isFormValid()}
+              onSubmit={handleSubmit}
+            />
+          </div>
 
           {/* Warranty Section */}
           <div className="border rounded-xl p-4 space-y-4 -mt-2">
@@ -1057,6 +1062,22 @@ function VendorProducts() {
               </>
             )}
           </div>
+
+          {/* ── Submit button — lives BELOW Warranty and Size ── */}
+          <Button
+            onClick={handleSubmit}
+            disabled={!isFormValid() || isSubmitting}
+            className="w-full h-11 gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {currentEditedId ? "Updating Product…" : "Creating Product…"}
+              </>
+            ) : (
+              currentEditedId ? "Update Product" : "Create Product"
+            )}
+          </Button>
         </DialogContent>
       </Dialog>
 

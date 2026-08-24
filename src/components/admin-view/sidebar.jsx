@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { id: "vendors",             label: "Vendors",             path: "/admin/vendors",              icon: Store           },
   { id: "products",            label: "Products",            path: "/admin/products",             icon: Package         },
   { id: "categories",          label: "Categories",          path: "/admin/categories",           icon: Tag             },
+  { id: "brands",              label: "Brands",              path: "/admin/brands",               icon: Tag             },
   { id: "banners",             label: "Banners",             path: "/admin/banners",              icon: Image           },
   { id: "customers",           label: "Customers",           path: "/admin/customers",            icon: Users           },
   { id: "seller-applications", label: "Seller Applications", path: "/admin/seller-applications",  icon: UserCheck       },

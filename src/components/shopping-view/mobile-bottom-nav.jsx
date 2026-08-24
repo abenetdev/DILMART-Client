@@ -1,91 +1,6 @@
-import { Home, ShoppingCart, Heart, User, UserCog, Package, LogOut } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { useEffect, useRef, useState } from "react";
-import { logoutUser } from "@/store/auth-slice";
-
-// ── Account popup (anchored above the Account tab) ────────────────────────
-
-function AccountPopup({ onClose, anchorRef }) {
-  const dispatch  = useDispatch();
-  const navigate  = useNavigate();
-  const { user }  = useSelector((s) => s.auth);
-  const popupRef  = useRef(null);
-
-  // Close on outside tap
-  useEffect(() => {
-    function handlePointerDown(e) {
-      if (
-        popupRef.current && !popupRef.current.contains(e.target) &&
-        anchorRef.current && !anchorRef.current.contains(e.target)
-      ) {
-        onClose();
-      }
-    }
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [onClose, anchorRef]);
-
-  function go(path) {
-    onClose();
-    navigate(path);
-  }
-
-  function handleLogout() {
-    onClose();
-    // logoutUser.pending clears auth state synchronously — UI updates immediately
-    dispatch(logoutUser());
-    navigate("/", { replace: true });
-  }
-
-  const initial = user?.userName?.[0]?.toUpperCase() || "U";
-
-  return (
-    // Positioned above the bottom nav (bottom: 100% + 8px gap)
-    <div
-      ref={popupRef}
-      role="dialog"
-      aria-label="Account menu"
-      className="
-        absolute bottom-[calc(100%+8px)] right-0
-        w-44 h-25 rounded-2xl bg-background border border-border
-        shadow-[0_8px_32px_rgba(0,0,0,0.18)]
-        overflow-hidden
-        animate-in fade-in slide-in-from-bottom-2 duration-150
-      "
-    >
-
-      {/* Menu items */}
-      <div className="py-2">
-        <button
-          onClick={() => go("/account/settings")}
-          className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
-        >
-          <UserCog className="h-4 w-4 text-muted-foreground shrink-0" />
-          My Account
-        </button>
-
-        <button
-          onClick={() => go("/account/orders")}
-          className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
-        >
-          <Package className="h-4 w-4 text-muted-foreground shrink-0" />
-          My Orders
-        </button>
-
-        <div className="mx-4 my-1 border-t border-border" />
-
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors touch-manipulation"
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
+import { Home, ShoppingCart, Heart, User, Package } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 // ── Main bottom nav ────────────────────────────────────────────────────────
 
@@ -95,26 +10,27 @@ function MobileBottomNav() {
   const { count: wishlistCount }    = useSelector((s) => s.shopWishlist);
   const { isAuthenticated, user }   = useSelector((s) => s.auth);
 
-  const [popupOpen, setPopupOpen] = useState(false);
-  const accountTabRef = useRef(null);
-
   const cartCount = cartItems?.items?.length || 0;
   const pathname  = location.pathname;
-
-  // Close popup on route change
-  useEffect(() => { setPopupOpen(false); }, [pathname]);
 
   function isActive(path) {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   }
 
-  // The first 3 tabs are always plain links
-  const linkItems = [
+  // Navigation items
+  const navItems = [
     {
       label: "Home",
       icon:  Home,
       path:  "/",
+      badge: null,
+      badgeClass: "",
+    },
+    {
+      label: "Orders",
+      icon:  Package,
+      path:  "/orders",
       badge: null,
       badgeClass: "",
     },
@@ -147,8 +63,8 @@ function MobileBottomNav() {
     >
       <div className="flex items-stretch h-16">
 
-        {/* ── Home, Cart, Wishlist ── */}
-        {linkItems.map((item) => {
+        {/* ── Home, Orders, Cart, Wishlist ── */}
+        {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon   = item.icon;
           return (
@@ -168,7 +84,7 @@ function MobileBottomNav() {
               )}
               <span className="relative">
                 <Icon
-                  className={`w-6 h-6 transition-transform duration-150 ${active ? "scale-110" : ""}`}
+                  className={`w-5 h-5 transition-transform duration-150 ${active ? "scale-110" : ""}`}
                   strokeWidth={active ? 2.5 : 1.75}
                 />
                 {item.badge !== null && (
@@ -184,75 +100,62 @@ function MobileBottomNav() {
           );
         })}
 
-        {/* ── Account tab (4th item) ── */}
-        <div className="relative flex flex-1 items-stretch">
+        {/* ── Account tab (5th item) ── */}
+        {isAuthenticated ? (
+          // Authenticated: circular avatar link → goes to /account
+          <Link
+            to="/account"
+            className={`
+              relative flex flex-1 flex-col items-center justify-center gap-0.5
+              min-w-0 touch-manipulation select-none transition-colors duration-150
+              ${accountActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+            `}
+            aria-label="Account"
+            aria-current={accountActive ? "page" : undefined}
+          >
+            {accountActive && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary" />
+            )}
 
-          {isAuthenticated ? (
-            // Authenticated: circular avatar button → opens popup
-            <button
-              ref={accountTabRef}
-              onClick={() => setPopupOpen((o) => !o)}
+            {/* Circular avatar */}
+            <span
               className={`
-                relative flex flex-1 flex-col items-center justify-center gap-0.5
-                min-w-0 touch-manipulation select-none transition-colors duration-150
-                ${accountActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+                flex h-7 w-7 items-center justify-center rounded-full
+                text-[11px] font-bold text-primary-foreground select-none
+                transition-transform duration-150
+                ${accountActive ? "bg-primary scale-110 ring-2 ring-primary/30" : "bg-primary/80"}
               `}
-              aria-label="Account menu"
-              aria-haspopup="dialog"
-              aria-expanded={popupOpen}
             >
-              {accountActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary" />
-              )}
+              {initial}
+            </span>
 
-              {/* Circular avatar */}
-              <span
-                className={`
-                  flex h-7 w-7 items-center justify-center rounded-full
-                  text-[11px] font-bold text-primary-foreground select-none
-                  transition-transform duration-150
-                  ${accountActive ? "bg-primary scale-110 ring-2 ring-primary/30" : "bg-primary/80"}
-                `}
-              >
-                {initial}
-              </span>
-
-              <span className={`text-[10px] font-medium leading-none ${accountActive ? "font-semibold" : ""}`}>
-                Account
-              </span>
-            </button>
-          ) : (
-            // Unauthenticated: plain link to login with outline User icon
-            <Link
-              to="/auth/login"
-              className={`
-                relative flex flex-1 flex-col items-center justify-center gap-0.5
-                min-w-0 touch-manipulation select-none transition-colors duration-150
-                ${isActive("/auth/login") ? "text-primary" : "text-muted-foreground hover:text-foreground"}
-              `}
-              aria-label="Login"
-            >
-              {isActive("/auth/login") && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary" />
-              )}
-              <User
-                className={`w-6 h-6 transition-transform duration-150 ${isActive("/auth/login") ? "scale-110" : ""}`}
-                strokeWidth={isActive("/auth/login") ? 2.5 : 1.75}
-              />
-              <span className={`text-[10px] font-medium leading-none ${isActive("/auth/login") ? "font-semibold" : ""}`}>
-                Account
-              </span>
-            </Link>
-          )}
-
-          {/* Popup — rendered inside the relative wrapper so it stays anchored */}
-          {popupOpen && (
-            <AccountPopup
-              onClose={() => setPopupOpen(false)}
-              anchorRef={accountTabRef}
+            <span className={`text-[10px] font-medium leading-none ${accountActive ? "font-semibold" : ""}`}>
+              Account
+            </span>
+          </Link>
+        ) : (
+          // Unauthenticated: plain link to login with outline User icon
+          <Link
+            to="/auth/login"
+            className={`
+              relative flex flex-1 flex-col items-center justify-center gap-0.5
+              min-w-0 touch-manipulation select-none transition-colors duration-150
+              ${isActive("/auth/login") ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+            `}
+            aria-label="Login"
+          >
+            {isActive("/auth/login") && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-primary" />
+            )}
+            <User
+              className={`w-5 h-5 transition-transform duration-150 ${isActive("/auth/login") ? "scale-110" : ""}`}
+              strokeWidth={isActive("/auth/login") ? 2.5 : 1.75}
             />
-          )}
-        </div>
+            <span className={`text-[10px] font-medium leading-none ${isActive("/auth/login") ? "font-semibold" : ""}`}>
+              Account
+            </span>
+          </Link>
+        )}
 
       </div>
 

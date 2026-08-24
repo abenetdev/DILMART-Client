@@ -427,7 +427,17 @@ function VendorOrders() {
                         <StatusBadge status={order.orderStatus} />
                       </TableCell>
                       <TableCell>
-                        <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                        {["delivered", "cancelled"].includes(order.orderStatus) ? (
+                          <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleView(order._id)}
+                            className="text-left hover:opacity-70 transition-opacity"
+                          >
+                            <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -495,7 +505,17 @@ function VendorOrders() {
                       <TableCell className="font-medium">ETB {currencyFormatter(order.totalAmount)}</TableCell>
                       <TableCell><StatusBadge status={order.orderStatus} /></TableCell>
                       <TableCell>
-                        <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                        {["delivered", "cancelled"].includes(order.orderStatus) ? (
+                          <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleView(order._id)}
+                            className="text-left hover:opacity-70 transition-opacity"
+                          >
+                            <NextActionHint status={order.orderStatus} paymentStatus={order.paymentStatus} />
+                          </button>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">{formatDate(order.orderDate)}</TableCell>
                       <TableCell>

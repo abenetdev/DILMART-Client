@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { logoutUser } from "@/store/auth-slice";
+import vendorIcon from "@/assets/vendor.png"
 // ── Nav Items ──────────────────────────────────────────────────────────────
 
 const navItems = [
@@ -238,12 +239,13 @@ function SidebarContent({ setOpen }) {
         onClick={() => { navigate("/vendor/dashboard"); setOpen?.(false); }}
         className="flex items-center gap-3 px-3 mb-6 cursor-pointer group"
       >
-        <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-          <ChartNoAxesCombined className="h-5 w-5 text-primary-foreground" />
+        <div className="h-9 w-9 rounded-xl  flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+          <img src={vendorIcon} alt="" />
+         
         </div>
         <div>
           <h1 className="text-base font-extrabold leading-tight tracking-tight">
-            Vendor Hub
+           Dilmart
           </h1>
           <p className="text-[10px] text-muted-foreground">Seller Dashboard</p>
         </div>
@@ -288,7 +290,7 @@ function VendorSideBar({ open, setOpen }) {
       </Sheet>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col border-r bg-background px-3 flex-shrink-0">
+      <aside className="hidden lg:flex w-64 flex-col border-r bg-background px-3 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <SidebarContent />
       </aside>
     </Fragment>

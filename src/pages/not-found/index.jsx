@@ -87,7 +87,7 @@ export default function NotFound() {
             {[
               { label: "Home",      path: "/"         },
               { label: "Products",  path: "/listing"  },
-              { label: "My Orders", path: "/account/orders" },
+              { label: "My Orders", path: "/orders" },
               { label: "Stores",    path: "/stores"   },
             ].map(({ label, path }) => (
               <button

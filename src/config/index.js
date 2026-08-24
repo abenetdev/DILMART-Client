@@ -100,6 +100,18 @@ huawei: "Huawei",
 other: "Other",
 };
 
+/**
+ * buildBrandOptionsMap(dbBrands)
+ * Merges live DB brands over the static fallback map.
+ * Any slug from the DB wins; unknown slugs still resolve via the static map.
+ */
+export function buildBrandOptionsMap(dbBrands = []) {
+  if (!dbBrands.length) return brandOptionsMap;
+  const map = { ...brandOptionsMap };
+  dbBrands.forEach((b) => { map[b.slug] = b.name; });
+  return map;
+}
+
 export const addProductFormElements = [
 {
 label: "Product Name",

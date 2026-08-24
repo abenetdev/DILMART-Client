@@ -33,16 +33,26 @@ const STATUS_FILTERS = [
   { value: "completed",        label: "Completed" },
 ];
 
+// ── Order ID resolution helper ─────────────────────────────────────────────
+// The backend injects `orderId.isMultiVendor = true` only when the sub-order
+// belongs to a checkout with 2+ vendors. We use that flag — not the mere
+// presence of parentOrderId — to decide whether to show the Group ID.
+function resolveOrderDisplay(orderId) {
+  if (!orderId) return { primary: "—", group: null };
+  const primary = orderId.vendorOrderId || `ORD-${orderId._id?.toString().slice(-8).toUpperCase()}`;
+  const group   = orderId.isMultiVendor ? (orderId.parentOrderId || null) : null;
+  return { primary, group };
+}
+
 // ── Mobile return card ─────────────────────────────────────────────────────
 function ReturnCard({ r, onView }) {
+  const { primary, group } = resolveOrderDisplay(r.orderId);
   return (
     <div className="bg-background border rounded-xl p-3 space-y-3">
       {/* Top row: order ID + status + view button */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-mono text-sm font-semibold">
-            ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
-          </p>
+          <p className="font-mono text-sm font-semibold">{primary}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {r.customerId?.userName || "—"}
           </p>
@@ -236,12 +246,12 @@ export default function VendorReturnRequestsTab() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {filtered.map((r) => {
+                    const { primary, group } = resolveOrderDisplay(r.orderId);
+                    return (
                   <tr key={r._id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3">
-                      <p className="font-mono text-xs font-semibold">
-                        ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
-                      </p>
+                      <p className="font-mono text-xs font-semibold">{primary}</p>
                       <p className="text-xs text-muted-foreground capitalize">
                         {r.reason?.replace(/_/g, " ")}
                       </p>
@@ -262,7 +272,8 @@ export default function VendorReturnRequestsTab() {
                       </Button>
                     </td>
                   </tr>
-                ))}
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -282,10 +293,12 @@ export default function VendorReturnRequestsTab() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r) => (
+                {filtered.map((r) => {
+                    const { primary, group } = resolveOrderDisplay(r.orderId);
+                    return (
                   <tr key={r._id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs">
-                      ORD-{r.orderId?._id?.toString().slice(-8).toUpperCase() || "?"}
+                    <td className="px-4 py-3">
+                      <p className="font-mono text-xs font-semibold">{primary}</p>
                     </td>
                     <td className="px-4 py-3">{r.customerId?.userName || "—"}</td>
                     <td className="px-4 py-3 capitalize text-xs">{r.reason?.replace(/_/g, " ")}</td>
@@ -300,7 +313,8 @@ export default function VendorReturnRequestsTab() {
                       </Button>
                     </td>
                   </tr>
-                ))}
+                    );
+                  })}
               </tbody>
             </table>
           </div>
@@ -320,12 +334,18 @@ export default function VendorReturnRequestsTab() {
           ) : (
             <div className="space-y-4 mt-2">
               {/* Header row */}
-              <div className="flex flex-wrap gap-3 items-center justify-between">
+              <div className="flex flex-wrap gap-3 items-start justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Order</p>
+                  <p className="text-xs text-muted-foreground">Order ID</p>
                   <p className="font-mono font-semibold">
-                    ORD-{current.orderId?._id?.toString().slice(-8).toUpperCase()}
+                    {current.orderId?.vendorOrderId
+                      || `ORD-${current.orderId?._id?.toString().slice(-8).toUpperCase()}`}
                   </p>
+                  {current.orderId?.isMultiVendor && current.orderId?.parentOrderId && (
+                    <p className="font-mono text-xs text-muted-foreground mt-0.5">
+                      Group: {current.orderId.parentOrderId}
+                    </p>
+                  )}
                 </div>
                 <ReturnStatusBadge status={current.status} />
               </div>

@@ -23,7 +23,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 import StarRatingComponent from "@/components/common/star-rating";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
-import { categoryOptionsMap, brandOptionsMap, buildCategoryOptionsMap } from "@/config";
+import { categoryOptionsMap, brandOptionsMap, buildCategoryOptionsMap, buildBrandOptionsMap } from "@/config";
 import { useCart } from "@/hooks/useCart";
 import {
   fetchProductDetails,
@@ -51,7 +51,9 @@ function ProductDetailPage() {
   const { orderList } = useSelector((s) => s.shopOrder);
   const { items: wishlistItems } = useSelector((s) => s.shopWishlist);
   const { all: dbCategories } = useSelector((s) => s.shopCategory);
+  const { all: dbBrands } = useSelector((s) => s.shopBrand);
   const liveCategoryMap = buildCategoryOptionsMap(dbCategories);
+  const liveBrandMap = buildBrandOptionsMap(dbBrands);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -207,7 +209,7 @@ function ProductDetailPage() {
   const categoryLabel =
     liveCategoryMap[productDetails.category] || productDetails.category;
   const brandLabel =
-    brandOptionsMap[productDetails.brand] || productDetails.brand;
+    liveBrandMap[productDetails.brand] || productDetails.brand;
   const store = productDetails.store;
   const related = productDetails.relatedProducts || [];
 

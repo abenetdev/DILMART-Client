@@ -59,7 +59,7 @@ function AccountOverview() {
       value: orderList?.length || 0,
       icon: Package,
       color: "from-blue-500 to-blue-600",
-      link: "/account/orders",
+      link: "/orders",
     },
     {
       label: "Wishlist Items",
@@ -80,7 +80,7 @@ function AccountOverview() {
       value: currencyFormatter(totalSpent),
       icon: TrendingUp,
       color: "from-emerald-500 to-teal-600",
-      link: "/account/orders",
+      link: "/orders",
       isText: true,
     },
   ];
@@ -128,7 +128,7 @@ function AccountOverview() {
             </p>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/account/orders">View all</Link>
+            <Link to="/orders">View all</Link>
           </Button>
         </CardHeader>
         <CardContent>

@@ -223,9 +223,11 @@ function ShoppingOrderDetailsView({ orderDetails }) {
           <div className="flex items-center justify-between">
             <p className="font-medium">Order ID</p>
             <Label className="font-mono text-xs font-semibold">
-              {orderDetails?.parentOrderId
-                ? orderDetails.parentOrderId
-                : `ORD-${groupId?.toString().slice(-8).toUpperCase()}`}
+              {orderDetails?.displayOrderId
+                || (orderDetails?.subOrders?.length > 1
+                  ? orderDetails?.parentOrderId
+                  : orderDetails?.subOrders?.[0]?.vendorOrderId)
+                || `ORD-${groupId?.toString().slice(-8).toUpperCase()}`}
             </Label>
           </div>
           <div className="flex items-center justify-between">

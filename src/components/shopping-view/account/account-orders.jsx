@@ -129,9 +129,11 @@ function AccountOrders() {
                         </div>
                         <div>
                           <p className="font-semibold font-mono">
-                            {order.parentOrderId
-                              ? order.parentOrderId
-                              : `ORD-${groupId?.slice(-8).toUpperCase()}`}
+                            {order.displayOrderId
+                              || (order.subOrders?.length > 1
+                                ? order.parentOrderId
+                                : order.subOrders?.[0]?.vendorOrderId)
+                              || `ORD-${groupId?.slice(-8).toUpperCase()}`}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(order.orderDate).toLocaleDateString("en-US", {

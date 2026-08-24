@@ -1,35 +1,60 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllActiveCategories } from "@/store/shop/category-slice";
+import { fetchAllActiveBrands } from "@/store/shop/brand-slice";
 import { addProductFormElements } from "@/config";
 
 /**
- * Returns `addProductFormElements` with the `category` field's options
- * replaced by the live categories from the database.
+ * Returns `addProductFormElements` with the `category` and `brand` fields' options
+ * replaced by the live data from the database.
  *
  * Falls back to the hard-coded config options if the API hasn't loaded yet.
  */
 export function useProductFormElements() {
   const dispatch = useDispatch();
-  const { all: dbCategories, isLoading } = useSelector((s) => s.shopCategory);
+  const { all: dbCategories, isLoading: isCategoryLoading } = useSelector((s) => s.shopCategory);
+  const { all: dbBrands, isLoading: isBrandLoading } = useSelector((s) => s.shopBrand);
 
   useEffect(() => {
     if (dbCategories.length === 0) {
       dispatch(fetchAllActiveCategories());
     }
-  }, [dispatch, dbCategories.length]);
+    if (dbBrands.length === 0) {
+      dispatch(fetchAllActiveBrands());
+    }
+  }, [dispatch, dbCategories.length, dbBrands.length]);
 
   const formElements = useMemo(() => {
-    if (!dbCategories.length) return addProductFormElements; // fallback to static
+    let elements = addProductFormElements;
 
-    return addProductFormElements.map((el) => {
-      if (el.name !== "category") return el;
-      return {
-        ...el,
-        options: dbCategories.map((c) => ({ id: c.slug, label: c.name })),
-      };
-    });
-  }, [dbCategories]);
+    // Replace category options with live DB data
+    if (dbCategories.length) {
+      elements = elements.map((el) => {
+        if (el.name !== "category") return el;
+        return {
+          ...el,
+          options: dbCategories.map((c) => ({ id: c.slug, label: c.name })),
+        };
+      });
+    }
 
-  return { formElements, isCategoryLoading: isLoading };
+    // Replace brand options with live DB data
+    if (dbBrands.length) {
+      elements = elements.map((el) => {
+        if (el.name !== "brand") return el;
+        return {
+          ...el,
+          options: dbBrands.map((b) => ({ id: b.slug, label: b.name })),
+        };
+      });
+    }
+
+    return elements;
+  }, [dbCategories, dbBrands]);
+
+  return {
+    formElements,
+    isCategoryLoading,
+    isBrandLoading,
+  };
 }

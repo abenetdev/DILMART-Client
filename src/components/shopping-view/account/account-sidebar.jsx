@@ -1,23 +1,20 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  LayoutDashboard, Package, Heart,
-  Settings, LogOut, ChevronRight, Store, Clock,
+  Package, Heart, Settings, ChevronRight, Store, Clock, ShoppingCart,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { logoutUser } from "@/store/auth-slice";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/account", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/account/orders", label: "Orders", icon: Package },
+  { to: "/account", label: "Settings", icon: Settings, end: true },
+  { to: "/orders", label: "Orders", icon: Package },
   { to: "/account/wishlist", label: "Wishlist", icon: Heart },
-  { to: "/account/settings", label: "Settings", icon: Settings },
+  { to: "/account/cart", label: "Cart", icon: ShoppingCart },
 ];
 
 function AccountSidebar({ onNavigate }) {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user }  = useSelector((state) => state.auth);
   const { sellerStatus } = useSelector((state) => state.shopSeller);
@@ -30,12 +27,6 @@ function AccountSidebar({ onNavigate }) {
     if (to.includes("wishlist") && wishlistCount > 0) return wishlistCount;
     if (to.includes("cart") && cartCount > 0) return cartCount;
     return null;
-  };
-
-  const handleLogout = () => {
-    // logoutUser.pending clears auth state synchronously — no need to await
-    dispatch(logoutUser());
-    navigate("/");
   };
 
   return (
@@ -87,15 +78,6 @@ function AccountSidebar({ onNavigate }) {
           );
         })}
       </nav>
-
-      <Button
-        variant="outline"
-        className="mt-6 w-full gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-        onClick={handleLogout}
-      >
-        <LogOut className="h-4 w-4" />
-        Logout
-      </Button>
 
       {/* ── Become a Seller CTA ─────────────────────── */}
       {user?.role === "user" && !sellerStatus && (

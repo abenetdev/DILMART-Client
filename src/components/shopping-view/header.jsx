@@ -278,7 +278,7 @@ function AccountControls({ onAction }) {
             <UserCog className="mr-2 h-4 w-4" />
             My Account
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => go("/account")}>
+          <DropdownMenuItem onClick={() => go("/orders")}>
             <Package className="mr-2 h-4 w-4" />
             My Orders
           </DropdownMenuItem>

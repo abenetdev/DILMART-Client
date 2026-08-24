@@ -230,7 +230,7 @@ function CustomerDetailsDialog({ open, onClose, customerId, onAction }) {
                     <TableBody>
                       {d.orders.map((o) => (
                         <TableRow key={o._id}>
-                          <TableCell className="font-mono text-xs">#{o.orderId}</TableCell>
+                          <TableCell className="font-mono text-xs font-semibold">{o.orderId}</TableCell>
                           <TableCell className="text-sm">{fmtDate(o.orderDate)}</TableCell>
                           <TableCell className="text-sm">{o.itemCount}</TableCell>
                           <TableCell className="font-semibold text-sm">{currencyFormatter(o.totalAmount)}</TableCell>

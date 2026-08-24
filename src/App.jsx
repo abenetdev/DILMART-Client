@@ -15,6 +15,7 @@ import AdminCustomers from "./pages/admin-view/customers";
 import AdminProducts from "./pages/admin-view/products";
 import AdminProfile from "./pages/admin-view/profile";
 import AdminCategories from "./pages/admin-view/categories";
+import AdminBrands from "./pages/admin-view/brands";
 import AdminBanners from "./pages/admin-view/banners";
 import AdminSettings from "./pages/admin-view/settings";
 import VendorLayout from "./components/vendor-view/layout";
@@ -35,7 +36,6 @@ import ShoppingListing from "./pages/shopping-view/listing";
 import ProductDetailPage from "./pages/shopping-view/productDetail";
 import ShoppingCheckout from "./pages/shopping-view/checkout";
 import ShoppingAccount from "./pages/shopping-view/account";
-import AccountOverviewPage from "./pages/shopping-view/account-overview";
 import AccountOrdersPage from "./pages/shopping-view/account-orders";
 import AccountWishlistPage from "./pages/shopping-view/account-wishlist";
 import AccountCartPage from "./pages/shopping-view/account-cart";
@@ -169,6 +169,7 @@ const location = useLocation();
           <Route path="customers"    element={<AdminCustomers />} />
           <Route path="seller-applications" element={<AdminSellerApplications />} />
           <Route path="categories"         element={<AdminCategories />} />
+          <Route path="brands"             element={<AdminBrands />} />
           <Route path="banners"            element={<AdminBanners />} />
           <Route path="settings"           element={<AdminSettings />} />
           <Route path="profile"     element={<AdminProfile />} />
@@ -207,9 +208,18 @@ const location = useLocation();
                 : <Navigate to="/auth/login?redirect=/checkout" replace />
             }
           />
+          {/* Orders - standalone route */}
+          <Route
+            path="orders"
+            element={
+              isAuthenticated
+                ? <AccountOrdersPage />
+                : <Navigate to="/auth/login?redirect=/orders" replace />
+            }
+          />
+          {/* Account - nested routes for settings, wishlist, cart */}
           <Route path="account" element={<ShoppingAccount />}>
-            <Route index element={<AccountOverviewPage />} />
-            <Route path="orders" element={<AccountOrdersPage />} />
+            <Route index element={<AccountSettingsPage />} />
             <Route path="wishlist" element={<AccountWishlistPage />} />
             <Route path="cart" element={<AccountCartPage />} />
             <Route path="settings" element={<AccountSettingsPage />} />

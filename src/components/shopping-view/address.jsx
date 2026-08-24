@@ -128,6 +128,24 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
     dispatch(fetchAllAddresses(user?.id));
   }, [dispatch, user?.id]);
 
+  // ── Smart auto-selection ───────────────────────────────────────────────
+  // • 0 addresses → open the add form so the user can't miss it
+  // • 1 address   → select it automatically (no manual click needed)
+  // • 2+ addresses → do nothing; customer must pick one
+  useEffect(() => {
+    if (addressList.length === 1 && setCurrentSelectedAddress) {
+      // Auto-select the only address (only if callback provided)
+      setCurrentSelectedAddress(addressList[0]);
+    } else if (addressList.length === 0) {
+      // No addresses — deselect and open the form
+      if (setCurrentSelectedAddress) {
+        setCurrentSelectedAddress(null);
+      }
+      setFormOpen(true);
+    }
+    // 2+ addresses: leave the current selection as-is
+  }, [addressList, setCurrentSelectedAddress]);
+
   // Open form in "add" mode
   function openAddForm() {
     setCurrentEditedId(null);
@@ -174,7 +192,7 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
         dispatch(fetchAllAddresses(user?.id));
         toast({ title: "Address updated" });
         // If the edited address is currently selected, push the fresh data up to checkout
-        if (selectedId?._id === currentEditedId) {
+        if (setCurrentSelectedAddress && selectedId?._id === currentEditedId) {
           setCurrentSelectedAddress({ ...selectedId, ...formData });
         }
         closeForm();
@@ -182,7 +200,15 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
     } else {
       const result = await dispatch(addNewAddress({ ...formData, userId: user?.id }));
       if (result?.payload?.success) {
-        dispatch(fetchAllAddresses(user?.id));
+        // Refresh the list — the useEffect above will auto-select if this
+        // brings the count to 1. If the customer already had addresses,
+        // we explicitly select the newly created one so they don't have
+        // to click it manually.
+        await dispatch(fetchAllAddresses(user?.id));
+        const newAddr = result?.payload?.data;
+        if (newAddr && setCurrentSelectedAddress) {
+          setCurrentSelectedAddress(newAddr);
+        }
         toast({ title: "Address added" });
         closeForm();
       }
@@ -216,7 +242,9 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
           <p className="text-xs text-muted-foreground mt-0.5">
             {addressList.length === 0
               ? "Add an address to continue"
-              : `${addressList.length} saved address${addressList.length > 1 ? "es" : ""} · select one to deliver`}
+              : addressList.length === 1
+              ? "Your address has been selected automatically"
+              : `${addressList.length} saved addresses · select one to deliver`}
           </p>
         </div>
 
