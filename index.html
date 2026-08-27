@@ -2,10 +2,41 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.png" />
+
+    <!-- ── Viewport ─────────────────────────────────────────────────────── -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dilmart</title>
-    <!-- Luxury fonts: Playfair Display (headings) + Inter (body) -->
+
+    <!-- ── Primary metadata ─────────────────────────────────────────────── -->
+    <title>DilMart</title>
+    <meta
+      name="description"
+      content="DilMart — Ethiopia's online marketplace. Shop thousands of products from verified vendors, track orders, and enjoy fast, secure delivery."
+    />
+
+    <!-- ── Favicon ───────────────────────────────────────────────────────── -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- ── PWA: Web App Manifest ────────────────────────────────────────── -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- ── PWA: Theme colour (browser chrome / address bar) ─────────────── -->
+    <!-- DilMart brand teal: HSL(176,84%,31%) = #0D9388                      -->
+    <meta name="theme-color" content="#0D9388" />
+
+    <!-- ── PWA: iOS / Safari home-screen support ─────────────────────────
+         Safari does not use the manifest for home-screen icons; these tags
+         provide the equivalent iOS-native hints.
+    ──────────────────────────────────────────────────────────────────────── -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="DilMart" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- ── PWA: Microsoft Tile (Windows / Edge) ──────────────────────────── -->
+    <meta name="msapplication-TileColor" content="#0D9388" />
+    <meta name="msapplication-TileImage" content="/icons/icon-192x192.png" />
+
+    <!-- ── Luxury fonts: Playfair Display (headings) + Inter (body) ─────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

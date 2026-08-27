@@ -47,13 +47,24 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
-  async () => {
-    const response = await axios.get("/api/auth/check-auth", {
-      headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      },
-    });
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/api/auth/check-auth", {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      });
+      return response.data;
+    } catch (e) {
+      // Distinguish a real 401 (invalid/expired token) from a transient
+      // network error (server sleeping, timeout, offline, etc.).
+      // Only a real 401 means the user is truly logged out.
+      const status = e.response?.status;
+      return rejectWithValue({
+        isAuthError: status === 401 || status === 403,
+        message: e.response?.data?.message || e.message,
+      });
+    }
   }
 );
 
@@ -236,11 +247,19 @@ const authSlice = createSlice({
           state.isAuthenticated = false;
         }
       })
-      .addCase(checkAuth.rejected, (state) => {
+      .addCase(checkAuth.rejected, (state, action) => {
         state.isLoading = false;
-        localStorage.removeItem("token");
-        state.user = null;
-        state.isAuthenticated = false;
+        // Only clear the session on a real authentication error (401/403).
+        // A transient network failure (server sleeping, offline, timeout) must
+        // NOT wipe the token — the user is still authenticated, just unreachable.
+        const isAuthError = action.payload?.isAuthError ?? true;
+        if (isAuthError) {
+          localStorage.removeItem("token");
+          state.user = null;
+          state.isAuthenticated = false;
+        }
+        // If it was a network error: leave user/token/isAuthenticated unchanged.
+        // The app will retry checkAuth on next load or the user can refresh.
       })
 
       // logout — state is cleared on pending so UI responds instantly

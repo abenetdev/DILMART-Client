@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "@/lib/axios";
+import { patchUserInState } from "@/store/auth-slice";
 
 const BASE = "/api/shop/seller";
 
@@ -28,9 +29,16 @@ export const applyToBecomeSeller = createAsyncThunk(
 
 export const getSellerStatus = createAsyncThunk(
   "shopSeller/getStatus",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
       const res = await axios.get(`${BASE}/status`, { withCredentials: true });
+      // If the DB role is vendor, sync it into the auth slice immediately.
+      // This handles the case where the JWT still carries role:"user" from
+      // before the vendor promotion was approved.
+      const dbRole = res.data?.data?.role;
+      if (dbRole) {
+        dispatch(patchUserInState({ role: dbRole }));
+      }
       return res.data;
     } catch (e) {
       return rejectWithValue(e.response?.data || { message: e.message });

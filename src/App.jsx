@@ -119,7 +119,7 @@ const location = useLocation();
       <SocketProvider>
 
       <Routes>
-        <Route path="/shop/home" element={<Navigate to="/" replace />} />
+        {/* <Route path="/shop/home" element={<Navigate to="/" replace />} />
         <Route path="/shop/listing" element={<Navigate to="/listing" replace />} />
         <Route path="/shop/product/:productId" element={<ProductRedirect />} />
         <Route path="/shop/search" element={<Navigate to="/search" replace />} />
@@ -130,7 +130,7 @@ const location = useLocation();
         <Route path="/shop/super-deals" element={<Navigate to="/super-deals" replace />} />
         <Route path="/shop/become-seller" element={<Navigate to="/become-seller" replace />} />
         <Route path="/shop/payment-success" element={<Navigate to="/payment-success" replace />} />
-        <Route path="/shop/chapa-return" element={<Navigate to="/chapa-return" replace />} />
+        <Route path="/shop/chapa-return" element={<Navigate to="/chapa-return" replace />} /> */}
 
         <Route
           path="/auth"
