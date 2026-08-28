@@ -91,27 +91,31 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json();
   } catch {
-    return; // malformed payload — ignore
+    return;
   }
 
-  // All fields are in data: {} because we send a data-only FCM message.
-  // This ensures the browser never auto-handles the notification and always
-  // fires this push handler.
   const data = payload.data || {};
 
-  const title         = data.title         || "New Order Received";
-  const body          = data.body          || "You have received a new order. Tap to view.";
+  const title         = data.title         || "\uD83C\uDF89 New Order Received";
+  const body          = data.body          || "You have a new order waiting for confirmation.";
   const orderId       = data.orderId       || "";
   const vendorOrderId = data.vendorOrderId || "";
   const targetUrl     = data.url           || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
 
+  // notification.jpg lives in public/icons/ — served at /icons/notification.jpg
+  // in both dev (vite static) and production (Vercel/CDN).
+  const NOTIF_ICON  = "/icons/notification.jpg";
+  const BADGE_ICON  = "/icons/icon-192x192.png";  // badge must be monochrome PNG
+
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      icon:               "/icons/icon-192x192.png",
-      badge:              "/icons/icon-192x192.png",
+      icon:               NOTIF_ICON,
+      badge:              BADGE_ICON,
+      image:              NOTIF_ICON,  // large image below the body (Chrome Android)
       tag:                `new-order-${orderId || Date.now()}`,
-      requireInteraction: true,
+      requireInteraction: true,        // stay visible until dismissed
+      vibrate:            [200, 100, 200], // subtle pulse on mobile
       data: {
         url:          targetUrl,
         orderId,

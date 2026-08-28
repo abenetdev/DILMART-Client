@@ -8,13 +8,25 @@
  *  3. On enable: request Notification permission → get FCM token → POST to
  *     backend.
  *  4. On disable: DELETE token from backend → mark local state as disabled.
- *  5. Expose loading/error state so the UI can show appropriate feedback.
+ *  5. Register onMessage() so FCM foreground messages are intercepted here
+ *     instead of being passed to the service worker — this prevents a
+ *     duplicate OS system notification appearing when the vendor is already
+ *     looking at the dashboard (Socket.IO + NewOrderToast already handle it).
+ *  6. Expose loading/error state so the UI can show appropriate feedback.
+ *
+ * Foreground duplicate-prevention strategy:
+ *   When the DilMart tab is active, Firebase SDK fires onMessage() for any
+ *   incoming FCM message BEFORE the service-worker push event.  By registering
+ *   a no-op onMessage() handler we consume the foreground message silently —
+ *   the SW push event does not fire, so no OS system notification is shown.
+ *   The Socket.IO path (SocketContext → NewOrderToast) already shows the
+ *   in-app notification, so the vendor sees exactly one notification.
+ *
+ *   When the tab is backgrounded or closed the onMessage() handler is not
+ *   active and the SW push event fires normally → OS system notification shown.
  *
  * This hook is ONLY for vendors. It must never be mounted for customers or
  * admin users — the useFCM() caller is responsible for that guard.
- *
- * The hook does NOT manage push message receipt; that is handled entirely
- * inside the service worker (sw.js).
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -39,6 +51,31 @@ export function useFCM() {
       if (!cancelled) setIsSupported(!!messaging);
     })();
     return () => { cancelled = true; };
+  }, []);
+
+  // ── Foreground duplicate suppression ─────────────────────────────────────
+  // Register a no-op onMessage() handler so Firebase consumes incoming FCM
+  // messages while this tab is in the foreground. This prevents the SW push
+  // event from firing and showing a duplicate OS system notification on top
+  // of the Socket.IO NewOrderToast that is already visible in the dashboard.
+  //
+  // The handler is registered once and cleaned up on unmount. If messaging is
+  // not supported the effect is a no-op and unsubscribe is never called.
+  useEffect(() => {
+    let unsubscribe = null;
+    (async () => {
+      const messaging = await getMessagingInstance();
+      if (!messaging) return;
+      // onMessage() returns an unsubscribe function
+      unsubscribe = onMessage(messaging, (_payload) => {
+        // Intentional no-op — we are in the foreground so Socket.IO +
+        // NewOrderToast already handle the notification. Consuming the
+        // message here prevents the SW from showing a duplicate OS popup.
+      });
+    })();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // ── Check current token status from backend ──────────────────────────────
