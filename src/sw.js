@@ -137,7 +137,17 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const { url, orderId } = event.notification.data || {};
-  const targetUrl = url || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
+
+  // Build the target URL.
+  // If the server sent an absolute URL (https://dilmart.et/vendor/orders/...)
+  // use it directly. If it sent a relative path (/vendor/orders/...) resolve
+  // it against the SW scope origin so we always open the correct domain,
+  // never localhost.
+  const rawUrl    = url || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
+  const origin    = self.registration.scope.replace(/\/$/, ""); // e.g. https://dilmart.et
+  const targetUrl = rawUrl.startsWith("http")
+    ? rawUrl                        // already absolute — use as-is
+    : `${origin}${rawUrl}`;         // relative → prepend SW origin
 
   event.waitUntil(
     (async () => {
