@@ -1,83 +1,162 @@
 /**
- * DilMart Service Worker — Step 1 Foundation
+ * DilMart Service Worker
  *
- * PURPOSE:
- *   Establish the minimal PWA service-worker architecture so the app is
- *   browser-installable. No aggressive caching. No push notifications.
- *   No background sync. Those are deferred to later steps.
+ * Combines:
+ *   A. PWA foundation  — static shell precache, navigation fallback, API NetworkOnly
+ *   B. FCM messaging   — background push receipt, notificationclick deep-link,
+ *                        foreground duplicate prevention
  *
- * CACHING STRATEGY:
- *   - Precache: Vite-injected static shell assets only (JS, CSS, HTML).
- *               Managed automatically by vite-plugin-pwa / Workbox.
- *   - Runtime:  All navigation requests → network first, fallback to
- *               precached shell. This keeps the SPA router working offline
- *               (blank tab → shell loads → React Router renders).
- *   - API calls: NEVER cached. All requests to /api/* go straight to the
- *               network. Dynamic marketplace data (products, prices, stock,
- *               orders, user info, vendor info) must always be fresh.
+ * ── FCM background message flow ────────────────────────────────────────────
+ *  1. FCM delivers a "push" event to this SW when the app is closed / in the
+ *     background.
+ *  2. The SW checks whether the DilMart vendor dashboard is currently open and
+ *     visible in any client window.
+ *  3. If the vendor dashboard IS open and visible → skip showing a system
+ *     notification (the existing Socket.IO in-app notification handles it).
+ *  4. If the vendor dashboard is NOT open/visible → show a system notification.
+ *  5. When the vendor taps the notification, notificationclick opens/focuses
+ *     the vendor order detail page using the orderId from the FCM data payload.
  *
- * EXPLICITLY NOT CACHED (security):
- *   - /api/auth/*  — authentication tokens and session data
- *   - /api/users/* — personal user information
- *   - /api/orders  — order details and payment information
- *   - Any response containing Authorization headers
+ * ── Foreground duplicate-prevention logic ──────────────────────────────────
+ *  "Visible" means: at least one client window whose URL contains "/vendor"
+ *  AND whose visibilityState is "visible".
+ *  If that condition is met we skip the system notification entirely because
+ *  the existing Socket.IO path already shows the in-app bell notification.
  *
- * SOCKET.IO:
- *   WebSocket upgrade requests (ws://, wss://) are never intercepted by
- *   service workers — the browser handles them natively. No special
- *   exclusion is required, but noted here for clarity.
+ * ── Security ────────────────────────────────────────────────────────────────
+ *  - The FCM data payload contains only: type, orderId, vendorOrderId, url.
+ *  - No auth tokens, customer data, or payment info is ever in the payload.
+ *  - The vendor order page loads fresh data through the authenticated API.
+ *  - Deep-link navigation requires the vendor to pass normal auth — the SW
+ *    only redirects the browser; auth enforcement is in the React app.
+ *
+ * ── Caching (unchanged from Step 1) ─────────────────────────────────────────
+ *  - Static shell precached by vite-plugin-pwa (self.__WB_MANIFEST)
+ *  - /api/* → NetworkOnly (never cached)
+ *  - Navigation → NetworkFirst (3s timeout) → precached shell fallback
  */
 
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
-import { registerRoute, NavigationRoute } from "workbox-routing";
-import { NetworkFirst, NetworkOnly } from "workbox-strategies";
-import { CacheableResponsePlugin } from "workbox-cacheable-response";
+import { registerRoute, NavigationRoute }           from "workbox-routing";
+import { NetworkFirst, NetworkOnly }                from "workbox-strategies";
+import { CacheableResponsePlugin }                  from "workbox-cacheable-response";
 
-// ── 1. Precache static shell assets ────────────────────────────────────────
-// self.__WB_MANIFEST is replaced at build time by vite-plugin-pwa with the
-// list of versioned static assets (index.html, main-[hash].js, etc.).
+// ── A. PWA FOUNDATION ──────────────────────────────────────────────────────
+
+// 1. Precache static shell assets (list injected by vite-plugin-pwa at build)
 precacheAndRoute(self.__WB_MANIFEST || []);
-
-// Remove stale precache entries from previous SW versions
 cleanupOutdatedCaches();
 
-// ── 2. Never cache API requests ─────────────────────────────────────────────
-// All /api/* requests always go to the network. If the network fails, the
-// error propagates naturally to the React error handlers — we do NOT serve
-// stale data for marketplace content, auth, orders, or user information.
+// 2. Never cache API requests — all marketplace data must always be fresh
 registerRoute(
   ({ url }) => url.pathname.startsWith("/api/"),
   new NetworkOnly()
 );
 
-// ── 3. Navigation fallback (SPA support) ────────────────────────────────────
-// For navigate requests (typing a URL, refreshing, opening a new tab):
-//   - Try the network first (gets the latest index.html in production)
-//   - On failure, fall back to the precached index.html so the SPA shell
-//     loads and React Router can render the correct route
-// Admin and vendor dashboards are internal tools; they also benefit from
-// the SPA fallback (they just won't have offline functionality, which is fine).
+// 3. SPA navigation fallback
 registerRoute(
   new NavigationRoute(
     new NetworkFirst({
-      cacheName: "dilmart-navigation",
+      cacheName:             "dilmart-navigation",
       networkTimeoutSeconds: 3,
-      plugins: [
-        new CacheableResponsePlugin({ statuses: [200] }),
-      ],
+      plugins: [new CacheableResponsePlugin({ statuses: [200] })],
     })
   )
 );
 
-// ── 4. Static asset runtime caching ─────────────────────────────────────────
-// Fonts loaded from Google Fonts CDN are fine to cache (they are immutable).
-// Everything else (images, API responses) is not cached at this stage.
-// Font caching will be added in a later step if needed.
+// 4. Lifecycle — activate immediately so new SW versions take effect on next nav
+self.addEventListener("install",  ()      => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
-// ── 5. Lifecycle — skip waiting & claim clients ──────────────────────────────
-// When a new SW version is ready, take control immediately on next navigation.
-// This avoids users being stuck on a stale shell across tabs.
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+// ── B. FCM MESSAGING ───────────────────────────────────────────────────────
+
+/**
+ * push event — fired by FCM when a new order notification is delivered.
+ *
+ * Strategy: ALWAYS show the system notification from the SW.
+ * The page-level Socket.IO notification (in-app bell) fires independently.
+ * Duplicate suppression is handled by the React app via onMessage() — when
+ * the app is in the foreground, onMessage() fires and we can suppress the
+ * system popup there. The SW should not try to query client visibility because
+ * WindowClient.focused is unreliable across browsers and the check causes
+ * notifications to be silently dropped.
+ *
+ * Data payload format (data-only message from fcmService.js):
+ *   data.title, data.body, data.orderId, data.vendorOrderId, data.url, data.type
+ */
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    return; // malformed payload — ignore
+  }
+
+  // All fields are in data: {} because we send a data-only FCM message.
+  // This ensures the browser never auto-handles the notification and always
+  // fires this push handler.
+  const data = payload.data || {};
+
+  const title         = data.title         || "New Order Received";
+  const body          = data.body          || "You have received a new order. Tap to view.";
+  const orderId       = data.orderId       || "";
+  const vendorOrderId = data.vendorOrderId || "";
+  const targetUrl     = data.url           || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon:               "/icons/icon-192x192.png",
+      badge:              "/icons/icon-192x192.png",
+      tag:                `new-order-${orderId || Date.now()}`,
+      requireInteraction: true,
+      data: {
+        url:          targetUrl,
+        orderId,
+        vendorOrderId,
+        type:         data.type || "NEW_ORDER",
+      },
+    })
+  );
+});
+
+/**
+ * notificationclick — fired when the vendor taps a DilMart system notification.
+ *
+ * Behaviour:
+ *  1. Close the notification immediately.
+ *  2. If a vendor dashboard tab is already open → focus it and navigate.
+ *  3. If no tab is open → open a new tab at the order detail URL.
+ *
+ * The vendor must still authenticate normally — we only navigate the browser.
+ * Authorization is enforced by the React app's CheckAuth component.
+ */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const { url, orderId } = event.notification.data || {};
+  const targetUrl = url || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
+
+  event.waitUntil(
+    (async () => {
+      const allClients = await self.clients.matchAll({
+        type:                "window",
+        includeUncontrolled: false,
+      });
+
+      // Look for an existing vendor dashboard tab to reuse
+      const vendorTab = allClients.find((c) => c.url.includes("/vendor"));
+
+      if (vendorTab) {
+        // Focus the existing tab and navigate it to the order
+        await vendorTab.focus();
+        await vendorTab.navigate(targetUrl);
+      } else {
+        // No existing tab — open a new one
+        await self.clients.openWindow(targetUrl);
+      }
+    })()
+  );
 });

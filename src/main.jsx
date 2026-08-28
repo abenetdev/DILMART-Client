@@ -9,22 +9,21 @@ import axios from "axios";
 import { registerSW } from "virtual:pwa-register";
 
 // ── DilMart PWA: Service Worker registration ─────────────────────────────
-// Only active in production builds (vite-plugin-pwa devOptions.enabled=false).
-// autoUpdate: when a new SW version is available, it updates silently on the
-// next page navigation — no intrusive "update available" prompt at this stage.
-if (import.meta.env.PROD) {
-  registerSW({
-    onRegisteredSW(swUrl, registration) {
-      // SW registered — log once in production for diagnostics
-      if (registration) {
-        console.log("[DilMart PWA] Service worker registered:", swUrl);
-      }
-    },
-    onRegisterError(error) {
-      console.warn("[DilMart PWA] Service worker registration failed:", error);
-    },
-  });
-}
+// Runs in both dev and production.
+// In dev: vite-plugin-pwa serves the SW at /dev-sw.js (devOptions.enabled:true)
+//         so FCM getToken() can find the registration at scope "/".
+// In prod: registers the compiled /sw.js bundle.
+// autoUpdate: when a new SW version is ready it activates on the next navigation.
+registerSW({
+  onRegisteredSW(swUrl, registration) {
+    if (registration) {
+      console.log("[DilMart PWA] Service worker registered:", swUrl);
+    }
+  },
+  onRegisterError(error) {
+    console.warn("[DilMart PWA] Service worker registration failed:", error);
+  },
+});
 
 axios.interceptors.response.use(
   (response) => response,

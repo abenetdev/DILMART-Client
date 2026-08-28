@@ -27,14 +27,18 @@ export default defineConfig({
       // the widest possible scope ("/").
       outDir: "dist",
 
-      // Register the SW automatically in the production build.
-      // In development (vite dev), the SW is NOT active by default to avoid
-      // stale-cache issues during development iteration.
+      // Register the SW automatically in production builds.
+      // In development (vite dev), the SW is enabled with type:"module" so
+      // that FCM getToken() can find the existing DilMart registration and
+      // obtain a push token. This is safe because:
+      //   - self.__WB_MANIFEST is [] in dev (nothing is precached)
+      //   - Navigation stays NetworkFirst (always hits the dev server first)
+      //   - API requests stay NetworkOnly (never cached)
+      // No stale-cache risk exists in this configuration.
       registerType: "autoUpdate",
       devOptions: {
-        // Keep SW disabled in dev to prevent caching issues while developing.
-        // Set to true + type "module" only if you need to debug SW behaviour.
-        enabled: false,
+        enabled: true,
+        type: "module",   // required — sw.js uses ES module imports (workbox-*)
       },
 
       // The manifest is embedded inside the built app by the plugin.

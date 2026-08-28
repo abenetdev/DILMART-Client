@@ -10,7 +10,7 @@
  *  - Loading skeletons, empty state, error state
  */
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -58,6 +58,10 @@ import {
   optimisticRemove,
 } from "@/store/vendor/notification-slice";
 import { formatDistanceToNow, formatDate } from "@/lib/timeUtils";
+import { useFCM } from "@/hooks/useFCM";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
+import { Smartphone, BellRing, BellOff as BellOffIcon, Loader2 } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -246,6 +250,9 @@ export default function VendorNotificationsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Push notification opt-in card */}
+      <PushNotificationCard />
 
       {/* Success banner */}
       {successMsg && (
@@ -601,5 +608,146 @@ function ConfirmDialog({ open, onClose, onConfirm, title, description }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ── Push Notification Opt-In Card ─────────────────────────────────────────
+/**
+ * PushNotificationCard
+ *
+ * Minimal UI to let a vendor enable or disable browser push notifications.
+ * Placed at the top of the Notifications page so it is discoverable without
+ * cluttering the main list.
+ *
+ * Uses the useFCM() hook — all FCM logic lives there.
+ * This component only handles rendering and user feedback.
+ *
+ * Spec constraints respected:
+ *  - No redesign of existing pages
+ *  - No custom install popup
+ *  - No notification preferences / history
+ *  - Uses existing DilMart Card/Switch/Button/Badge styling
+ */
+function PushNotificationCard() {
+  const {
+    isSupported,
+    isEnabled,
+    isLoading,
+    isRegistering,
+    error,
+    enable,
+    disable,
+  } = useFCM();
+
+  const [localSuccess, setLocalSuccess] = React.useState("");
+
+  // Auto-clear success message after 4 s
+  React.useEffect(() => {
+    if (!localSuccess) return;
+    const t = setTimeout(() => setLocalSuccess(""), 4000);
+    return () => clearTimeout(t);
+  }, [localSuccess]);
+
+  async function handleToggle() {
+    if (isEnabled) {
+      const ok = await disable();
+      if (ok) setLocalSuccess("Push notifications disabled.");
+    } else {
+      const ok = await enable();
+      if (ok) setLocalSuccess("Push notifications enabled! You'll be notified when a new order arrives.");
+    }
+  }
+
+  // Don't render the card if the browser definitely doesn't support FCM
+  // (checked after the async isSupported resolves — while loading show skeleton)
+  if (!isLoading && !isSupported) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex items-center gap-3 py-4 px-5">
+          <BellOffIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            Push notifications are not supported in this browser. Try Chrome or Edge.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="py-4 px-5">
+        {/* Loading skeleton while checking backend status */}
+        {isLoading ? (
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-72" />
+            </div>
+            <Skeleton className="h-6 w-10 rounded-full" />
+          </div>
+        ) : (
+          <div className="flex items-start gap-4">
+            {/* Icon */}
+            <div className={`
+              flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center mt-0.5
+              ${isEnabled ? "bg-primary/10" : "bg-muted"}
+            `}>
+              {isEnabled
+                ? <BellRing className="h-4 w-4 text-primary" />
+                : <Smartphone className="h-4 w-4 text-muted-foreground" />
+              }
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold">
+                  {isEnabled ? "Order Notifications Enabled" : "Enable Order Notifications"}
+                </span>
+                {isEnabled && (
+                  <Badge variant="default" className="text-[10px] h-4 px-1.5">Active</Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isEnabled
+                  ? "You'll receive a push notification on this device when a customer places an order."
+                  : "Get notified immediately when a customer places an order, even when the dashboard isn't open."
+                }
+              </p>
+
+              {/* Success feedback */}
+              {localSuccess && (
+                <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  {localSuccess}
+                </p>
+              )}
+
+              {/* Error feedback */}
+              {error && (
+                <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* Toggle switch */}
+            <div className="flex-shrink-0 flex items-center gap-2 mt-0.5">
+              {isRegistering && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+              <Switch
+                checked={isEnabled}
+                onCheckedChange={handleToggle}
+                disabled={isRegistering || isLoading}
+                aria-label={isEnabled ? "Disable push notifications" : "Enable push notifications"}
+              />
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
