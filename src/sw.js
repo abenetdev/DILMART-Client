@@ -94,35 +94,53 @@ self.addEventListener("push", (event) => {
     return;
   }
 
-  const data = payload.data || {};
+  // Fields live in payload.data (data-only) or payload.notification (notification msg).
+  // fcmService.js sends BOTH so we have a fallback either way.
+  const data   = payload.data         || {};
+  const notif  = payload.notification || {};
 
-  const title         = data.title         || "\uD83C\uDF89 New Order Received";
-  const body          = data.body          || "You have a new order waiting for confirmation.";
-  const orderId       = data.orderId       || "";
-  const vendorOrderId = data.vendorOrderId || "";
-  const targetUrl     = data.url           || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
+  const title         = data.title         || notif.title || "\uD83C\uDF89 New Order Received";
+  const body          = data.body          || notif.body  || "You have a new order waiting for confirmation.";
+  const orderId       = data.orderId       || (notif.data && notif.data.orderId)       || "";
+  const vendorOrderId = data.vendorOrderId || (notif.data && notif.data.vendorOrderId) || "";
+  const targetUrl     = data.url           || (notif.data && notif.data.url)           ||
+                        (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
 
-  // notification.jpg lives in public/icons/ — served at /icons/notification.jpg
-  // in both dev (vite static) and production (Vercel/CDN).
-  const NOTIF_ICON  = "/icons/notification.jpg";
-  const BADGE_ICON  = "/icons/icon-192x192.png";  // badge must be monochrome PNG
+  const NOTIF_ICON = "/icons/notification.jpg";
+  const BADGE_ICON = "/icons/icon-192x192.png";
+  const TAG        = `new-order-${orderId || Date.now()}`;
 
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon:               NOTIF_ICON,
-      badge:              BADGE_ICON,
-      image:              NOTIF_ICON,  // large image below the body (Chrome Android)
-      tag:                `new-order-${orderId || Date.now()}`,
-      requireInteraction: true,        // stay visible until dismissed
-      vibrate:            [200, 100, 200], // subtle pulse on mobile
-      data: {
-        url:          targetUrl,
-        orderId,
-        vendorOrderId,
-        type:         data.type || "NEW_ORDER",
-      },
-    })
+    (async () => {
+      // ── Duplicate guard ───────────────────────────────────────────────────
+      // When webpush.notification is present in the FCM payload, Chrome may
+      // have already displayed the notification before this push event fires
+      // (this happens when the app is closed — the OS shows it directly).
+      // Check existing notifications with the same tag; if one is already
+      // shown, skip creating a duplicate.
+      const existing = await self.registration.getNotifications({ tag: TAG });
+      if (existing.length > 0) {
+        // Notification already displayed by the browser natively — nothing to do.
+        return;
+      }
+
+      // ── Show the DilMart-branded notification ─────────────────────────────
+      await self.registration.showNotification(title, {
+        body,
+        icon:               NOTIF_ICON,
+        badge:              BADGE_ICON,
+        image:              NOTIF_ICON,
+        tag:                TAG,
+        requireInteraction: true,
+        vibrate:            [200, 100, 200],
+        data: {
+          url:          targetUrl,
+          orderId,
+          vendorOrderId,
+          type:         data.type || "NEW_ORDER",
+        },
+      });
+    })()
   );
 });
 
@@ -140,18 +158,19 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const { url, orderId } = event.notification.data || {};
+  // Data may come from either:
+  //  • notification.data — when the browser showed it natively (app closed)
+  //  • notification.data — when the SW showed it (app backgrounded)
+  // Both paths store the same fields under notification.data because we set
+  // data: { url, orderId, vendorOrderId, type } in both webpush.notification.data
+  // and in the showNotification() call above.
+  const notifData = event.notification.data || {};
+  const url       = notifData.url;
+  const orderId   = notifData.orderId;
 
-  // Build the target URL.
-  // If the server sent an absolute URL (https://dilmart.et/vendor/orders/...)
-  // use it directly. If it sent a relative path (/vendor/orders/...) resolve
-  // it against the SW scope origin so we always open the correct domain,
-  // never localhost.
   const rawUrl    = url || (orderId ? `/vendor/orders/${orderId}` : "/vendor/orders");
-  const origin    = self.registration.scope.replace(/\/$/, ""); // e.g. https://dilmart.et
-  const targetUrl = rawUrl.startsWith("http")
-    ? rawUrl                        // already absolute — use as-is
-    : `${origin}${rawUrl}`;         // relative → prepend SW origin
+  const origin    = self.registration.scope.replace(/\/$/, "");
+  const targetUrl = rawUrl.startsWith("http") ? rawUrl : `${origin}${rawUrl}`;
 
   event.waitUntil(
     (async () => {
