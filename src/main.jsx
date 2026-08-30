@@ -11,7 +11,7 @@ import { registerSW } from "virtual:pwa-register";
 // ── DilMart PWA: Service Worker registration ─────────────────────────────
 // Runs in both dev and production.
 // In dev: vite-plugin-pwa serves the SW at /dev-sw.js (devOptions.enabled:true)
-//         so FCM getToken() can find the registration at scope "/".
+//         so the service worker is active for PWA caching during development.
 // In prod: registers the compiled /sw.js bundle.
 // autoUpdate: when a new SW version is ready it activates on the next navigation.
 registerSW({

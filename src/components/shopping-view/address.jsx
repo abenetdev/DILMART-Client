@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addNewAddress, deleteAddress, editaAddress, fetchAllAddresses,
@@ -9,9 +9,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import {
-  Plus, X, MapPin, Loader2, ChevronDown, ChevronUp,
-} from "lucide-react";
+import { Plus, X, MapPin, Loader2 } from "lucide-react";
 
 const EMPTY = { address: "", city: "", phone: "", pincode: "", notes: "" };
 
@@ -26,7 +24,6 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Address */}
       <div className="space-y-1.5">
         <Label htmlFor="addr-address">Street Address <span className="text-red-500">*</span></Label>
         <Input
@@ -38,7 +35,6 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
         />
       </div>
 
-      {/* City + Pincode */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="addr-city">City <span className="text-red-500">*</span></Label>
@@ -62,7 +58,6 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
         </div>
       </div>
 
-      {/* Phone */}
       <div className="space-y-1.5">
         <Label htmlFor="addr-phone">Phone Number <span className="text-red-500">*</span></Label>
         <Input
@@ -75,14 +70,14 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
         />
       </div>
 
-      {/* Notes */}
       <div className="space-y-1.5">
         <Label htmlFor="addr-notes">
-          Delivery Notes <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+          Delivery Notes{" "}
+          <span className="text-xs text-muted-foreground font-normal">(optional)</span>
         </Label>
         <Textarea
           id="addr-notes"
-          placeholder="Any special delivery instructions…"
+          placeholder="Any special delivery instructions..."
           value={formData.notes}
           onChange={(e) => set("notes", e.target.value)}
           rows={2}
@@ -90,22 +85,12 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
         />
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-2 pt-1">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1"
-          onClick={onCancel}
-        >
+        <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          className="flex-1 gap-2"
-          disabled={!isValid || isSubmitting}
-        >
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" className="flex-1 gap-2" disabled={!isValid || isSubmitting}>
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {isEditing ? "Save Changes" : "Add Address"}
         </Button>
       </div>
@@ -114,46 +99,43 @@ function AddressForm({ formData, setFormData, onSubmit, onCancel, isEditing, isS
 }
 
 export default function Address({ setCurrentSelectedAddress, selectedId }) {
-  const [formData,       setFormData]       = useState(EMPTY);
+  const [formData,        setFormData]        = useState(EMPTY);
   const [currentEditedId, setCurrentEditedId] = useState(null);
-  const [formOpen,       setFormOpen]       = useState(false);
-  const [isSubmitting,   setIsSubmitting]   = useState(false);
+  const [formOpen,        setFormOpen]        = useState(false);
+  const [isSubmitting,    setIsSubmitting]    = useState(false);
 
   const dispatch = useDispatch();
-  const { user } = useSelector((s) => s.auth);
+  const { user }  = useSelector((s) => s.auth);
   const { addressList } = useSelector((s) => s.shopAddress);
   const { toast } = useToast();
 
+  // Fetch on mount and inspect the RESULT directly.
+  // Never rely on Redux isLoading or addressList for the initial open decision
+  // because addressLoading starts as false and addressList starts as [] —
+  // any effect watching those will fire immediately with empty data before
+  // the network response arrives.
   useEffect(() => {
-    dispatch(fetchAllAddresses(user?.id));
-  }, [dispatch, user?.id]);
+    dispatch(fetchAllAddresses(user?.id)).then((action) => {
+      const list = action?.payload?.data ?? [];
 
-  // ── Smart auto-selection ───────────────────────────────────────────────
-  // • 0 addresses → open the add form so the user can't miss it
-  // • 1 address   → select it automatically (no manual click needed)
-  // • 2+ addresses → do nothing; customer must pick one
-  useEffect(() => {
-    if (addressList.length === 1 && setCurrentSelectedAddress) {
-      // Auto-select the only address (only if callback provided)
-      setCurrentSelectedAddress(addressList[0]);
-    } else if (addressList.length === 0) {
-      // No addresses — deselect and open the form
-      if (setCurrentSelectedAddress) {
-        setCurrentSelectedAddress(null);
+      if (list.length === 0) {
+        // Confirmed empty from server — open the add form
+        if (setCurrentSelectedAddress) setCurrentSelectedAddress(null);
+        setFormOpen(true);
+      } else if (list.length === 1 && setCurrentSelectedAddress) {
+        // Auto-select the only address
+        setCurrentSelectedAddress(list[0]);
       }
-      setFormOpen(true);
-    }
-    // 2+ addresses: leave the current selection as-is
-  }, [addressList, setCurrentSelectedAddress]);
+      // 2+ addresses: leave selection untouched
+    });
+  }, [dispatch, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Open form in "add" mode
   function openAddForm() {
     setCurrentEditedId(null);
     setFormData(EMPTY);
     setFormOpen(true);
   }
 
-  // Open form in "edit" mode
   function handleEditAddress(addr) {
     setCurrentEditedId(addr._id);
     setFormData({
@@ -164,9 +146,9 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
       notes:    addr.notes    || "",
     });
     setFormOpen(true);
-    // Scroll form into view smoothly
     setTimeout(() => {
-      document.getElementById("address-form-section")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      document.getElementById("address-form-section")
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 50);
   }
 
@@ -187,11 +169,12 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
     setIsSubmitting(true);
 
     if (currentEditedId) {
-      const result = await dispatch(editaAddress({ userId: user?.id, addressId: currentEditedId, formData }));
+      const result = await dispatch(
+        editaAddress({ userId: user?.id, addressId: currentEditedId, formData })
+      );
       if (result?.payload?.success) {
         dispatch(fetchAllAddresses(user?.id));
         toast({ title: "Address updated" });
-        // If the edited address is currently selected, push the fresh data up to checkout
         if (setCurrentSelectedAddress && selectedId?._id === currentEditedId) {
           setCurrentSelectedAddress({ ...selectedId, ...formData });
         }
@@ -200,10 +183,6 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
     } else {
       const result = await dispatch(addNewAddress({ ...formData, userId: user?.id }));
       if (result?.payload?.success) {
-        // Refresh the list — the useEffect above will auto-select if this
-        // brings the count to 1. If the customer already had addresses,
-        // we explicitly select the newly created one so they don't have
-        // to click it manually.
         await dispatch(fetchAllAddresses(user?.id));
         const newAddr = result?.payload?.data;
         if (newAddr && setCurrentSelectedAddress) {
@@ -218,11 +197,12 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
   }
 
   async function handleDeleteAddress(addr) {
-    const result = await dispatch(deleteAddress({ userId: user?.id, addressId: addr._id }));
+    const result = await dispatch(
+      deleteAddress({ userId: user?.id, addressId: addr._id })
+    );
     if (result?.payload?.success) {
       dispatch(fetchAllAddresses(user?.id));
       toast({ title: "Address removed" });
-      // If deleted address was selected, deselect
       if (selectedId?._id === addr._id) setCurrentSelectedAddress?.(null);
     }
   }
@@ -232,7 +212,7 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
   return (
     <div className="space-y-4">
 
-      {/* ── Header row ── */}
+      {/* Header row */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
@@ -242,9 +222,9 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
           <p className="text-xs text-muted-foreground mt-0.5">
             {addressList.length === 0
               ? "Add an address to continue"
-              : addressList.length === 1
-              ? "Your address has been selected automatically"
-              : `${addressList.length} saved addresses · select one to deliver`}
+              : addressList.length >= 2
+              ? `${addressList.length} saved addresses - select one`
+              : ""}
           </p>
         </div>
 
@@ -259,7 +239,7 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
         )}
       </div>
 
-      {/* ── Address cards grid ── */}
+      {/* Address cards */}
       {addressList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {addressList.map((addr) => (
@@ -275,7 +255,7 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
         </div>
       )}
 
-      {/* ── Empty state ── */}
+      {/* Empty state */}
       {addressList.length === 0 && !formOpen && (
         <div
           onClick={openAddForm}
@@ -286,18 +266,19 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-gray-900">No addresses saved</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Click to add your first delivery address</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Click to add your first delivery address
+            </p>
           </div>
         </div>
       )}
 
-      {/* ── Collapsible form ── */}
+      {/* Add / Edit form */}
       {formOpen && (
         <div
           id="address-form-section"
           className="rounded-2xl border bg-gray-50/50 overflow-hidden"
         >
-          {/* Form header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
             <p className="text-sm font-semibold text-gray-900">
               {currentEditedId ? "Edit Address" : "New Address"}
@@ -310,8 +291,6 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
               <X className="h-4 w-4" />
             </button>
           </div>
-
-          {/* Form body */}
           <div className="p-4">
             <AddressForm
               formData={formData}
@@ -328,7 +307,7 @@ export default function Address({ setCurrentSelectedAddress, selectedId }) {
       {/* Max reached notice */}
       {addressList.length >= 3 && !formOpen && (
         <p className="text-xs text-muted-foreground text-center">
-          Maximum 3 addresses — delete one to add a new address.
+          Maximum 3 addresses - delete one to add a new address.
         </p>
       )}
     </div>

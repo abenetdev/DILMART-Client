@@ -1,14 +1,14 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Package, Heart, Settings, ChevronRight, Store, Clock, ShoppingCart,
+  Package, Heart, UserCircle, ChevronRight, Store, Clock, ShoppingCart,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/account", label: "Settings", icon: Settings, end: true },
+  { to: "/account", label: "Overview", icon: UserCircle, end: true },
   { to: "/orders", label: "Orders", icon: Package },
   { to: "/account/wishlist", label: "Wishlist", icon: Heart },
   { to: "/account/cart", label: "Cart", icon: ShoppingCart },

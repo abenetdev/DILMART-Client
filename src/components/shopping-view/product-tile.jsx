@@ -72,11 +72,11 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
         onClick={() => navigate(`/product/${product?._id}`)}
       >
         {/*
-          aspect-square on mobile → perfectly square image that always fits
-          a 2-col cell without overflow.
-          On sm+ use aspect-[3/4] for a taller portrait ratio.
+          aspect-[4/3] on mobile → landscape ratio, shorter image that still
+          shows the full product clearly.
+          On sm+ use aspect-square for a balanced square ratio.
         */}
-        <div className="aspect-square sm:aspect-[3/4] w-full overflow-hidden bg-gray-100">
+        <div className="aspect-[4/3] sm:aspect-square w-full overflow-hidden bg-gray-100">
           <img
             src={image}
             alt={title}
@@ -125,35 +125,35 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
 
       {/* ── Text content ── */}
       <CardContent
-        className="p-2 sm:p-3 flex-1 flex flex-col gap-1"
+        className="p-1.5 sm:p-2 flex-1 flex flex-col gap-0.5"
         onClick={() => navigate(`/product/${product?._id}`)}
       >
         {/* Title */}
-        <h2 className="text-[14px] sm:text-lg font-semibold line-clamp-2 leading-snug text-gray-900">
+        <h2 className="text-[15px] sm:text-lg font-semibold line-clamp-1 leading-snug text-gray-900">
           {title}
         </h2>
 
         {/* Category (brand hidden on mobile to save space) */}
-        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+        <p className="text-[10px] sm:text-xs text-muted-foreground truncate leading-none">
           {categoryLabel}
           {brandLabel && (
             <span className="hidden sm:inline"> · {brandLabel}</span>
           )}
         </p>
 
-        {/* Price — stack on mobile, inline on sm+ */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 mt-auto pt-1">
+        {/* Price — inline on all sizes to save vertical space */}
+        <div className="flex flex-col sm:flex-row items-baseline gap-1 mt-auto pt-0.5">
           {salePrice > 0 ? (
             <>
-              <span className="text-md sm:text-lg font-bold text-primary leading-tight">
+              <span className="text-sm sm:text-lg font-bold text-primary leading-tight">
                 ETB {currencyFormatter(salePrice)}
               </span>
-              <span className="text-[9px] sm:text-xs line-through text-muted-foreground leading-tight">
+              <span className="text-[10px] sm:text-xs line-through text-red-500 font-bold leading-tight">
                 ETB {currencyFormatter(price)}
               </span>
             </>
           ) : (
-            <span className="text-md sm:text-lg font-bold text-primary leading-tight">
+            <span className="text-sm sm:text-sm font-bold text-primary leading-tight">
               ETB {currencyFormatter(price)}
             </span>
           )}
@@ -161,10 +161,10 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
       </CardContent>
 
       {/* ── Add to cart ── */}
-      <CardFooter className="p-2 sm:p-3 pt-0">
+      <CardFooter className="p-1.5 sm:p-2 pt-0">
         {totalStock === 0 ? (
           <Button
-            className="w-full h-7 sm:h-9 text-[10px] sm:text-xs"
+            className="w-full h-6 sm:h-7 text-[10px] sm:text-xs"
             disabled
             variant="secondary"
           >
@@ -172,7 +172,7 @@ function ShoppingProductTile({ product, handleAddtoCart }) {
           </Button>
         ) : (
           <Button
-            className="w-full h-7 sm:h-9 text-[10px] sm:text-xs gap-1 px-1 sm:px-3"
+            className="w-full h-6 sm:h-7 text-[10px] sm:text-xs gap-1 px-1 sm:px-3"
             onClick={onAddToCart}
             disabled={adding}
           >

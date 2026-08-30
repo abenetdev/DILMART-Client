@@ -402,7 +402,7 @@ export default function BecomeASeller() {
             Verified Seller Program
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            {showRejectedBanner ? "Reapply to Become a Seller" : "Become a Seller"}
+            {showRejectedBanner ? "Reapply to Become a Seller" : "Start Selling On Dilmart"}
           </h1>
           <p className="text-gray-500 mt-3 max-w-lg mx-auto text-sm leading-relaxed">
             Join thousands of vendors on DilMart. Set up your store, list

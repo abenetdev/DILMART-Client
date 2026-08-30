@@ -1,6 +1,6 @@
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { useCart } from "@/hooks/useCart";
-import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice";
+import { getSearchResults } from "@/store/shop/search-slice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
@@ -17,9 +17,8 @@ function SearchProducts() {
   useEffect(() => {
     if (keyword.trim()) {
       dispatch(getSearchResults(keyword.trim()));
-    } else {
-      dispatch(resetSearchResults());
     }
+    // Intentionally do nothing when keyword is cleared — keep showing last results
   }, [keyword, dispatch]);
 
   return (
@@ -54,7 +53,7 @@ function SearchProducts() {
           <p className="text-sm">Try different keywords or check for typos</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {searchResults.map((item) => (
             <ShoppingProductTile
               key={item._id}

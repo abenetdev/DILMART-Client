@@ -39,10 +39,6 @@ export default function Footer() {
                 />
               </Link>
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: "#5C6B6A" }}>
-              Your one-stop multivendor marketplace. Shop from thousands of
-              verified stores.
-            </p>
             <div className="flex gap-3 mt-5">
               {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
                 <a

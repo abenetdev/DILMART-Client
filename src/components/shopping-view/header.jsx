@@ -25,7 +25,7 @@ import { logoutUser } from "@/store/auth-slice";
 import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlist } from "@/store/shop/wishlist-slice";
-import { getSearchResults, resetSearchResults } from "@/store/shop/search-slice";
+import { getSearchResults } from "@/store/shop/search-slice";
 import { fetchAllActiveCategories } from "@/store/shop/category-slice";
 
 function getCartUserId(user, isAuthenticated) {
@@ -57,13 +57,8 @@ function HeaderSearchBar() {
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
-    if (value.trim().length === 0) {
-      dispatch(resetSearchResults());
-      if (location.pathname === "/search") {
-        navigate("/search", { replace: true });
-      }
-      return;
-    }
+    // If input is cleared, do nothing — keep existing results visible
+    if (value.trim().length === 0) return;
     debounceRef.current = setTimeout(() => {
       navigate(
         `/search?keyword=${encodeURIComponent(value.trim())}`,
@@ -85,10 +80,7 @@ function HeaderSearchBar() {
 
   function handleClear() {
     setValue("");
-    dispatch(resetSearchResults());
-    if (location.pathname === "/search") {
-      navigate("/search", { replace: true });
-    }
+    // Don't reset results or navigate — keep last search results visible
     inputRef.current?.focus();
   }
 

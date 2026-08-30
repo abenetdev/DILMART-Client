@@ -40,6 +40,7 @@ import AccountOrdersPage from "./pages/shopping-view/account-orders";
 import AccountWishlistPage from "./pages/shopping-view/account-wishlist";
 import AccountCartPage from "./pages/shopping-view/account-cart";
 import AccountSettingsPage from "./pages/shopping-view/account-settings";
+import AccountOverviewPage from "./pages/shopping-view/account-overview";
 import CheckAuth from "./components/common/check-auth";
 import ScrollToTop from "./components/common/scroll-to-top";
 import UnauthPage from "./pages/unauth-page";
@@ -217,12 +218,13 @@ const location = useLocation();
                 : <Navigate to="/auth/login?redirect=/orders" replace />
             }
           />
-          {/* Account - nested routes for settings, wishlist, cart */}
+          {/* Account - nested routes */}
           <Route path="account" element={<ShoppingAccount />}>
-            <Route index element={<AccountSettingsPage />} />
+            <Route index element={<AccountOverviewPage />} />
             <Route path="wishlist" element={<AccountWishlistPage />} />
             <Route path="cart" element={<AccountCartPage />} />
-            <Route path="settings" element={<AccountSettingsPage />} />
+            <Route path="settings" element={<AccountOverviewPage />} />
+            <Route path="update-profile" element={<AccountSettingsPage />} />
           </Route>
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="chapa-return" element={<ChapaReturnPage />} />

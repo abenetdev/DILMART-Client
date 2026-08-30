@@ -1,5 +1,5 @@
-/**
- * Vendor Notifications Page — /vendor/notifications
+﻿/**
+ * Vendor Notifications Page â€” /vendor/notifications
  *
  * Features:
  *  - Notification list with pagination
@@ -58,12 +58,8 @@ import {
   optimisticRemove,
 } from "@/store/vendor/notification-slice";
 import { formatDistanceToNow, formatDate } from "@/lib/timeUtils";
-import { useFCM } from "@/hooks/useFCM";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent } from "@/components/ui/card";
-import { Smartphone, BellRing, BellOff as BellOffIcon, Loader2 } from "lucide-react";
 
-// ── Constants ──────────────────────────────────────────────────────────────
+// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STATUS_OPTIONS = [
   { value: "all",    label: "All"    },
@@ -83,7 +79,7 @@ const DATE_OPTIONS = [
   { value: "this_month", label: "This month" },
 ];
 
-// ── Page component ─────────────────────────────────────────────────────────
+// â”€â”€ Page component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function VendorNotificationsPage() {
   const dispatch = useDispatch();
@@ -117,7 +113,7 @@ export default function VendorNotificationsPage() {
     return () => clearTimeout(t);
   }, [successMsg]);
 
-  // ── Filter handlers ──────────────────────────────────────────────────────
+  // â”€â”€ Filter handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function handleFilterChange(key, value) {
     dispatch(setFilters({ [key]: value }));
@@ -127,7 +123,7 @@ export default function VendorNotificationsPage() {
     dispatch(setPage(newPage));
   }
 
-  // ── Selection ────────────────────────────────────────────────────────────
+  // â”€â”€ Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function toggleSelect(id) {
     setSelectedIds((prev) => {
@@ -145,7 +141,7 @@ export default function VendorNotificationsPage() {
     }
   }
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function handleClickNotification(n) {
     if (!n.isRead) {
@@ -192,7 +188,7 @@ export default function VendorNotificationsPage() {
 
   const readCount = notifications.filter((n) => n.isRead).length;
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -204,7 +200,7 @@ export default function VendorNotificationsPage() {
             <h1 className="text-xl font-bold">Notifications</h1>
             <p className="text-xs text-muted-foreground">
               {pagination.total} total
-              {unreadCount > 0 && ` · ${unreadCount} unread`}
+              {unreadCount > 0 && ` Â· ${unreadCount} unread`}
             </p>
           </div>
         </div>
@@ -250,9 +246,6 @@ export default function VendorNotificationsPage() {
           </Button>
         </div>
       </div>
-
-      {/* Push notification opt-in card */}
-      <PushNotificationCard />
 
       {/* Success banner */}
       {successMsg && (
@@ -425,7 +418,7 @@ export default function VendorNotificationsPage() {
               );
             })}
 
-            {pagination.totalPages > 5 && <span className="text-muted-foreground text-sm px-1">…</span>}
+            {pagination.totalPages > 5 && <span className="text-muted-foreground text-sm px-1">â€¦</span>}
 
             <Button
               variant="outline"
@@ -460,7 +453,7 @@ export default function VendorNotificationsPage() {
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NotificationRow({ notification, selected, onSelect, onClick, onDelete }) {
   const { title, message, isRead, type, createdAt } = notification;
@@ -517,7 +510,7 @@ function NotificationRow({ notification, selected, onSelect, onClick, onDelete }
         <p className="text-xs text-muted-foreground mt-0.5 truncate">{message}</p>
         <p className="text-[10px] text-muted-foreground/60 mt-1 flex items-center gap-1">
           <span>{formatDistanceToNow(createdAt)}</span>
-          <span>·</span>
+          <span>Â·</span>
           <span>{formatDate(createdAt)}</span>
         </p>
       </div>
@@ -608,146 +601,5 @@ function ConfirmDialog({ open, onClose, onConfirm, title, description }) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-// ── Push Notification Opt-In Card ─────────────────────────────────────────
-/**
- * PushNotificationCard
- *
- * Minimal UI to let a vendor enable or disable browser push notifications.
- * Placed at the top of the Notifications page so it is discoverable without
- * cluttering the main list.
- *
- * Uses the useFCM() hook — all FCM logic lives there.
- * This component only handles rendering and user feedback.
- *
- * Spec constraints respected:
- *  - No redesign of existing pages
- *  - No custom install popup
- *  - No notification preferences / history
- *  - Uses existing DilMart Card/Switch/Button/Badge styling
- */
-function PushNotificationCard() {
-  const {
-    isSupported,
-    isEnabled,
-    isLoading,
-    isRegistering,
-    error,
-    enable,
-    disable,
-  } = useFCM();
-
-  const [localSuccess, setLocalSuccess] = React.useState("");
-
-  // Auto-clear success message after 4 s
-  React.useEffect(() => {
-    if (!localSuccess) return;
-    const t = setTimeout(() => setLocalSuccess(""), 4000);
-    return () => clearTimeout(t);
-  }, [localSuccess]);
-
-  async function handleToggle() {
-    if (isEnabled) {
-      const ok = await disable();
-      if (ok) setLocalSuccess("Push notifications disabled.");
-    } else {
-      const ok = await enable();
-      if (ok) setLocalSuccess("Push notifications enabled! You'll be notified when a new order arrives.");
-    }
-  }
-
-  // Don't render the card if the browser definitely doesn't support FCM
-  // (checked after the async isSupported resolves — while loading show skeleton)
-  if (!isLoading && !isSupported) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex items-center gap-3 py-4 px-5">
-          <BellOffIcon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-          <p className="text-sm text-muted-foreground">
-            Push notifications are not supported in this browser. Try Chrome or Edge.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="py-4 px-5">
-        {/* Loading skeleton while checking backend status */}
-        {isLoading ? (
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-full flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-3 w-72" />
-            </div>
-            <Skeleton className="h-6 w-10 rounded-full" />
-          </div>
-        ) : (
-          <div className="flex items-start gap-4">
-            {/* Icon */}
-            <div className={`
-              flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center mt-0.5
-              ${isEnabled ? "bg-primary/10" : "bg-muted"}
-            `}>
-              {isEnabled
-                ? <BellRing className="h-4 w-4 text-primary" />
-                : <Smartphone className="h-4 w-4 text-muted-foreground" />
-              }
-            </div>
-
-            {/* Text */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold">
-                  {isEnabled ? "Order Notifications Enabled" : "Enable Order Notifications"}
-                </span>
-                {isEnabled && (
-                  <Badge variant="default" className="text-[10px] h-4 px-1.5">Active</Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {isEnabled
-                  ? "You'll receive a push notification on this device when a customer places an order."
-                  : "Get notified immediately when a customer places an order, even when the dashboard isn't open."
-                }
-              </p>
-
-              {/* Success feedback */}
-              {localSuccess && (
-                <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  {localSuccess}
-                </p>
-              )}
-
-              {/* Error feedback */}
-              {error && (
-                <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  {error}
-                </p>
-              )}
-            </div>
-
-            {/* Toggle switch */}
-            <div className="flex-shrink-0 flex items-center gap-2 mt-0.5">
-              {isRegistering && (
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              <Switch
-                checked={isEnabled}
-                onCheckedChange={handleToggle}
-                disabled={isRegistering || isLoading}
-                aria-label={isEnabled ? "Disable push notifications" : "Enable push notifications"}
-              />
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
