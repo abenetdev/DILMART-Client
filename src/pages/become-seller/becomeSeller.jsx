@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -21,10 +21,31 @@ import {
 import {
   Store, CheckCircle, Clock, XCircle, ArrowRight, Loader2,
   ShieldCheck, TrendingUp, Package, Wallet, Upload, FileText,
-  X as XIcon,
+  X as XIcon, RotateCcw, Info,
 } from "lucide-react";
-
 import { fetchAllActiveCategories } from "@/store/shop/category-slice";
+
+// ── Draft persistence key (scoped so different users don't share drafts) ──
+const DRAFT_KEY = "dilmart_seller_draft";
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(data) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  } catch { /* storage full — silently skip */ }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+}
 
 // ── Status Banner ──────────────────────────────────────────────────────────
 function StatusBanner({ status, application }) {
@@ -85,14 +106,14 @@ function StatusBanner({ status, application }) {
 
 // ── Benefit cards ─────────────────────────────────────────────────────────
 const benefits = [
-  { icon: Store,      title: "Your Own Storefront",   desc: "Get a branded store page customers can visit" },
-  { icon: Package,    title: "Product Management",     desc: "Add, edit and manage unlimited products" },
-  { icon: TrendingUp, title: "Sales Analytics",        desc: "Track revenue, orders and customer insights" },
-  { icon: Wallet,     title: "Secure Payouts",         desc: "Withdraw earnings with flexible payout options" },
+  { icon: Store,      title: "Your Own Storefront",  desc: "Get a branded store page customers can visit" },
+  { icon: Package,    title: "Product Management",    desc: "Add, edit and manage unlimited products" },
+  { icon: TrendingUp, title: "Sales Analytics",       desc: "Track revenue, orders and customer insights" },
+  { icon: Wallet,     title: "Secure Payouts",        desc: "Withdraw earnings with flexible payout options" },
 ];
 
 // ── File Upload Input ──────────────────────────────────────────────────────
-function LicenceUpload({ file, onChange, error }) {
+function LicenceUpload({ file, onChange, error, needsReupload }) {
   const inputRef = useRef(null);
 
   const handleChange = (e) => {
@@ -114,21 +135,36 @@ function LicenceUpload({ file, onChange, error }) {
         Business Licence &amp; Registration{" "}
         <span className="text-red-500">*</span>
       </Label>
+
+      {/* Re-upload notice shown when a draft was restored but the file is gone */}
+      {needsReupload && !file && (
+        <div className="mt-1 mb-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+          <span>
+            Your previous progress was restored, but the business licence file
+            could not be saved in the browser. Please upload it again.
+          </span>
+        </div>
+      )}
+
       <div
         onClick={() => inputRef.current?.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         className={`mt-1 border-2 border-dashed rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition-colors
-          ${error ? "border-red-400 bg-red-50" : "border-gray-200 hover:border-primary/60 bg-gray-50 hover:bg-primary/5"}`}
+          ${error
+            ? "border-red-400 bg-red-50"
+            : needsReupload && !file
+            ? "border-amber-300 bg-amber-50/50 hover:border-amber-400"
+            : "border-gray-200 hover:border-primary/60 bg-gray-50 hover:bg-primary/5"
+          }`}
       >
         {file ? (
           <div className="flex items-center gap-3 w-full">
             <FileText className="h-8 w-8 text-primary flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-              <p className="text-xs text-gray-400">
-                {(file.size / 1024).toFixed(1)} KB
-              </p>
+              <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
             </div>
             <button
               type="button"
@@ -141,12 +177,8 @@ function LicenceUpload({ file, onChange, error }) {
         ) : (
           <>
             <Upload className="h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 font-medium">
-              Click or drag & drop to upload
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              JPEG, PNG, WebP or PDF · Max 10 MB
-            </p>
+            <p className="text-sm text-gray-600 font-medium">Click or drag &amp; drop to upload</p>
+            <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WebP or PDF · Max 10 MB</p>
           </>
         )}
       </div>
@@ -172,8 +204,6 @@ function EmailOption({ currentEmail, emailOption, onOptionChange, anotherEmail, 
       <p className="text-xs text-gray-400">
         This email will be associated with your seller account after approval.
       </p>
-
-      {/* Current email option */}
       <label className="flex items-center gap-3 border rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
         <input
           type="radio"
@@ -187,12 +217,9 @@ function EmailOption({ currentEmail, emailOption, onOptionChange, anotherEmail, 
           <p className="text-sm font-medium text-gray-800">Use Current Email</p>
           <p className="text-xs text-gray-400 truncate">{currentEmail}</p>
         </div>
-        {emailOption === "current" && (
-          <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-        )}
+        {emailOption === "current" && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
       </label>
 
-      {/* Another email option */}
       <label className="flex items-center gap-3 border rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors">
         <input
           type="radio"
@@ -206,9 +233,7 @@ function EmailOption({ currentEmail, emailOption, onOptionChange, anotherEmail, 
           <p className="text-sm font-medium text-gray-800">Use Another Email</p>
           <p className="text-xs text-gray-400">Provide a different email for your vendor account</p>
         </div>
-        {emailOption === "another" && (
-          <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
-        )}
+        {emailOption === "another" && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
       </label>
 
       {emailOption === "another" && (
@@ -233,43 +258,75 @@ export default function BecomeASeller() {
   const navigate  = useNavigate();
   const { toast } = useToast();
 
-  const { user, isAuthenticated }                           = useSelector((s) => s.auth);
-  const { isLoading, sellerStatus, application, error }    = useSelector((s) => s.shopSeller);
-  const { all: dbCategories }                              = useSelector((s) => s.shopCategory);
+  const { user, isAuthenticated }                         = useSelector((s) => s.auth);
+  const { isLoading, sellerStatus, application, error }  = useSelector((s) => s.shopSeller);
+  const { all: dbCategories }                            = useSelector((s) => s.shopCategory);
 
-  // Fetch categories for the form
+  // ── Form state (initialised from draft if one exists) ──────────────────
+  const draft = loadDraft();
+
+  const [form, setForm] = useState({
+    storeName:     draft?.storeName     ?? "",
+    storeLocation: draft?.storeLocation ?? "",
+    category:      draft?.category      ?? "other",
+    phone:         draft?.phone         ?? "",
+  });
+
+  const [emailOption,   setEmailOption]   = useState(draft?.emailOption   ?? "current");
+  const [anotherEmail,  setAnotherEmail]  = useState(draft?.anotherEmail  ?? "");
+  const [licenceFile,   setLicenceFile]   = useState(null); // files can never be restored
+  const [termsAccepted, setTermsAccepted] = useState(false); // always require re-confirmation
+  const [errors,        setErrors]        = useState({});
+
+  // True when a draft was restored that originally had a file attached
+  const [draftHadFile,  setDraftHadFile]  = useState(draft?.hadFile ?? false);
+
+  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  // ── Persist text fields to localStorage on every change ─────────────────
+  // The licence file and terms checkbox are intentionally excluded:
+  //   - File objects cannot be serialised to localStorage
+  //   - Terms must be actively re-confirmed each session
+  useEffect(() => {
+    const isBlank =
+      !form.storeName &&
+      !form.storeLocation &&
+      form.category === "other" &&
+      !form.phone &&
+      emailOption === "current" &&
+      !anotherEmail;
+
+    if (isBlank) return; // nothing worth saving yet
+
+    saveDraft({
+      storeName:     form.storeName,
+      storeLocation: form.storeLocation,
+      category:      form.category,
+      phone:         form.phone,
+      emailOption,
+      anotherEmail,
+      hadFile:       !!licenceFile || draftHadFile,
+    });
+  }, [form, emailOption, anotherEmail, licenceFile, draftHadFile]);
+
+  // When a new file is picked, clear the "needs re-upload" indicator
+  useEffect(() => {
+    if (licenceFile) setDraftHadFile(false);
+  }, [licenceFile]);
+
+  // ── Other side effects ───────────────────────────────────────────────────
   useEffect(() => {
     if (dbCategories.length === 0) dispatch(fetchAllActiveCategories());
   }, [dispatch, dbCategories.length]);
 
-  const [form, setForm] = useState({
-    storeName:     "",
-    storeLocation: "",
-    category:      "other",
-    phone:         "",
-  });
-
-  const [emailOption,   setEmailOption]   = useState("current"); // "current" | "another"
-  const [anotherEmail,  setAnotherEmail]  = useState("");
-  const [licenceFile,   setLicenceFile]   = useState(null);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-
-  // Field-level validation errors
-  const [errors, setErrors] = useState({});
-
-  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-  // Load current seller status on mount
   useEffect(() => {
     if (isAuthenticated) dispatch(getSellerStatus());
   }, [dispatch, isAuthenticated]);
 
-  // If already a vendor redirect to dashboard
   useEffect(() => {
     if (user?.role === "vendor") navigate("/vendor/dashboard", { replace: true });
   }, [user, navigate]);
 
-  // Show toast on server error
   useEffect(() => {
     if (error) {
       toast({ title: error, variant: "destructive" });
@@ -280,10 +337,16 @@ export default function BecomeASeller() {
   // ── Validation ──────────────────────────────────────────────────────────
   const validate = () => {
     const errs = {};
-
     if (!form.storeName.trim())     errs.storeName     = "Store name is required";
     if (!form.storeLocation.trim()) errs.storeLocation = "Physical location is required";
-    if (!form.phone.trim())         errs.phone         = "Phone number is required";
+    const phoneVal = form.phone.trim();
+    if (!phoneVal) {
+      errs.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(phoneVal)) {
+      errs.phone = "Phone number must be exactly 10 digits";
+    } else if (!/^0[79]/.test(phoneVal)) {
+      errs.phone = "Phone number must start with 09 or 07";
+    }
     if (!form.category)             errs.category      = "Please select a category";
 
     if (emailOption === "another") {
@@ -295,7 +358,6 @@ export default function BecomeASeller() {
     }
 
     if (!licenceFile) errs.licenceFile = "Please upload your business licence / registration document";
-
     if (!termsAccepted) errs.terms = "You must agree to the Seller Terms before submitting";
 
     return errs;
@@ -309,14 +371,12 @@ export default function BecomeASeller() {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      // Scroll to first error
       const firstErrKey = Object.keys(errs)[0];
       document.getElementById(firstErrKey)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     setErrors({});
 
-    // Build FormData
     const fd = new FormData();
     fd.append("storeName",     form.storeName.trim());
     fd.append("storeLocation", form.storeLocation.trim());
@@ -327,12 +387,25 @@ export default function BecomeASeller() {
 
     const result = await dispatch(applyToBecomeSeller(fd));
     if (result?.payload?.success) {
+      clearDraft(); // wipe the draft on success
       toast({ title: "Application submitted!", description: result.payload.message });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  // ── Redirect unauthenticated ──────────────────────────────────────────────
+  // ── Clear draft manually ─────────────────────────────────────────────────
+  function handleClearDraft() {
+    clearDraft();
+    setForm({ storeName: "", storeLocation: "", category: "other", phone: "" });
+    setEmailOption("current");
+    setAnotherEmail("");
+    setLicenceFile(null);
+    setTermsAccepted(false);
+    setDraftHadFile(false);
+    setErrors({});
+  }
+
+  // ── Unauthenticated ──────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-5 px-4 text-center">
@@ -349,7 +422,7 @@ export default function BecomeASeller() {
     );
   }
 
-  // ── Already approved — role not yet synced (needs re-login) ─────────────
+  // ── Already approved — role not yet synced ───────────────────────────────
   if (sellerStatus === "active" && user?.role !== "vendor") {
     return (
       <div className="max-w-xl mx-auto mt-16 mb-5 text-center space-y-6 px-4">
@@ -359,41 +432,37 @@ export default function BecomeASeller() {
           </div>
         </div>
         <div className="flex flex-col gap-5">
-          <div className="">
-          <h1 className="text-2xl font-bold text-gray-900">Application Approved!</h1>
-          <p className="text-gray-500 mt-2 text-sm leading-relaxed">
-            Your seller application has been approved. Please log out and log back in
-            to activate your vendor account.
-          </p>
-           </div>
-        <Button onClick={() => navigate("/auth/login")}>Log out & Re-login</Button>
-       
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Application Approved!</h1>
+            <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+              Your seller application has been approved. Please log out and log back in
+              to activate your vendor account.
+            </p>
+          </div>
+          <Button onClick={() => navigate("/auth/login")}>Log out &amp; Re-login</Button>
         </div>
       </div>
     );
   }
 
-  // ── Already approved (role is vendor) ────────────────────────────────────
-  if (user?.role === "vendor") {
-    return null; // redirect handled by useEffect above
-  }
+  if (user?.role === "vendor") return null;
 
-  // ── Pending state ─────────────────────────────────────────────────────────
   if (sellerStatus === "pending") {
     return <StatusBanner status="pending" application={application} />;
   }
 
   const showRejectedBanner = sellerStatus === "rejected";
+  const draftRestored = !!(draft?.storeName || draft?.storeLocation || draft?.phone || draft?.anotherEmail);
 
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <div className="bg-gray-50 min-h-[80vh] py-12 px-4">
       <div className="max-w-5xl mx-auto">
 
-        {/* Rejected banner */}
-        {showRejectedBanner && (
-          <StatusBanner status="rejected" application={application} />
-        )}
+        {showRejectedBanner && <StatusBanner status="rejected" application={application} />}
+
+        {/* Draft restored banner */}
+       
 
         {/* Hero */}
         <div className="text-center mb-10 mt-6">
@@ -405,8 +474,8 @@ export default function BecomeASeller() {
             {showRejectedBanner ? "Reapply to Become a Seller" : "Start Selling On Dilmart"}
           </h1>
           <p className="text-gray-500 mt-3 max-w-lg mx-auto text-sm leading-relaxed">
-            Join thousands of vendors on DilMart. Set up your store, list
-            your products, and start earning today.
+            Join thousands of vendors on DilMart. Set up your store, list your products,
+            and start earning today.
           </p>
         </div>
 
@@ -414,9 +483,7 @@ export default function BecomeASeller() {
 
           {/* Left — Benefits */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">
-              Why sell on DilMart?
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Why sell on DilMart?</h2>
             {benefits.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="flex gap-4 items-start bg-white rounded-xl border p-4 shadow-sm">
                 <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
@@ -432,9 +499,7 @@ export default function BecomeASeller() {
 
           {/* Right — Application Form */}
           <div className="bg-white rounded-2xl border shadow-sm p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-1">
-              Seller Application
-            </h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Seller Application</h2>
             <p className="text-sm text-gray-500 mb-6">
               Fill in your details and we'll review your application within 24–48 hours.
             </p>
@@ -453,9 +518,7 @@ export default function BecomeASeller() {
                   placeholder="e.g. Xy Electronics"
                   className={`mt-1 ${errors.storeName ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
-                {errors.storeName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.storeName}</p>
-                )}
+                {errors.storeName && <p className="text-xs text-red-500 mt-1">{errors.storeName}</p>}
               </div>
 
               {/* Store Physical Location */}
@@ -470,9 +533,7 @@ export default function BecomeASeller() {
                   placeholder="e.g. Bole, Addis Ababa"
                   className={`mt-1 ${errors.storeLocation ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
-                {errors.storeLocation && (
-                  <p className="text-xs text-red-500 mt-1">{errors.storeLocation}</p>
-                )}
+                {errors.storeLocation && <p className="text-xs text-red-500 mt-1">{errors.storeLocation}</p>}
               </div>
 
               {/* Category */}
@@ -480,10 +541,7 @@ export default function BecomeASeller() {
                 <Label htmlFor="category">
                   Category <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={form.category}
-                  onValueChange={(v) => set("category", v)}
-                >
+                <Select value={form.category} onValueChange={(v) => set("category", v)}>
                   <SelectTrigger
                     id="category"
                     className={`mt-1 ${errors.category ? "border-red-400 focus:ring-red-400" : ""}`}
@@ -491,14 +549,12 @@ export default function BecomeASeller() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(dbCategories.length > 0 ? dbCategories : []).map((c) => (
+                    {dbCategories.map((c) => (
                       <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.category && (
-                  <p className="text-xs text-red-500 mt-1">{errors.category}</p>
-                )}
+                {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category}</p>}
               </div>
 
               {/* Phone Number */}
@@ -509,14 +565,19 @@ export default function BecomeASeller() {
                 <Input
                   id="phone"
                   type="tel"
+                  inputMode="numeric"
                   value={form.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                  placeholder="+251 9XX XXX XXX"
+                  onChange={(e) => {
+                    // Accept digits only, max 10 characters
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    set("phone", digits);
+                    if (errors.phone) setErrors((p) => ({ ...p, phone: undefined }));
+                  }}
+                  placeholder="09XXXXXXXX or 07XXXXXXXX"
+                  maxLength={10}
                   className={`mt-1 ${errors.phone ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                )}
+                {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
               </div>
 
               {/* Email Option */}
@@ -537,6 +598,7 @@ export default function BecomeASeller() {
                   file={licenceFile}
                   onChange={setLicenceFile}
                   error={errors.licenceFile}
+                  needsReupload={draftHadFile}
                 />
               </div>
 
@@ -567,24 +629,35 @@ export default function BecomeASeller() {
                     . I confirm that all information provided is accurate and that I am
                     authorised to submit this application.
                   </label>
-                  {errors.terms && (
-                    <p className="text-xs text-red-500 mt-1">{errors.terms}</p>
-                  )}
+                  {errors.terms && <p className="text-xs text-red-500 mt-1">{errors.terms}</p>}
                 </div>
               </div>
 
               {/* Submit */}
-              <Button
-                type="submit"
-                className="w-full gap-2 mt-2"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full gap-2 mt-2" disabled={isLoading}>
                 {isLoading ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                 ) : (
                   <><ArrowRight className="h-4 w-4" /> Submit Application</>
                 )}
               </Button>
+               {draftRestored && (
+          <div className="mb-6 flex items-start justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <div className="flex items-start gap-2">
+              <RotateCcw className="h-4 w-4 mt-0.5 shrink-0 text-blue-600" />
+              <span>
+                <strong>Draft restored.</strong> Review it before submitting.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearDraft}
+              className="shrink-0 text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900 whitespace-nowrap"
+            >
+              Clear draft
+            </button>
+          </div>
+        )}
             </form>
           </div>
         </div>
@@ -592,3 +665,4 @@ export default function BecomeASeller() {
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 import {
-  LogOut, ShoppingCart,
-  UserCog, LogIn, UserPlus, Package,
-  Store, Search, X, Heart,
+  ShoppingCart,
+  LogIn, UserPlus,
+  Store, Search, X, Heart, Package,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import {
@@ -12,16 +12,7 @@ import {
 } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { logoutUser } from "@/store/auth-slice";
 import { useEffect, useRef, useState } from "react";
 import { fetchCartItems } from "@/store/shop/cart-slice";
 import { fetchWishlist } from "@/store/shop/wishlist-slice";
@@ -231,17 +222,11 @@ function CartButton({ onClick }) {
   );
 }
 
-// ── Account / auth controls (shown inside drawer on mobile, top-bar on desktop) ──
+// ── Account / auth controls ───────────────────────────────────────────────
 
 function AccountControls({ onAction }) {
   const { user, isAuthenticated } = useSelector((s) => s.auth);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  function handleLogout() {
-    dispatch(logoutUser());
-    onAction?.();
-  }
 
   function go(path) {
     navigate(path);
@@ -250,37 +235,18 @@ function AccountControls({ onAction }) {
 
   if (isAuthenticated && user) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Avatar className="cursor-pointer bg-primary h-9 w-9">
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
-              {user.userName?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="bottom" align="end" className="w-56">
-          <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-semibold">{user.userName}</span>
-              <span className="text-xs text-muted-foreground">{user.email}</span>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => go("/account")}>
-            <UserCog className="mr-2 h-4 w-4" />
-            My Account
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => go("/orders")}>
-            <Package className="mr-2 h-4 w-4" />
-            My Orders
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Avatar
+        className="cursor-pointer bg-primary h-9 w-9 hover:ring-2 hover:ring-primary/40 transition-all"
+        onClick={() => go("/account")}
+        role="button"
+        aria-label="My account"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && go("/account")}
+      >
+        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
+          {user.userName?.[0]?.toUpperCase() || "U"}
+        </AvatarFallback>
+      </Avatar>
     );
   }
 
@@ -354,8 +320,18 @@ function ShoppingHeader() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <WishlistButton onClick={() => navigate("/account/wishlist")} />
+          <WishlistButton onClick={() => navigate("/wishlist")} />
           <CartButton onClick={() => navigate("/cart")} />
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative shrink-0"
+            onClick={() => navigate("/orders")}
+            aria-label="My orders"
+          >
+            <Package className="w-5 h-5" />
+            <span className="sr-only">Orders</span>
+          </Button>
           <AccountControls />
         </div>
       </div>

@@ -243,6 +243,12 @@ export default function VendorWallet() {
 
   const vendorId = user?._id || user?.id;
 
+  // Hide COMMISSION transactions where the amount is 0 (commission rate = 0%)
+  // — there is nothing meaningful to show the vendor in that case.
+  const visibleTransactions = (transactions || []).filter(
+    (txn) => !(txn.type === "COMMISSION" && txn.amount === 0)
+  );
+
   // ── Keep filter ref stable for observer callbacks ──────────────────────
   const txnFilterRef = useRef("all");
   useEffect(() => { txnFilterRef.current = txnFilterStatus; }, [txnFilterStatus]);
@@ -438,11 +444,11 @@ export default function VendorWallet() {
           <Card>
             <CardHeader><CardTitle>Recent Transactions</CardTitle></CardHeader>
             <CardContent className="p-0 sm:p-6 sm:pt-0">
-              {transactions?.length > 0 ? (
+              {visibleTransactions?.length > 0 ? (
                 <>
                   {/* Mobile */}
                   <div className="sm:hidden px-4 pb-2">
-                    {transactions.slice(0, 5).map((txn) => (
+                    {visibleTransactions.slice(0, 5).map((txn) => (
                       <TransactionCard key={txn._id} txn={txn} />
                     ))}
                   </div>
@@ -458,7 +464,7 @@ export default function VendorWallet() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.slice(0, 5).map((txn) => (
+                        {visibleTransactions.slice(0, 5).map((txn) => (
                           <TableRow key={txn._id}>
                             <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
                             <TableCell><TypeBadge type={txn.type} /></TableCell>
@@ -501,13 +507,13 @@ export default function VendorWallet() {
           <Card>
             <CardContent className="p-0">
               {/* First-page loading skeleton */}
-              {isLoading && transactions.length === 0 ? (
+              {isLoading && visibleTransactions.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground text-sm">Loading transactions…</p>
-              ) : transactions?.length > 0 ? (
+              ) : visibleTransactions?.length > 0 ? (
                 <>
                   {/* ── Mobile: card-list ── */}
                   <div className="sm:hidden px-4 pb-2 pt-3">
-                    {transactions.map((txn) => (
+                    {visibleTransactions.map((txn) => (
                       <TransactionCard key={txn._id} txn={txn} />
                     ))}
                   </div>
@@ -524,7 +530,7 @@ export default function VendorWallet() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.map((txn) => (
+                        {visibleTransactions.map((txn) => (
                           <TableRow key={txn._id}>
                             <TableCell className="text-sm">{formatDate(txn.createdAt)}</TableCell>
                             <TableCell><TypeBadge type={txn.type} /></TableCell>
@@ -548,11 +554,10 @@ export default function VendorWallet() {
                           <TableHead>Type</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Description</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.map((txn) => (
+                        {visibleTransactions.map((txn) => (
                           <TableRow key={txn._id}>
                             <TableCell className="font-mono text-xs">
                               {txn._id?.slice(-8).toUpperCase()}
@@ -563,9 +568,7 @@ export default function VendorWallet() {
                               {txn.amount >= 0 ? "+" : ""}{currencyFormatter(txn.amount)}
                             </TableCell>
                             <TableCell><StatusBadge status={txn.status} /></TableCell>
-                            <TableCell className="text-xs text-muted-foreground max-w-[220px]">
-                              {txn.description || txn.reference || "—"}
-                            </TableCell>
+                           
                           </TableRow>
                         ))}
                       </TableBody>

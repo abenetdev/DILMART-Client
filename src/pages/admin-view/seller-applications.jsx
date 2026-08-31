@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getAllApplications,
@@ -36,12 +36,12 @@ import {
   Loader2, Eye, Users,
 } from "lucide-react";
 
-// ── Status badge ────────────────────────────────────────────────────────────
+// ── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
   const map = {
-    pending:  { className: "bg-yellow-100 text-yellow-800", icon: Clock       },
-    approved: { className: "bg-green-100  text-green-800",  icon: CheckCircle  },
-    rejected: { className: "bg-red-100    text-red-800",    icon: XCircle      },
+    pending:  { className: "bg-yellow-100 text-yellow-800", icon: Clock      },
+    approved: { className: "bg-green-100  text-green-800",  icon: CheckCircle },
+    rejected: { className: "bg-red-100    text-red-800",    icon: XCircle     },
   };
   const { className, icon: Icon } = map[status] || map.pending;
   return (
@@ -52,16 +52,30 @@ function StatusBadge({ status }) {
   );
 }
 
-// ── Review Dialog ───────────────────────────────────────────────────────────
-function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
+// ── Review Dialog ─────────────────────────────────────────────────────────────
+// `actionLoading` is "approve" | "reject" | null
+// Each button checks only its own value so they spin independently.
+function ReviewDialog({ app, onClose, onApprove, onReject, actionLoading }) {
   const [note, setNote] = useState("");
+
+  // Clear the note whenever a different application is opened
+  useEffect(() => { setNote(""); }, [app?._id]);
 
   if (!app) return null;
 
-  const isPending = app.status === "pending";
+  const isPending   = app.status === "pending";
+  const approveBusy = actionLoading === "approve";
+  const rejectBusy  = actionLoading === "reject";
+  const anyBusy     = !!actionLoading;
 
   return (
-    <Dialog open={!!app} onOpenChange={onClose}>
+    <Dialog
+      open={!!app}
+      onOpenChange={(open) => {
+        // Block closing the dialog while an action is in flight
+        if (!open && !anyBusy) onClose();
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -142,7 +156,10 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-xs text-primary underline underline-offset-2 hover:text-primary/80"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
                 View Document
               </a>
             </div>
@@ -162,7 +179,7 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
             </div>
           )}
 
-          {/* Admin note input only for pending */}
+          {/* Admin note textarea — only shown for pending applications */}
           {isPending && (
             <div>
               <p className="text-xs text-muted-foreground mb-1">
@@ -174,6 +191,7 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 className="resize-none"
+                disabled={anyBusy}
               />
             </div>
           )}
@@ -181,22 +199,29 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
 
         {isPending && (
           <div className="flex gap-2 pt-2">
+            {/* Approve — spinner shown ONLY when approve is in flight */}
             <Button
               className="flex-1 gap-1.5 bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
+              disabled={anyBusy}
               onClick={() => onApprove(app._id, note)}
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-              Approve
+              {approveBusy
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <CheckCircle className="h-4 w-4" />}
+              {approveBusy ? "Approving…" : "Approve"}
             </Button>
+
+            {/* Reject — spinner shown ONLY when reject is in flight */}
             <Button
               variant="destructive"
               className="flex-1 gap-1.5"
-              disabled={isLoading}
+              disabled={anyBusy}
               onClick={() => onReject(app._id, note)}
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-              Reject
+              {rejectBusy
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <XCircle className="h-4 w-4" />}
+              {rejectBusy ? "Rejecting…" : "Reject"}
             </Button>
           </div>
         )}
@@ -205,43 +230,53 @@ function ReviewDialog({ app, onClose, onApprove, onReject, isLoading }) {
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AdminSellerApplications() {
-  const dispatch   = useDispatch();
-  const { toast }  = useToast();
+  const dispatch  = useDispatch();
+  const { toast } = useToast();
   const { applications, isLoading } = useSelector((s) => s.adminSellerApplications);
 
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedApp,  setSelectedApp]  = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [filterStatus,  setFilterStatus]  = useState("all");
+  const [selectedApp,   setSelectedApp]   = useState(null);
+
+  // "approve" | "reject" | null — only one action can be in flight at a time
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     dispatch(getAllApplications(filterStatus));
   }, [dispatch, filterStatus]);
 
+  // ── Approve ───────────────────────────────────────────────────────────────
+  // Uses .unwrap() — resolves on server success, throws on server error or
+  // network failure. No payload.success inspection needed; no false negatives.
   const handleApprove = async (id, adminNote) => {
-    setActionLoading(true);
-    const result = await dispatch(approveApplication({ id, adminNote }));
-    setActionLoading(false);
-    if (result?.payload?.success) {
-      toast({ title: "✅ Application approved", description: result.payload.message });
+    setActionLoading("approve");
+    try {
+      const payload = await dispatch(approveApplication({ id, adminNote })).unwrap();
+      toast({ title: "Application approved", description: payload.message });
       setSelectedApp(null);
       dispatch(getAllApplications(filterStatus));
-    } else {
-      toast({ title: "Failed to approve", variant: "destructive" });
+    } catch (err) {
+      const msg = err?.message || "Failed to approve application. Please try again.";
+      toast({ title: msg, variant: "destructive" });
+    } finally {
+      setActionLoading(null);
     }
   };
 
+  // ── Reject ────────────────────────────────────────────────────────────────
   const handleReject = async (id, adminNote) => {
-    setActionLoading(true);
-    const result = await dispatch(rejectApplication({ id, adminNote }));
-    setActionLoading(false);
-    if (result?.payload?.success) {
-      toast({ title: "Application rejected", description: result.payload.message });
+    setActionLoading("reject");
+    try {
+      const payload = await dispatch(rejectApplication({ id, adminNote })).unwrap();
+      toast({ title: "Application rejected", description: payload.message });
       setSelectedApp(null);
       dispatch(getAllApplications(filterStatus));
-    } else {
-      toast({ title: "Failed to reject", variant: "destructive" });
+    } catch (err) {
+      const msg = err?.message || "Failed to reject application. Please try again.";
+      toast({ title: msg, variant: "destructive" });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -347,7 +382,7 @@ export default function AdminSellerApplications() {
         onClose={() => setSelectedApp(null)}
         onApprove={handleApprove}
         onReject={handleReject}
-        isLoading={actionLoading}
+        actionLoading={actionLoading}
       />
     </div>
   );

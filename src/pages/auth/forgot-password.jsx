@@ -15,42 +15,6 @@ import {
 const OTP_LENGTH  = 6;
 const RESEND_SECS = 60;
 
-// ── Step indicator ─────────────────────────────────────────────────────────────
-const STEPS = ["Email", "Verify Code", "New Password"];
-
-function StepDots({ current }) {
-  return (
-    <div className="flex items-center justify-center gap-2 mb-8">
-      {STEPS.map((label, i) => {
-        const done   = i < current;
-        const active = i === current;
-        return (
-          <div key={label} className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-1">
-              <div
-                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                  done   ? "bg-primary text-primary-foreground" :
-                  active ? "border-2 border-primary text-primary bg-primary/10" :
-                           "border-2 border-gray-200 text-gray-400 bg-white"
-                }`}
-              >
-                {done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-              </div>
-              <span className={`text-[10px] font-medium whitespace-nowrap ${
-                active ? "text-primary" : done ? "text-gray-600" : "text-gray-400"
-              }`}>
-                {label}
-              </span>
-            </div>
-            {i < STEPS.length - 1 && (
-              <div className={`h-px w-8 mb-4 ${done ? "bg-primary" : "bg-gray-200"}`} />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ── Step 1 — Email input ───────────────────────────────────────────────────────
 function StepEmail({ onSuccess }) {
@@ -510,7 +474,6 @@ export default function ForgotPasswordPage() {
   return (
     <div className="space-y-2">
       {/* Step progress dots — hide on success */}
-      {step < 3 && <StepDots current={step} />}
 
       {step === 0 && (
         <StepEmail

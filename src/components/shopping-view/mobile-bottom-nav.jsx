@@ -44,15 +44,15 @@ function MobileBottomNav() {
     {
       label: "Wishlist",
       icon:  Heart,
-      path:  "/account/wishlist",
+      path:  "/wishlist",
       badge: isAuthenticated && wishlistCount > 0 ? wishlistCount : null,
       badgeClass: "bg-red-500 text-white",
     },
   ];
 
   const accountActive =
-    // On any /account sub-route EXCEPT /account/wishlist (which has its own tab)
-    (pathname.startsWith("/account") && !pathname.startsWith("/account/wishlist")) ||
+    // On any /account sub-route EXCEPT /wishlist (which has its own tab)
+    (pathname.startsWith("/account") && !pathname.startsWith("/wishlist")) ||
     pathname.startsWith("/auth/login");
   const initial = user?.userName?.[0]?.toUpperCase() || "U";
 

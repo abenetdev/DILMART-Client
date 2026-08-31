@@ -221,7 +221,7 @@ const location = useLocation();
           {/* Account - nested routes */}
           <Route path="account" element={<ShoppingAccount />}>
             <Route index element={<AccountOverviewPage />} />
-            <Route path="wishlist" element={<AccountWishlistPage />} />
+            <Route path="wishlist" element={<Navigate to="/wishlist" replace />} />
             <Route path="cart" element={<AccountCartPage />} />
             <Route path="settings" element={<AccountOverviewPage />} />
             <Route path="update-profile" element={<AccountSettingsPage />} />
@@ -231,6 +231,14 @@ const location = useLocation();
           <Route path="paypal-cancel" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
           <Route path="cart" element={<CartPage />} />
+          <Route
+            path="wishlist"
+            element={
+              isAuthenticated
+                ? <AccountWishlistPage />
+                : <Navigate to="/auth/login?redirect=/wishlist" replace />
+            }
+          />
           <Route path="stores" element={<AllStoresPage />} />
           <Route path="categories" element={<AllCategoriesPage />} />
           <Route path="super-deals" element={<SuperDealsPage />} />

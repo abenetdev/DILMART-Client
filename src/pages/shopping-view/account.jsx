@@ -44,22 +44,11 @@ function ShoppingAccount() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4 py-6 md:py-10">
-        <div className="flex gap-8">
-
-          {/* Desktop sidebar — hidden on update-profile sub-page */}
-          {!isUpdateProfile && (
-            <div className="hidden lg:block w-72 shrink-0">
-              <div className="sticky top-24">
-                <AccountSidebar />
-              </div>
-            </div>
-          )}
-
+        <div className="flex gap-8">         
           {/* Main content */}
           <div className="flex-1 min-w-0">
             <Outlet />
           </div>
-
         </div>
       </div>
     </div>

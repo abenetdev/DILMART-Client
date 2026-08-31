@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/account", label: "Overview", icon: UserCircle, end: true },
   { to: "/orders", label: "Orders", icon: Package },
-  { to: "/account/wishlist", label: "Wishlist", icon: Heart },
+  { to: "/wishlist", label: "Wishlist", icon: Heart },
   { to: "/account/cart", label: "Cart", icon: ShoppingCart },
-];
+]; 
 
 function AccountSidebar({ onNavigate }) {
   const navigate = useNavigate();
