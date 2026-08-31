@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#0D9388",
-  "background_color": "#0D9388",
+  "background_color": "#ffffff",
   "categories": ["shopping", "lifestyle"],
   "lang": "en",
   "icons": [
