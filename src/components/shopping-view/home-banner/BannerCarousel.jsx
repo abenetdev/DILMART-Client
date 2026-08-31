@@ -20,7 +20,6 @@ function useIsMobile() {
 function BannerSlide({ banner, isActive, isMobile }) {
   const navigate = useNavigate();
   const imgSrc = (isMobile && banner.mobileImage) ? banner.mobileImage : banner.desktopImage;
-
   const hasContent = banner.title || banner.subtitle || banner.badge ||
                      banner.buttonText;
 
