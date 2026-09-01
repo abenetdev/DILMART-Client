@@ -48,34 +48,33 @@ function BannerSlide({ banner, isActive, isMobile }) {
       {/* Text Content */}
       {hasContent && (
         <div className="absolute inset-0 flex items-center">
-          <div className="px-6 sm:px-10 md:px-16 lg:px-24 max-w-xl md:max-w-2xl">
+          <div className="px-3 sm:px-8 md:px-14 lg:px-20 max-w-[58%] sm:max-w-lg md:max-w-xl">
             {/* Badge */}
             {banner.badge && (
-              <span className="inline-block mb-3 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm tracking-wide">
+              <span className="inline-block mb-1 sm:mb-2 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-xs font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm tracking-wide">
                 {banner.badge}
               </span>
             )}
 
             {/* Title */}
             {banner.title && (
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight drop-shadow-md">
+              <h2 className="text-[11px] sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white leading-tight drop-shadow-md line-clamp-2">
                 {banner.title}
               </h2>
             )}
 
             {/* Subtitle */}
             {banner.subtitle && (
-              <p className="mt-2 sm:mt-3 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed drop-shadow-sm max-w-md">
+              <p className="mt-1 sm:mt-2 text-[9px] sm:text-sm md:text-base text-white/85 leading-snug drop-shadow-sm line-clamp-2">
                 {banner.subtitle}
               </p>
             )}
 
             {/* Button */}
             {banner.buttonText && (
-              <div className="mt-5 sm:mt-6">
+              <div className="mt-1.5 sm:mt-3 md:mt-4">
                 <Button
-                  size="lg"
-                  className="rounded-xl bg-white text-gray-900 hover:bg-white/90 font-semibold shadow-lg shadow-black/20 transition-all duration-200 hover:scale-105"
+                  className="h-5 px-2 text-[9px] sm:h-8 sm:px-4 sm:text-xs md:h-9 md:px-5 md:text-sm rounded-lg bg-white text-gray-900 hover:bg-white/90 font-semibold shadow-md shadow-black/20 transition-all duration-200 hover:scale-105"
                   onClick={() =>
                     banner.buttonLink ? navigate(banner.buttonLink) : undefined
                   }
@@ -187,18 +186,19 @@ export default function BannerCarousel({ banners = [] }) {
         />
       ))}
 
-      {/* Prev / Next buttons — only when > 1 slide */}
+      {/* Prev / Next buttons — hidden on mobile, only when > 1 slide */}
       {count > 1 && (
         <>
           <button
             onClick={goPrev}
             aria-label="Previous banner"
             className="
+              hidden sm:flex
               absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20
               h-9 w-9 sm:h-10 sm:w-10 rounded-full
               bg-black/30 hover:bg-black/55 backdrop-blur-sm
               text-white border border-white/20
-              flex items-center justify-center
+              items-center justify-center
               transition-all duration-200 hover:scale-110 focus-visible:ring-2 focus-visible:ring-white/50
             "
           >
@@ -209,11 +209,12 @@ export default function BannerCarousel({ banners = [] }) {
             onClick={goNext}
             aria-label="Next banner"
             className="
+              hidden sm:flex
               absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20
               h-9 w-9 sm:h-10 sm:w-10 rounded-full
               bg-black/30 hover:bg-black/55 backdrop-blur-sm
               text-white border border-white/20
-              flex items-center justify-center
+              items-center justify-center
               transition-all duration-200 hover:scale-110 focus-visible:ring-2 focus-visible:ring-white/50
             "
           >
