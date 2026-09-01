@@ -29,6 +29,7 @@ import {
   updateVendorAccountStatus, deleteVendor, resetVendorPassword,
   clearVendorDetails, registerVendor,
 } from "@/store/admin/vendors-slice";
+import { fetchAdminCategories } from "@/store/admin/category-slice";
 import { currencyFormatter } from "@/utils";
 
 const formatDate = (d) =>
@@ -54,6 +55,8 @@ export default function AdminVendors() {
   const { vendorList, vendorDetails, isListLoading, isSubmitting } =
     useSelector((s) => s.adminVendors);
 
+  const { categories: adminCategories } = useSelector((s) => s.adminCategory);
+
   // Filter state
   const [searchTerm,   setSearchTerm]   = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -73,6 +76,10 @@ export default function AdminVendors() {
   useEffect(() => {
     dispatch(fetchAllVendors({ search: searchTerm, storeStatus: filterStatus }));
   }, [dispatch, filterStatus]);
+
+  useEffect(() => {
+    dispatch(fetchAdminCategories());
+  }, [dispatch]);
 
   // ── Handlers ───────────────────────────────────────────────────────────
   const refresh = () => dispatch(fetchAllVendors({ search: searchTerm, storeStatus: filterStatus }));
@@ -634,23 +641,18 @@ export default function AdminVendors() {
                   <Label htmlFor="reg-category">Category</Label>
                   <Select value={registerForm.businessCategory} onValueChange={(v) => setRF("businessCategory", v)}>
                     <SelectTrigger id="reg-category">
-                      <SelectValue />
+                      <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[
-                        ["other",          "Other"],
-                        ["fashion",        "Fashion"],
-                        ["electronics",    "Electronics"],
-                        ["beauty",         "Beauty"],
-                        ["home-living",    "Home & Living"],
-                        ["automotive",     "Automotive"],
-                        ["sports",         "Sports"],
-                        ["food-beverage",  "Food & Beverage"],
-                        ["health-wellness","Health & Wellness"],
-                        ["books",          "Books"],
-                      ].map(([val, label]) => (
-                        <SelectItem key={val} value={val}>{label}</SelectItem>
-                      ))}
+                      {adminCategories.length > 0 ? (
+                        adminCategories.map((cat) => (
+                          <SelectItem key={cat._id} value={cat.slug}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="other">Other</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -235,23 +235,33 @@ function AccountControls({ onAction }) {
 
   if (isAuthenticated && user) {
     return (
-      <Avatar
-        className="cursor-pointer bg-primary h-9 w-9 hover:ring-2 hover:ring-primary/40 transition-all"
-        onClick={() => go("/account")}
-        role="button"
-        aria-label="My account"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && go("/account")}
-      >
-        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
-          {user.userName?.[0]?.toUpperCase() || "U"}
-        </AvatarFallback>
-      </Avatar>
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          onClick={() => go("/become-seller")}
+          className="gap-1 bg-green-600 hover:bg-green-700 text-xs px-2.5 py-1 h-8"
+        >
+          <Store className="h-3.5 w-3.5" />
+          Become Seller
+        </Button>
+        <Avatar
+          className="cursor-pointer bg-primary h-9 w-9 hover:ring-2 hover:ring-primary/40 transition-all"
+          onClick={() => go("/account")}
+          role="button"
+          aria-label="My account"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === "Enter" && go("/account")}
+        >
+          <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">
+            {user.userName?.[0]?.toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center gap-2">
       <Button variant="ghost" size="sm" onClick={() => go("/auth/login")} className="gap-1.5">
         <LogIn className="h-4 w-4" />
         Login
@@ -260,9 +270,13 @@ function AccountControls({ onAction }) {
         <UserPlus className="h-4 w-4" />
         Register
       </Button>
-      <Button size="sm" onClick={() => go("/become-seller")} className="gap-1.5 bg-green-600">
-        <Store className="h-4 w-4" />
-        Become Seller
+      <Button
+        size="sm"
+        onClick={() => go("/become-seller")}
+        className="gap-1 bg-green-600 hover:bg-green-700 text-xs px-2.5 py-1 h-8"
+      >
+        <Store className="h-3.5 w-3.5" />
+        Sell
       </Button>
     </div>
   );
@@ -322,16 +336,18 @@ function ShoppingHeader() {
         <div className="flex items-center gap-3 shrink-0">
           <WishlistButton onClick={() => navigate("/wishlist")} />
           <CartButton onClick={() => navigate("/cart")} />
-          <Button
-            variant="outline"
-            size="icon"
-            className="relative shrink-0"
-            onClick={() => navigate("/orders")}
-            aria-label="My orders"
-          >
-            <Package className="w-5 h-5" />
-            <span className="sr-only">Orders</span>
-          </Button>
+          {isAuthenticated && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative shrink-0"
+              onClick={() => navigate("/orders")}
+              aria-label="My orders"
+            >
+              <Package className="w-5 h-5" />
+              <span className="sr-only">Orders</span>
+            </Button>
+          )}
           <AccountControls />
         </div>
       </div>

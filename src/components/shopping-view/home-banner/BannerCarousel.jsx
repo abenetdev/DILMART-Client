@@ -48,34 +48,34 @@ function BannerSlide({ banner, isActive, isMobile }) {
       {/* Text Content */}
       {hasContent && (
         <div className="absolute inset-0 flex items-center">
-          <div className="px-6 sm:px-10 md:px-16 lg:px-24 max-w-xl md:max-w-2xl">
+          <div className="px-3 sm:px-8 md:px-14 max-w-[55%] sm:max-w-lg md:max-w-xl">
             {/* Badge */}
             {banner.badge && (
-              <span className="inline-block mb-3 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm tracking-wide">
+              <span className="inline-block mb-1 sm:mb-2 px-2 py-0.5 rounded-full text-[9px] sm:text-xs font-semibold bg-white/20 text-white border border-white/30 backdrop-blur-sm tracking-wide">
                 {banner.badge}
               </span>
             )}
 
             {/* Title */}
             {banner.title && (
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight drop-shadow-md">
+              <h2 className="text-xs sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-white leading-tight drop-shadow-md line-clamp-2">
                 {banner.title}
               </h2>
             )}
 
-            {/* Subtitle */}
+            {/* Subtitle — hidden on very small screens to avoid clutter */}
             {banner.subtitle && (
-              <p className="mt-2 sm:mt-3 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed drop-shadow-sm max-w-md">
+              <p className="hidden sm:block mt-1 sm:mt-2 text-[11px] sm:text-sm md:text-base text-white/85 leading-snug drop-shadow-sm line-clamp-2">
                 {banner.subtitle}
               </p>
             )}
 
             {/* Button */}
             {banner.buttonText && (
-              <div className="mt-5 sm:mt-6">
+              <div className="mt-1.5 sm:mt-3">
                 <Button
-                  size="lg"
-                  className="rounded-xl bg-white text-gray-900 hover:bg-white/90 font-semibold shadow-lg shadow-black/20 transition-all duration-200 hover:scale-105"
+                  size="sm"
+                  className="h-6 px-2.5 text-[10px] sm:h-8 sm:px-4 sm:text-xs md:h-9 md:px-5 md:text-sm rounded-lg bg-white text-gray-900 hover:bg-white/90 font-semibold shadow-md shadow-black/20 transition-all duration-200 hover:scale-105"
                   onClick={() =>
                     banner.buttonLink ? navigate(banner.buttonLink) : undefined
                   }
@@ -167,7 +167,7 @@ export default function BannerCarousel({ banners = [] }) {
   return (
     <section
       className="relative w-full overflow-hidden rounded-none select-none"
-      style={{ height: "clamp(260px, 55vw, 600px)" }}
+      style={{ aspectRatio: "890 / 266", maxHeight: "366px" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
