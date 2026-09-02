@@ -20,7 +20,7 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 
-const SRC_LOGO = resolve(ROOT, "src/assets/logo.png");
+const SRC_LOGO = resolve(ROOT, "public/pwa/appIcon.png");
 const OUT_DIR  = resolve(ROOT, "public/icons");
 
 // DilMart brand teal: HSL(176,84%,31%) ≈ RGB(13,147,136)
