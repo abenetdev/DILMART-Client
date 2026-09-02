@@ -11,6 +11,8 @@ import {
   Store,
   Tag,
   Package,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 import ProductShareButton from "@/components/shopping-view/product-share-button";
 import OfflineBlock, { isOfflineError } from "@/components/common/offline-block";
@@ -38,6 +40,133 @@ import {
 } from "@/store/shop/wishlist-slice";
 import { currencyFormatter } from "@/utils";
 
+// ── Escrow Info Modal ─────────────────────────────────────────────────────
+
+const ESCROW_SECTIONS = [
+  {
+    icon: "🛡️",
+    title: "What is Escrow Service?",
+    body: "It is a service that allows you to make a secure purchase. After you have ordered goods from our platform, the payment will be held by DilMart temporarily until the goods are delivered and confirmed. Upon confirmation of the delivery, the payment will be transferred to the merchant.",
+  },
+  {
+    icon: "🤝",
+    title: "Why use Escrow Service?",
+    body: "We are using the Escrow Service to maintain trust between all stakeholders involved in the process of purchasing and selling. Escrow Service enables us to return your payment to you without any hassle if the merchant fails to deliver the product.",
+  },
+  {
+    icon: "⏱️",
+    title: "How long is it stored in Escrow Service?",
+    body: null,
+    bodyNode: (
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        Escrow Service will temporarily keep your payment until you confirm the delivery of the product or for{" "}
+        <strong className="text-foreground">5 days starting from the purchase date</strong>.
+        However, the payment will be released to the merchant automatically upon{" "}
+        <strong className="text-foreground">delivery confirmation or after five (5) days starting from the purchase date</strong>.
+      </p>
+    ),
+  },
+];
+
+function EscrowModal({ open, onClose }) {
+  // Lock body scroll while open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      aria-modal="true"
+      role="dialog"
+      aria-label="DilMart Escrow Service"
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Panel — bottom-sheet on mobile, centered modal on sm+ */}
+      <div
+        className={`
+          relative z-10 w-full bg-background
+          sm:max-w-lg sm:rounded-2xl sm:shadow-2xl
+          rounded-t-2xl shadow-xl
+          max-h-[90dvh] flex flex-col
+          animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95
+          duration-300 ease-out
+        `}
+      >
+        {/* Drag handle — mobile only */}
+        <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            <h2 className="text-base font-semibold text-foreground">
+              DilMart Escrow Service
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto flex-1 px-5 py-5 space-y-5 mb-20">
+          {ESCROW_SECTIONS.map(({ icon, title, body, bodyNode }) => (
+            <div key={title} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg leading-none">{icon}</span>
+                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+              </div>
+              {bodyNode || (
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {body}
+                </p>
+              )}
+            </div>
+          ))}
+
+          {/* Footer note */}
+          {/* <div className="rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
+            <p className="text-xs text-primary/80 leading-relaxed">
+              DilMart holds your payment securely and only releases it to the merchant after you confirm delivery or after 5 days from your purchase date.
+            </p>
+          </div> */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────
 function ProductDetailPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
@@ -64,6 +193,7 @@ function ProductDetailPage() {
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [descOverflows, setDescOverflows] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [showEscrow, setShowEscrow] = useState(false);
   const descRef = useRef(null);
 
   const userId = user?.id || user?._id;
@@ -393,6 +523,17 @@ function ProductDetailPage() {
               )}
             </div>
           )}
+
+          {/* ── DilMart Escrow Banner — always below the image ── */}
+          <div className="flex gap-6 rounded-xl border border-primary/20 bg-[#0c9388] py-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xl leading-none shrink-0 mt-0.5">🛡️</span>
+              <p className="text-[13px] font-semibold text-white">DilMart Escrow Service</p>
+            </div>
+            <div className="">
+              <Button className="text-[13px]" onClick={() => setShowEscrow(true)}>How it works →</Button>
+            </div>            
+          </div>
         </div>
 
         {/* Details */}
@@ -730,6 +871,7 @@ function ProductDetailPage() {
         </section>
       )}
 
+      <EscrowModal open={showEscrow} onClose={() => setShowEscrow(false)} />
     </div>
   );
 }

@@ -24,7 +24,7 @@ function WishlistProductCard({ item, onRemove, onAddToCart, addingId, onView }) 
     >
       {/* Image */}
       <div
-        className="relative h-36 sm:h-32 bg-muted overflow-hidden cursor-pointer"
+        className="relative h-28 sm:h-32 bg-muted overflow-hidden cursor-pointer"
         onClick={() => onView(item.productId)}
         onKeyDown={(e) => e.key === "Enter" && onView(item.productId)}
         role="button"
@@ -46,7 +46,7 @@ function WishlistProductCard({ item, onRemove, onAddToCart, addingId, onView }) 
         ) : null}
         <button
           type="button"
-          onClick={() => onRemove(item.productId)}
+          onClick={(e) => { e.stopPropagation(); onRemove(item.productId); }}
           className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
           aria-label="Remove from wishlist"
         >
@@ -55,29 +55,29 @@ function WishlistProductCard({ item, onRemove, onAddToCart, addingId, onView }) 
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+      <div className="flex flex-1 flex-col p-2 sm:p-3">
         <h3
-          className="text-xs sm:text-sm font-medium leading-snug line-clamp-2 min-h-[2.5rem] cursor-pointer hover:text-primary"
+          className="text-[11px] sm:text-sm font-medium leading-snug line-clamp-2 min-h-[2rem] cursor-pointer hover:text-primary"
           onClick={() => onView(item.productId)}
         >
           {item.title}
         </h3>
 
-        <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-sm font-bold text-primary">
+        <div className="mt-1 flex items-baseline gap-1">
+          <span className="text-[11px] sm:text-sm font-bold text-primary">
             ETB {displayPrice?.toFixed(2)}
           </span>
           {hasSale && (
-            <span className="text-[10px] text-muted-foreground line-through">
+            <span className="text-[9px] sm:text-[10px] text-muted-foreground line-through">
               ETB {item.price?.toFixed(2)}
             </span>
           )}
         </div>
 
-        <div className="mt-auto pt-2.5 flex gap-1.5">
+        <div className="mt-auto pt-2 flex gap-1">
           <Button
             size="sm"
-            className="h-8 flex-1 text-xs gap-1 px-2"
+            className="h-7 sm:h-8 flex-1 text-[10px] sm:text-xs gap-1 px-1.5 sm:px-2"
             disabled={outOfStock || isAdding}
             onClick={() => onAddToCart(item)}
           >
@@ -93,7 +93,7 @@ function WishlistProductCard({ item, onRemove, onAddToCart, addingId, onView }) 
           <Button
             size="sm"
             variant="outline"
-            className="h-8 w-8 p-0 shrink-0"
+            className="h-7 sm:h-8 w-7 sm:w-8 p-0 shrink-0"
             onClick={() => onRemove(item.productId)}
             aria-label="Remove"
           >
@@ -142,16 +142,16 @@ function AccountWishlist() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-3 sm:px-6 lg:px-10">
       <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">My Wishlist</h1>
+        <div className="ml-4 my-3">
+          <h1 className=" text-lg lg:text-2xl font-bold tracking-tight">My Wishlist</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {items.length} saved {items.length === 1 ? "item" : "items"}
           </p>
         </div>
         {items.length > 0 && (
-          <Button variant="outline" size="sm" className="gap-1.5 shrink-0" asChild>
+          <Button variant="outline" size="sm" className="gap-1.5 mr-3 shrink-0" asChild>
             <Link to="/listing">
               <Plus className="h-4 w-4" />
               Browse more
@@ -165,7 +165,7 @@ function AccountWishlist() {
           <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
         </div>
       ) : items.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 place-items-center sm:place-items-start sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {items.map((item) => (
             <WishlistProductCard
               key={item.productId}

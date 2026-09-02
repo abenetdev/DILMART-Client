@@ -1,7 +1,7 @@
 import { CATEGORIES } from "@/config";
 import logo from "@/assets/logo.png";
 import { Link, useNavigate } from "react-router-dom";
-import { Facebook, Instagram, Youtube, Twitter } from "lucide-react";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 
 export default function Footer() {
   const navigate = useNavigate();
@@ -40,9 +40,21 @@ export default function Footer() {
               </Link>
             </div>
             <div className="flex gap-3 mt-5">
-              {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
+              {[
+                { label: "Facebook",  Icon: Facebook },
+                { label: "Instagram", Icon: Instagram },
+                { label: "Twitter",   Icon: Twitter },
+                {
+                  label: "TikTok",
+                  Icon: () => (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 transition-colors" style={{ color: "#5C6B6A" }} fill="currentColor" aria-hidden="true">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
+                    </svg>
+                  ),
+                },
+              ].map(({ label, Icon }) => (
                 <a
-                  key={i}
+                  key={label}
                   href="#"
                   className="p-2 rounded-lg transition-colors group"
                   style={{ backgroundColor: "#EDE8E1" }}
@@ -54,7 +66,7 @@ export default function Footer() {
                     e.currentTarget.style.backgroundColor = "#EDE8E1";
                     e.currentTarget.querySelector("svg").style.color = "#5C6B6A";
                   }}
-                  aria-label="Social link"
+                  aria-label={label}
                 >
                   <Icon className="h-4 w-4 transition-colors" style={{ color: "#5C6B6A" }} />
                 </a>
