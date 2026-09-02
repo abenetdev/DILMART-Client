@@ -355,11 +355,20 @@ function ProductDetailPage() {
 
   // ── Review eligibility ────────────────────────────────────────────────────
   // 1. Has the user purchased this product?
-  const hasPurchased = isAuthenticated && orderList?.some((order) =>
-    order.cartItems?.some(
-      (item) => item.productId?.toString() === productDetails?._id?.toString()
-    )
-  );
+  // Orders are grouped objects — items live in subOrders[].cartItems.
+  // Fall back to top-level cartItems for legacy/single-vendor orders.
+  const hasPurchased = isAuthenticated && orderList?.some((order) => {
+    const pid = productDetails?._id?.toString();
+    // Check top-level cartItems (legacy orders)
+    const inTopLevel = order.cartItems?.some(
+      (item) => item.productId?.toString() === pid
+    );
+    // Check inside subOrders (grouped multi-vendor orders)
+    const inSubOrders = order.subOrders?.some((sub) =>
+      sub.cartItems?.some((item) => item.productId?.toString() === pid)
+    );
+    return inTopLevel || inSubOrders;
+  });
 
   // 2. Has the user already left a review?
   const alreadyReviewed = isAuthenticated && reviews?.some(
