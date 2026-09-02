@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react"; import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   ArrowLeft,
@@ -238,12 +238,12 @@ function ProductDetailPage() {
   useEffect(() => {
     if (!productDetails) return;
 
-    const pageTitle   = productDetails.name || productDetails.title || "Product";
+    const pageTitle = productDetails.name || productDetails.title || "Product";
     const description = productDetails.description
       ? productDetails.description.slice(0, 200).replace(/\n/g, " ")
       : `Buy ${pageTitle} on DilMart`;
-    const image       = productDetails.images?.[0] || productDetails.image || "";
-    const url         = `${window.location.origin}/product/${productDetails._id}`;
+    const image = productDetails.images?.[0] || productDetails.image || "";
+    const url = `${window.location.origin}/product/${productDetails._id}`;
 
     // Helper: upsert a <meta> tag by property or name attribute
     const setMeta = (attr, value, content) => {
@@ -260,16 +260,16 @@ function ProductDetailPage() {
     document.title = `${pageTitle} — DilMart`;
 
     // Open Graph
-    setMeta("property", "og:type",        "product");
-    setMeta("property", "og:title",        pageTitle);
-    setMeta("property", "og:description",  description);
-    setMeta("property", "og:url",          url);
-    setMeta("property", "og:site_name",    "DilMart");
+    setMeta("property", "og:type", "product");
+    setMeta("property", "og:title", pageTitle);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", url);
+    setMeta("property", "og:site_name", "DilMart");
     if (image) setMeta("property", "og:image", image);
 
     // Twitter Card
-    setMeta("name", "twitter:card",        image ? "summary_large_image" : "summary");
-    setMeta("name", "twitter:title",       pageTitle);
+    setMeta("name", "twitter:card", image ? "summary_large_image" : "summary");
+    setMeta("name", "twitter:title", pageTitle);
     setMeta("name", "twitter:description", description);
     if (image) setMeta("name", "twitter:image", image);
 
@@ -303,7 +303,8 @@ function ProductDetailPage() {
     );
   }
 
-  if (isLoading && !productDetails) {    return (
+  if (isLoading && !productDetails) {
+    return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
@@ -330,8 +331,8 @@ function ProductDetailPage() {
       : productDetails.image
         ? [productDetails.image]
         : [];
-  const video     = productDetails.video || null;
-  const stock     = productDetails.stock ?? productDetails.totalStock ?? 0;
+  const video = productDetails.video || null;
+  const stock = productDetails.stock ?? productDetails.totalStock ?? 0;
   const price = productDetails.price ?? 0;
   const salePrice = productDetails.salePrice ?? 0;
   const hasSale = salePrice > 0 && salePrice < price;
@@ -495,9 +496,8 @@ function ProductDetailPage() {
                   key={i}
                   type="button"
                   onClick={() => setSelectedImage(i)}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
-                    selectedImage === i ? "border-primary" : "border-transparent"
-                  }`}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${selectedImage === i ? "border-primary" : "border-transparent"
+                    }`}
                 >
                   <img src={img} alt="" className="h-full w-full object-cover" />
                 </button>
@@ -507,11 +507,10 @@ function ProductDetailPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedImage(images.length)} // index beyond images = video
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 relative transition-colors ${
-                    selectedImage === images.length ? "border-primary" : "border-transparent"
-                  } bg-black`}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 relative transition-colors ${selectedImage === images.length ? "border-primary" : "border-transparent"
+                    } bg-black`}
                 >
-                  <video src={video} className="h-full w-full object-cover opacity-70" controls  />
+                  <video src={video} className="h-full w-full object-cover opacity-70" controls />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-white/80 rounded-full p-1">
                       <svg className="h-3 w-3 text-gray-900 fill-current" viewBox="0 0 24 24">
@@ -525,14 +524,20 @@ function ProductDetailPage() {
           )}
 
           {/* ── DilMart Escrow Banner — always below the image ── */}
-          <div className="flex gap-6 rounded-xl border border-primary/20 bg-[#0c9388] py-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xl leading-none shrink-0 mt-0.5">🛡️</span>
-              <p className="text-[13px] font-semibold text-white">DilMart Escrow Service</p>
+          <div className="flex items-center justify-between gap-6 rounded-xl border border-primary/20 bg-[#0c9388] px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl leading-none shrink-0">🛡️</span>
+              <p className="text-[14px] font-semibold text-white">
+                DilMart Escrow Service
+              </p>
             </div>
-            <div className="">
-              <Button className="text-[13px]" onClick={() => setShowEscrow(true)}>How it works →</Button>
-            </div>            
+
+            <Button
+              className="shrink-0 px-4 py-2 text-[14px]"
+              onClick={() => setShowEscrow(true)}
+            >
+              How it works →
+            </Button>
           </div>
         </div>
 
@@ -611,11 +616,10 @@ function ProductDetailPage() {
                 <div className="flex items-center gap-2.5">
                   <span className="text-sm text-muted-foreground w-24 shrink-0">Condition</span>
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${
-                      productDetails.condition === "new"
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${productDetails.condition === "new"
                         ? "bg-green-50 text-green-700 ring-green-600/20"
                         : "bg-amber-50 text-amber-700 ring-amber-600/20"
-                    }`}
+                      }`}
                   >
                     {productDetails.condition === "new" ? "Brand New" : "Used"}
                   </span>
@@ -657,11 +661,10 @@ function ProductDetailPage() {
                       key={sz}
                       type="button"
                       onClick={() => setSelectedSize((prev) => (prev === sz ? null : sz))}
-                      className={`min-w-[40px] px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                        selectedSize === sz
+                      className={`min-w-[40px] px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${selectedSize === sz
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-background text-foreground border-border hover:border-primary"
-                      }`}
+                        }`}
                     >
                       {sz}
                     </button>
@@ -683,9 +686,8 @@ function ProductDetailPage() {
               <div>
                 <p
                   ref={descRef}
-                  className={`text-muted-foreground text-sm leading-relaxed whitespace-pre-line break-words transition-all ${
-                    showFullDesc ? "" : "line-clamp-4"
-                  }`}
+                  className={`text-muted-foreground text-sm leading-relaxed whitespace-pre-line break-words transition-all ${showFullDesc ? "" : "line-clamp-4"
+                    }`}
                 >
                   {productDetails.description}
                 </p>
@@ -729,7 +731,7 @@ function ProductDetailPage() {
                     disabled={quantity >= stock}
                   >
                     <Plus className="h-4 w-4" />
-                    
+
                   </Button>
                 </div>
               </div>
@@ -818,11 +820,10 @@ function ProductDetailPage() {
               </div>
             )}
             {reviewBlockReason && reviewBlockReason !== "login" && (
-              <div className={`rounded-lg px-3 py-2.5 text-sm font-medium flex items-center gap-2 ${
-                alreadyReviewed
+              <div className={`rounded-lg px-3 py-2.5 text-sm font-medium flex items-center gap-2 ${alreadyReviewed
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-amber-50 text-amber-700 border border-amber-200"
-              }`}>
+                }`}>
                 <span>{alreadyReviewed ? "✓" : "⚠"}</span>
                 {reviewBlockReason}
               </div>
