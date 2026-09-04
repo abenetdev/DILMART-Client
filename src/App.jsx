@@ -66,6 +66,10 @@ import TermsPage from "./pages/terms";
 import BecomeASeller from "./pages/become-seller/becomeSeller";
 import { SocketProvider } from "./context/SocketContext";
 
+// ── Pre-launch ────────────────────────────────────────────────────────────
+import LaunchGuard from "./components/common/LaunchGuard";
+import { IS_LAUNCHED } from "./config/launch";
+
 // Legacy /shop/* redirect helpers
 function ProductRedirect() {
   const { productId } = useParams();
@@ -77,188 +81,223 @@ function AccountRedirect() {
 }
 
 function App() {
-  const { user, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-const location = useLocation();
+  const location = useLocation();
 
-  const hideHeaderRoutes = [
-    "/auth",
-    "/admin",
-    "/vendor",
-  ];
-
+  const hideHeaderRoutes = ["/auth", "/admin", "/vendor"];
   const shouldHideHeader = hideHeaderRoutes.some((path) =>
     location.pathname.startsWith(path)
   );
+
+  // Hide the global header/footer/nav entirely during pre-launch
+  const isComingSoonPage = !IS_LAUNCHED;
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const isProduction = import.meta.env.PROD;
 
     if (!isProduction || storedToken) {
-      // Local dev: rely on cookies (no localStorage token needed)
-      // Production: only call checkAuth if we have a token in localStorage
       dispatch(checkAuth());
     } else {
-      // Production with no token → user is definitely logged out, skip the network call
       dispatch(clearAuth());
     }
 
     dispatch(loadGuestCartToStore());
   }, [dispatch]);
 
-
   return (
-   <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
       <ScrollToTop />
       {/* Global offline indicator — always mounted, shows only when needed */}
       <OfflineBanner />
-      {/* HEADER — hidden on auth / admin / vendor pages */}
-      {!shouldHideHeader && <ShoppingHeader />}
+
+      {/* HEADER — hidden on auth/admin/vendor pages AND the ComingSoon page */}
+      {!shouldHideHeader && !isComingSoonPage && <ShoppingHeader />}
 
       <SocketProvider>
+        <Routes>
 
-      <Routes>
-        {/* <Route path="/shop/home" element={<Navigate to="/" replace />} />
-        <Route path="/shop/listing" element={<Navigate to="/listing" replace />} />
-        <Route path="/shop/product/:productId" element={<ProductRedirect />} />
-        <Route path="/shop/search" element={<Navigate to="/search" replace />} />
-        <Route path="/shop/cart" element={<Navigate to="/cart" replace />} />
-        <Route path="/shop/checkout" element={<Navigate to="/checkout" replace />} />
-        <Route path="/shop/account/*" element={<AccountRedirect />} />
-        <Route path="/shop/stores" element={<Navigate to="/stores" replace />} />
-        <Route path="/shop/super-deals" element={<Navigate to="/super-deals" replace />} />
-        <Route path="/shop/become-seller" element={<Navigate to="/become-seller" replace />} />
-        <Route path="/shop/payment-success" element={<Navigate to="/payment-success" replace />} />
-        <Route path="/shop/chapa-return" element={<Navigate to="/chapa-return" replace />} /> */}
-
-        <Route
-          path="/auth"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AuthLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="login"            element={<AuthLogin />} />
-          <Route path="register"         element={<AuthRegister />} />
-          <Route path="verify-otp"       element={<VerifyOtp />} />
-          <Route path="forgot-password"  element={<ForgotPassword />} />
-        </Route>
-
-        {/* ── Admin auth (standalone, no layout) ── */}
-        <Route path="/admin/auth/login" element={
-          <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-            <AdminLogin />
-          </CheckAuth>
-        } />
-
-        <Route
-          path="/admin"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <AdminLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="dashboard"    element={<AdminDashboard />} />
-          <Route path="vendors"      element={<AdminVendors />} />
-          <Route path="products"     element={<AdminProducts />} />
-          <Route path="orders"       element={<AdminOrders />} />
-          <Route path="withdrawals"  element={<AdminWithdrawals />} />
-          <Route path="customers"    element={<AdminCustomers />} />
-          <Route path="seller-applications" element={<AdminSellerApplications />} />
-          <Route path="categories"         element={<AdminCategories />} />
-          <Route path="brands"             element={<AdminBrands />} />
-          <Route path="banners"            element={<AdminBanners />} />
-          <Route path="settings"           element={<AdminSettings />} />
-          <Route path="profile"     element={<AdminProfile />} />
-        </Route>
-
-        <Route
-          path="/vendor"
-          element={
-            <CheckAuth isAuthenticated={isAuthenticated} user={user}>
-              <VendorLayout />
-            </CheckAuth>
-          }
-        >
-          <Route path="dashboard" element={<VendorDashboard />} />
-          <Route path="products" element={<VendorProducts />} />
-          <Route path="orders" element={<VendorOrders />} />
-          <Route path="orders/:orderId" element={<VendorOrderDetails />} />
-          <Route path="wallet" element={<VendorWallet />} />
-          <Route path="payout-settings" element={<VendorPayoutSettings />} />
-          <Route path="features" element={<VendorFeatures />} />
-          <Route path="store-settings" element={<VendorStoreSettings />} />
-          <Route path="profile" element={<VendorProfile />} />
-          <Route path="notifications" element={<VendorNotifications />} />
-        </Route>
-
-        <Route path="/" element={<ShoppingLayout />}>
-          <Route index element={<ShoppingHome />} />
-          <Route path="listing" element={<ShoppingListing />} />
-          <Route path="become-seller" element={<BecomeASeller />} />
-          <Route path="product/:productId" element={<ProductDetailPage />} />
+          {/* ── Auth routes — always accessible (vendors/admins need login) ── */}
           <Route
-            path="checkout"
+            path="/auth"
             element={
-              isAuthenticated
-                ? <ShoppingCheckout />
-                : <Navigate to="/auth/login?redirect=/checkout" replace />
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AuthLayout />
+              </CheckAuth>
             }
-          />
-          {/* Orders - standalone route */}
-          <Route
-            path="orders"
-            element={
-              isAuthenticated
-                ? <AccountOrdersPage />
-                : <Navigate to="/auth/login?redirect=/orders" replace />
-            }
-          />
-          {/* Account - nested routes */}
-          <Route path="account" element={<ShoppingAccount />}>
-            <Route index element={<AccountOverviewPage />} />
-            <Route path="wishlist" element={<Navigate to="/wishlist" replace />} />
-            <Route path="cart" element={<AccountCartPage />} />
-            <Route path="settings" element={<AccountOverviewPage />} />
-            <Route path="update-profile" element={<AccountSettingsPage />} />
+          >
+            <Route path="login"           element={<AuthLogin />} />
+            <Route path="register"        element={<AuthRegister />} />
+            <Route path="verify-otp"      element={<VerifyOtp />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
           </Route>
-          <Route path="payment-success" element={<PaymentSuccessPage />} />
-          <Route path="chapa-return" element={<ChapaReturnPage />} />
-          <Route path="paypal-cancel" element={<PaymentSuccessPage />} />
-          <Route path="search" element={<SearchProducts />} />
-          <Route path="cart" element={<CartPage />} />
+
+          {/* ── Admin auth (standalone, no layout) — always accessible ────── */}
           <Route
-            path="wishlist"
+            path="/admin/auth/login"
             element={
-              isAuthenticated
-                ? <AccountWishlistPage />
-                : <Navigate to="/auth/login?redirect=/wishlist" replace />
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AdminLogin />
+              </CheckAuth>
             }
           />
-          <Route path="stores" element={<AllStoresPage />} />
-          <Route path="categories" element={<AllCategoriesPage />} />
-          <Route path="super-deals" element={<SuperDealsPage />} />
-        </Route>
 
-        <Route path="/unauth-page" element={<UnauthPage />} />
-        <Route path="/store/:slug" element={<StoreFront />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/refund-policy" element={<RefundPolicyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* ── Admin routes — protected by CheckAuth (admin role required) ── */}
+          <Route
+            path="/admin"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AdminLayout />
+              </CheckAuth>
+            }
+          >
+            <Route path="dashboard"            element={<AdminDashboard />} />
+            <Route path="vendors"              element={<AdminVendors />} />
+            <Route path="products"             element={<AdminProducts />} />
+            <Route path="orders"               element={<AdminOrders />} />
+            <Route path="withdrawals"          element={<AdminWithdrawals />} />
+            <Route path="customers"            element={<AdminCustomers />} />
+            <Route path="seller-applications"  element={<AdminSellerApplications />} />
+            <Route path="categories"           element={<AdminCategories />} />
+            <Route path="brands"               element={<AdminBrands />} />
+            <Route path="banners"              element={<AdminBanners />} />
+            <Route path="settings"             element={<AdminSettings />} />
+            <Route path="profile"              element={<AdminProfile />} />
+          </Route>
 
+          {/* ── Vendor routes — protected by CheckAuth (vendor role required) */}
+          <Route
+            path="/vendor"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <VendorLayout />
+              </CheckAuth>
+            }
+          >
+            <Route path="dashboard"      element={<VendorDashboard />} />
+            <Route path="products"       element={<VendorProducts />} />
+            <Route path="orders"         element={<VendorOrders />} />
+            <Route path="orders/:orderId" element={<VendorOrderDetails />} />
+            <Route path="wallet"         element={<VendorWallet />} />
+            <Route path="payout-settings" element={<VendorPayoutSettings />} />
+            <Route path="features"       element={<VendorFeatures />} />
+            <Route path="store-settings" element={<VendorStoreSettings />} />
+            <Route path="profile"        element={<VendorProfile />} />
+            <Route path="notifications"  element={<VendorNotifications />} />
+          </Route>
+
+          {/* ── Public shopping routes — guarded during pre-launch ─────────
+               LaunchGuard redirects every path except "/" to "/"
+               when IS_LAUNCHED is false. When IS_LAUNCHED is true it is
+               a transparent no-op and everything works as before.
+          ──────────────────────────────────────────────────────────────── */}
+          <Route
+            path="/"
+            element={
+              <LaunchGuard>
+                <ShoppingLayout />
+              </LaunchGuard>
+            }
+          >
+            <Route index element={<ShoppingHome />} />
+            <Route path="listing"       element={<ShoppingListing />} />
+            <Route path="become-seller" element={<BecomeASeller />} />
+            <Route path="product/:productId" element={<ProductDetailPage />} />
+            <Route
+              path="checkout"
+              element={
+                isAuthenticated
+                  ? <ShoppingCheckout />
+                  : <Navigate to="/auth/login?redirect=/checkout" replace />
+              }
+            />
+            <Route
+              path="orders"
+              element={
+                isAuthenticated
+                  ? <AccountOrdersPage />
+                  : <Navigate to="/auth/login?redirect=/orders" replace />
+              }
+            />
+            <Route path="account" element={<ShoppingAccount />}>
+              <Route index element={<AccountOverviewPage />} />
+              <Route path="wishlist"        element={<Navigate to="/wishlist" replace />} />
+              <Route path="cart"            element={<AccountCartPage />} />
+              <Route path="settings"        element={<AccountOverviewPage />} />
+              <Route path="update-profile"  element={<AccountSettingsPage />} />
+            </Route>
+            <Route path="payment-success" element={<PaymentSuccessPage />} />
+            <Route path="chapa-return"    element={<ChapaReturnPage />} />
+            <Route path="paypal-cancel"   element={<PaymentSuccessPage />} />
+            <Route path="search"          element={<SearchProducts />} />
+            <Route path="cart"            element={<CartPage />} />
+            <Route
+              path="wishlist"
+              element={
+                isAuthenticated
+                  ? <AccountWishlistPage />
+                  : <Navigate to="/auth/login?redirect=/wishlist" replace />
+              }
+            />
+            <Route path="stores"      element={<AllStoresPage />} />
+            <Route path="categories"  element={<AllCategoriesPage />} />
+            <Route path="super-deals" element={<SuperDealsPage />} />
+          </Route>
+
+          {/* ── Misc public pages — also guarded ───────────────────────── */}
+          <Route
+            path="/unauth-page"
+            element={
+              <LaunchGuard>
+                <UnauthPage />
+              </LaunchGuard>
+            }
+          />
+          <Route
+            path="/store/:slug"
+            element={
+              <LaunchGuard>
+                <StoreFront />
+              </LaunchGuard>
+            }
+          />
+          <Route
+            path="/privacy-policy"
+            element={
+              <LaunchGuard>
+                <PrivacyPolicyPage />
+              </LaunchGuard>
+            }
+          />
+          <Route
+            path="/refund-policy"
+            element={
+              <LaunchGuard>
+                <RefundPolicyPage />
+              </LaunchGuard>
+            }
+          />
+          <Route
+            path="/terms"
+            element={
+              <LaunchGuard>
+                <TermsPage />
+              </LaunchGuard>
+            }
+          />
+
+          {/* 404 — always visible */}
+          <Route path="*" element={<NotFound />} />
+
+        </Routes>
       </SocketProvider>
 
-      {/* FOOTER — hidden on auth / admin / vendor pages */}
-      {!shouldHideHeader && <Footer />}
+      {/* FOOTER — hidden on auth/admin/vendor pages AND the ComingSoon page */}
+      {!shouldHideHeader && !isComingSoonPage && <Footer />}
 
-      {/* MOBILE BOTTOM NAV — hidden on auth / admin / vendor pages */}
-      {!shouldHideHeader && <MobileBottomNav />}
+      {/* MOBILE BOTTOM NAV — same hiding logic */}
+      {!shouldHideHeader && !isComingSoonPage && <MobileBottomNav />}
     </div>
   );
 }
